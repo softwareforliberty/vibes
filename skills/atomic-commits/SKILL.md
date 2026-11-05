@@ -76,22 +76,32 @@ code that makes it pass, and a refactor gets its own commit.
    git diff --staged
    ```
 
-4. **Check that the staged change is green on its own.** Hide everything
-   unstaged, run the tests and linters, then restore it.
+4. **Hide everything you're not committing,** so the working tree holds
+   exactly the staged change:
 
    ```sh
    git stash push --keep-index --include-untracked
-   # Run the project's tests and linters here.
+   ```
+
+   Skip this when there's nothing unstaged or untracked.
+
+5. **Check that the staged change is green on its own.** Run the project's
+   tests and linters. If the project has a commit gate (see the
+   [commit gate](../commit-gate/SKILL.md) skill), it runs them for you when
+   you commit, and it refuses to commit while anything is unstaged or
+   untracked.
+
+6. **Commit with a clear message** (see below), then bring the rest back:
+
+   ```sh
    git stash pop
    ```
 
-   If the tests or a formatter changed files while the stash was hidden, the
-   pop can conflict. Resolve that before committing, and stage any formatter
-   changes deliberately.
+   If the checks or a formatter changed files, the pop can conflict. Resolve
+   the conflict, and stage any formatter changes deliberately in a later
+   commit.
 
-5. **Commit with a clear message** (see below).
-
-6. **Repeat** until the working tree is clean or holds only unfinished work.
+7. **Repeat** until the working tree is clean or holds only unfinished work.
 
 ## Commit messages
 

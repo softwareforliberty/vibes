@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+#
+# Claude Code PreToolUse hook for the vibes commit gate. Reads the tool call
+# as JSON on stdin and blocks a git commit (exit 2) when the gate fails.
+
+set -euo pipefail
+
+# shellcheck source=hooks/lib/commit_gate.sh
+source "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/lib/commit_gate.sh"
+
+readonly COMMIT_RE='(^|[;&|[:space:]])git[[:space:]]+commit([[:space:]]|$)'
+readonly NO_VERIFY_RE='(^|[[:space:]])(--no-verify|-n)([[:space:]]|$)'
+readonly ALL_RE='(^|[[:space:]])(-a|--all)([[:space:]]|$)'
+
+# Prints one field of the hook's JSON input, or nothing if no parser exists.
+json_field() {
+  local json="$1"
+  local field="$2"
+  if command -v jq >/dev/null; then
+    jq -r "${field} // empty" <<<"${json}"
+  elif command -v python3 >/dev/null; then
+    python3 -c '
+import json, sys
+value = json.load(sys.stdin)
+for key in sys.argv[1].lstrip(".").split("."):
+    value = value.get(key) if isinstance(value, dict) else None
+print(value if value is not None else "")
+' "${field}" <<<"${json}"
+  fi
+}
+
+# Returns 0 when the project's own git hook is the vibes gate.
+git_hook_is_gate() {
+  local hook
+  hook="$(git rev-parse --git-path hooks/pre-commit 2>/dev/null)" || return 1
+  [[ -f "${hook}" ]] && grep -q 'vibes-commit-gate' -- "${hook}"
+}
+
+main() {
+  local input command cwd
+  input="$(cat)"
+  # Drop quoted strings, so a commit message mentioning -a or -n can't match.
+  command="$(json_field "${input}" '.tool_input.command' \
+    | sed -E "s/'[^']*'//g; s/\"[^\"]*\"//g")"
+  cwd="$(json_field "${input}" '.cwd')"
+
+  if [[ -n "${cwd}" ]]; then
+    cd -- "${cwd}" || exit 0
+  fi
+
+  if [[ -n "${command}" ]] && ! [[ "${command}" =~ ${COMMIT_RE} ]]; then
+    exit 0
+  fi
+  if [[ ! -x "$(git rev-parse --show-toplevel 2>/dev/null)/scripts/check" ]]
+  then
+    exit 0
+  fi
+
+  if [[ "${command}" =~ ${NO_VERIFY_RE} ]]; then
+    gate::err "don't bypass the commit gate with --no-verify or -n."
+    exit 2
+  fi
+  if [[ "${command}" =~ ${ALL_RE} ]]; then
+    gate::err "don't commit with -a or --all. Stage each change explicitly."
+    exit 2
+  fi
+
+  # Git runs the gate itself when its hook is installed, so don't run twice.
+  if git_hook_is_gate; then
+    exit 0
+  fi
+
+  if ! gate::run; then
+    exit 2
+  fi
+}
+
+main "$@"

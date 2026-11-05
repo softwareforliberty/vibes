@@ -79,7 +79,9 @@ Commit whenever the tests are green and the change is a complete step, usually
 after green or after a refactor. Each commit holds a test together with the
 code that makes it pass. Never commit with failing tests. See the
 [atomic commits](../atomic-commits/SKILL.md) skill for how to shape each
-commit.
+commit. If the project has a [commit gate](../commit-gate/SKILL.md), it runs
+the linters and the full test suite on every commit and blocks any commit
+that fails.
 
 ## Fixing a bug
 

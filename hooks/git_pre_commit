@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+#
+# vibes-commit-gate
+#
+# Git pre-commit hook for the vibes commit gate. Install it in a project with:
+#   ln -s /path/to/vibes/hooks/git_pre_commit .git/hooks/pre-commit
+
+set -euo pipefail
+
+# shellcheck source=hooks/lib/commit_gate.sh
+source "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/lib/commit_gate.sh"
+
+main() {
+  if ! gate::run; then
+    exit 1
+  fi
+}
+
+main "$@"
