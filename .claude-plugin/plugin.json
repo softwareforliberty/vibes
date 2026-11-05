@@ -4,6 +4,8 @@
   "author": {
     "name": "Reece Fowell"
   },
+  "homepage": "https://github.com/softwareforliberty/vibe-docs",
+  "repository": "https://github.com/softwareforliberty/vibe-docs",
   "license": "0BSD",
   "keywords": [
     "tdd",
