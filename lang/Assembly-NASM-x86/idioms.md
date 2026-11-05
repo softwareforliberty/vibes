@@ -130,15 +130,17 @@ buf_flush:
 ```
 
 Microsoft x64. The caller reserves 32 bytes of shadow space for the callee to
-use, so `sub rsp` reserves it before each call:
+use, so `sub rsp` reserves it before each call. The Windows unwinder expects
+the prologue in a fixed order: push the callee-saved registers, then allocate
+the stack, then set the frame pointer:
 
 ```nasm
 ; int buf_flush(struct buf *b)
 buf_flush:
 	push	rbp
-	mov	rbp, rsp
 	push	rbx			; rsp is now 8 past a multiple of 16
 	sub	rsp, 40			; 32 bytes of shadow space + 8 to realign
+	lea	rbp, [rsp + 32]		; frame pointer above the shadow space
 	mov	rbx, rcx		; keep b across the call
 	...
 	call	buf_write_all
