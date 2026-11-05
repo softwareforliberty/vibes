@@ -43,7 +43,7 @@ people under both:
 - **Write booleans only as `true` and `false`.** They're booleans under every
   schema.
 - yamllint's `truthy`, `octal-values` and `float-values` rules catch most of
-  these (see the [style guide's config](coding-style.md#recommended-setup)).
+  these (see the [style guide's config](tools.md#recommended-setup)).
 
 ## Strings
 

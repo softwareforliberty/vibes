@@ -10,90 +10,11 @@ This guide covers how code looks. For how to design and structure it
 (ownership, error handling, const-correctness, templates and other idioms),
 see [idioms.md](idioms.md).
 
-## Tools
+The tools that check C++ code are listed in [tools.md](tools.md).
 
-All tools are free/open source.
+## Language baseline
 
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [clang-format](https://clang.llvm.org/docs/ClangFormat.html) | Apache-2.0 with LLVM exception | Formatting, applied automatically |
-| [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) | Apache-2.0 with LLVM exception | Linting naming, modernisation and bug-prone patterns |
-| [Clang](https://clang.llvm.org/) | Apache-2.0 with LLVM exception | Compiling, and linting through its warning flags |
-
-### Formatting
-
-Commit this `.clang-format` at the repository root, and run clang-format on
-every changed file before committing. A formatter ends layout debates and
-keeps diffs free of whitespace noise.
-
-```yaml
-BasedOnStyle: Google
-DerivePointerAlignment: false
-PointerAlignment: Right
-```
-
-### Linting
-
-Commit this `.clang-tidy` at the repository root. Code must pass it with no
-warnings.
-
-```yaml
-Checks: >
-  bugprone-*,
-  cppcoreguidelines-*,
-  google-*,
-  misc-*,
-  modernize-*,
-  performance-*,
-  readability-*,
-  -bugprone-easily-swappable-parameters,
-  -google-readability-todo,
-  -modernize-use-trailing-return-type,
-  -readability-identifier-length
-WarningsAsErrors: '*'
-CheckOptions:
-  readability-identifier-naming.ClassCase: CamelCase
-  readability-identifier-naming.StructCase: CamelCase
-  readability-identifier-naming.EnumCase: CamelCase
-  readability-identifier-naming.FunctionCase: CamelCase
-  readability-identifier-naming.MethodCase: CamelCase
-  readability-identifier-naming.VariableCase: lower_case
-  readability-identifier-naming.ParameterCase: lower_case
-  readability-identifier-naming.PrivateMemberSuffix: _
-  readability-identifier-naming.ProtectedMemberSuffix: _
-  readability-identifier-naming.NamespaceCase: lower_case
-  readability-identifier-naming.ConstexprVariableCase: CamelCase
-  readability-identifier-naming.ConstexprVariablePrefix: k
-  readability-identifier-naming.GlobalConstantCase: CamelCase
-  readability-identifier-naming.GlobalConstantPrefix: k
-  readability-identifier-naming.StaticConstantCase: CamelCase
-  readability-identifier-naming.StaticConstantPrefix: k
-  readability-identifier-naming.EnumConstantCase: CamelCase
-  readability-identifier-naming.EnumConstantPrefix: k
-  readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
-  readability-implicit-bool-conversion.AllowPointerConditions: true
-```
-
-- The disabled checks conflict with rules in this guide: TODO format,
-  ordinary return types and short local names. `AllowPointerConditions`
-  permits the [`if (ptr)`](#statements-and-expressions) form.
-- Suppress a warning only on the line that needs it, with
-  `// NOLINT(check-name)` and a reason. A bare `NOLINT` hides every check,
-  including ones nobody meant to silence.
-
-### Compiler warnings
-
-Code must build with **no warnings** using at least these flags:
-
-```sh
-clang++ -std=c++20 -Wall -Wextra -Wpedantic -Wconversion -Wshadow \
-    -Wold-style-cast -Wnon-virtual-dtor -Woverloaded-virtual -Wdocumentation
-```
-
-- The baseline language is **C++20**.
-- `-Wold-style-cast` enforces the [no C-style casts](#casts) rule.
-- `-Wdocumentation` checks [API comments](#api-documentation) against the
-  declarations they describe.
+The baseline language is **C++20**.
 
 ## Files
 

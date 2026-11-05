@@ -10,71 +10,7 @@ This guide covers how code looks. For how to design and structure it (memory
 management, nullability, error handling and other idioms), see
 [idioms.md](idioms.md).
 
-## Tools
-
-All tools are free/open source.
-
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [clang-format](https://clang.llvm.org/docs/ClangFormat.html) | Apache-2.0 with LLVM exception | Formatting, applied automatically |
-| [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) | Apache-2.0 with LLVM exception | Linting naming and bug-prone patterns |
-| [Clang Static Analyzer](https://clang-analyzer.llvm.org/) | Apache-2.0 with LLVM exception | Finding leaks, nil misuse and API misuse along every code path |
-| [Clang](https://clang.llvm.org/) | Apache-2.0 with LLVM exception | Compiling, and linting through its warning flags |
-
-### Formatting
-
-Commit this `.clang-format` at the repository root, and run clang-format on
-every changed file before committing. A formatter ends layout debates and
-keeps diffs free of whitespace noise.
-
-```yaml
----
-Language: ObjC
-BasedOnStyle: Google
-ColumnLimit: 100
-DerivePointerAlignment: false
-PointerAlignment: Right
-```
-
-### Linting
-
-Commit this `.clang-tidy` at the repository root. Code must pass it with no
-warnings.
-
-```yaml
-Checks: >
-  bugprone-*,
-  clang-analyzer-*,
-  google-objc-*,
-  objc-*,
-  readability-braces-around-statements,
-  -bugprone-easily-swappable-parameters
-WarningsAsErrors: '*'
-```
-
-- Suppress a warning only on the line that needs it, with
-  `// NOLINT(check-name)` and a reason. A bare `NOLINT` hides every check,
-  including ones nobody meant to silence.
-- Run the static analyzer over the whole build with `scan-build`, for example
-  `scan-build make`. It follows paths across functions, and finds bugs that
-  per-file checks miss.
-
-### Compiler warnings
-
-Code must build with **no warnings** using at least these flags:
-
-```sh
-clang -fobjc-arc -Wall -Wextra -Wdocumentation -Wimplicit-retain-self \
-    -Wnullable-to-nonnull-conversion
-```
-
-- `-fobjc-arc` turns on Automatic Reference Counting. All code uses ARC.
-- `-Wimplicit-retain-self` flags blocks that capture `self` through an
-  instance variable without saying so (see [idioms.md](idioms.md#blocks)).
-- `-Wnullable-to-nonnull-conversion` enforces the
-  [nullability annotations](#nullability).
-- `-Wdocumentation` checks [API comments](#api-documentation) against the
-  declarations they describe.
+The tools that check Objective-C code are listed in [tools.md](tools.md).
 
 ## Files
 

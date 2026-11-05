@@ -10,45 +10,7 @@ This guide covers how linker scripts look. For when to write one and how to
 structure it (memory regions, load and run addresses, symbols shared with C
 and other idioms), see [idioms.md](idioms.md).
 
-## Tools
-
-All tools are free/open source.
-
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [GNU ld](https://sourceware.org/binutils/) (GNU Binutils) | GPLv3 | Linking with the script, and linting through its warnings |
-| [LLD](https://lld.llvm.org/) | Apache-2.0 WITH LLVM-exception | Linking with the same script, to prove it works with both linkers |
-| `readelf`, `objdump`, `nm` (GNU Binutils) | GPLv3 | Checking the layout of the linked image |
-
-No dedicated linter or formatter for linker scripts exists, so the linkers
-themselves are the check.
-
-### Linker warnings
-
-Linker warnings are the lint gate. An image must link with **no warnings**,
-and with every input section placed by the script, using at least these
-flags (passed through the compiler driver):
-
-```sh
-gcc -nostdlib -T link.ld \
-    -Wl,--fatal-warnings \
-    -Wl,--orphan-handling=error \
-    -Wl,-Map=build/image.map \
-    -o build/image.elf build/start.o build/main.o
-```
-
-- `--fatal-warnings` makes the linker treat warnings as errors, so a warning
-  can't slip through a build.
-- `--orphan-handling=error` stops the link when an input section matches no
-  rule in the script. Without it, the linker places such *orphan* sections
-  wherever its own heuristics choose, and GNU ld and LLD choose differently.
-- `-Map` writes a map file showing where every section and symbol ended up.
-  Keep it as a build artifact, so a layout change can be reviewed.
-- For scripts that declare memory regions, add `-Wl,--print-memory-usage` to
-  print how full each region is after every link. LLD supports it from
-  LLVM 17.
-- Link with LLD as well, using `-fuse-ld=lld`, if the project claims to
-  support both linkers.
+The tools that check GNU ld Linker Script code are listed in [tools.md](tools.md).
 
 ## Files
 

@@ -9,29 +9,13 @@ This guide covers how code looks. For how to design and structure it
 (ownership, error handling, memory safety and other idioms), see
 [idioms.md](idioms.md).
 
-## Tools
+The tools that check C code are listed in [tools.md](tools.md).
 
-All tools are free/open source.
+## Language baseline
 
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [GCC](https://gcc.gnu.org/) | GPLv3 | Compiling C, and linting through its warning flags |
-
-### Compiler warnings
-
-Compiler warnings are the lint gate. Code must build with **no warnings**
-using at least these flags:
-
-```sh
-gcc -std=c99 -Wall -Wextra -Wvla
-```
-
-- The baseline language is **C99**. Compiler extensions are limited to
-  `__attribute__` and `__asm__` (see
-  [Inline assembly and attributes](#inline-assembly-and-attributes)).
-- `-Wextra` turns on `-Wimplicit-fallthrough`, which enforces the
-  [`fallthrough` rule](#switch).
-- `-Wvla` enforces the [no variable-length arrays](#language-usage) rule.
+The baseline language is **C99**. Compiler extensions are limited to
+`__attribute__` and `__asm__` (see
+[Inline assembly and attributes](#inline-assembly-and-attributes)).
 
 ## Layout
 

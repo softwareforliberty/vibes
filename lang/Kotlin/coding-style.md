@@ -9,47 +9,11 @@ This guide covers how code looks. For how to design and structure it
 (immutability, null safety, errors, coroutines and other idioms), see
 [idioms.md](idioms.md).
 
-## Tools
+The tools that check Kotlin code are listed in [tools.md](tools.md).
 
-All tools are free/open source.
+## Language baseline
 
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [kotlinc](https://kotlinlang.org/) (Kotlin compiler) | Apache-2.0 | Compiling, and linting through its warnings |
-| [ktlint](https://pinterest.github.io/ktlint/) | MIT | Formatting and style checks: applies most of [Layout](#layout) automatically |
-| [detekt](https://detekt.dev/) | Apache-2.0 | Static analysis for complexity, code smells and error-prone patterns |
-
-### Recommended setup
-
-Format, then check. Code must build with **no warnings** and no findings.
-
-```sh
-# Format every Kotlin file in place, then check what it couldn't fix
-ktlint --format
-ktlint
-
-# Static analysis, using detekt's defaults plus the project's overrides
-detekt --input src --config detekt.yml --build-upon-default-config
-```
-
-Configure ktlint through `.editorconfig` at the repository root:
-
-```ini
-[*.{kt,kts}]
-ktlint_code_style = intellij_idea
-max_line_length = 120
-ij_kotlin_allow_trailing_comma = true
-ij_kotlin_allow_trailing_comma_on_call_site = true
-```
-
-- Treat warnings as errors: pass `-Werror` to `kotlinc`, or set
-  `allWarningsAsErrors = true` in the Gradle `compilerOptions` block.
-- In libraries, turn on **explicit API mode** (`kotlin { explicitApi() }`).
-  The compiler then requires a visibility modifier and return type on every
-  public declaration (see [Visibility and types](#visibility-and-types)).
-- Because the formatter owns layout, never hand-format code it will rewrite.
-  Run it before every commit.
-- The baseline language is **Kotlin 2.0**.
+The baseline language is **Kotlin 2.0**.
 
 ## Source files
 

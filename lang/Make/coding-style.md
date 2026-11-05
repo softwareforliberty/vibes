@@ -9,34 +9,7 @@ This guide covers how makefiles look. For how to structure a build
 (dependencies, build directories, non-recursive make and other idioms), see
 [idioms.md](idioms.md).
 
-## Tools
-
-All tools are free/open source.
-
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [GNU Make](https://www.gnu.org/software/make/) 4.3 or later | GPLv3 | Building, and linting through its own warnings |
-
-No well-maintained FOSS linter for makefiles exists, so none is listed.
-
-### Make warnings
-
-GNU Make's warning for undefined variables is the lint gate. It catches typos
-in variable names, which Make otherwise expands silently to nothing. A
-makefile must produce **no warnings** when dry-run with the check enabled:
-
-```sh
-make --warn-undefined-variables --dry-run all
-```
-
-- Newer GNU Make releases also spell this check `--warn=undefined-var`, and
-  keep `--warn-undefined-variables` as an alias.
-- The check only reports warnings, so CI fails the build when the output
-  contains `warning:`.
-- Define every variable the makefile reads, even as empty (`LDLIBS ?=`), so
-  the check stays quiet for variables that are meant to be empty.
-- macOS ships GNU Make 3.81, which is too old. Install a current GNU Make from
-  a package manager.
+The tools that check Make code are listed in [tools.md](tools.md).
 
 ## Files
 

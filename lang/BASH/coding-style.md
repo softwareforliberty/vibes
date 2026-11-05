@@ -8,54 +8,9 @@ pitfall lists (see [Sources](#sources)).
 This guide covers how code looks. For how to design and structure it (error
 handling, quoting, safety and other idioms), see [idioms.md](idioms.md).
 
-## Tools
+The tools that check Bash code are listed in [tools.md](tools.md).
 
-All tools are free/open source.
-
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [ShellCheck](https://www.shellcheck.net/) | GPLv3 | Linting: quoting bugs, unsafe constructs and portability problems |
-| [shfmt](https://github.com/mvdan/sh) | BSD-3-Clause | Formatting |
-
-### Formatting
-
-shfmt is the formatter. Run it in check mode in CI, and in write mode
-locally:
-
-```sh
-shfmt -ln bash -i 2 -ci -bn -d .   # show what would change
-shfmt -ln bash -i 2 -ci -bn -w .   # rewrite the files
-```
-
-- `-i 2` indents with 2 spaces.
-- `-ci` indents the branches of a `case`.
-- `-bn` lets `|`, `&&` and `||` start a continuation line.
-- Given a directory, shfmt also finds scripts with no extension by their
-  shebang.
-
-### Linting
-
-Code must pass ShellCheck with **no warnings**. Put this `.shellcheckrc` at the
-root of the repository to turn on the optional checks this guide relies on:
-
-```ini
-enable=add-default-case
-enable=avoid-nullary-conditions
-enable=quote-safe-variables
-enable=require-double-brackets
-enable=require-variable-braces
-```
-
-When a warning is a false positive, disable that one check on the line above
-the code, and add a comment saying why:
-
-```bash
-# Read by the scripts that source this library.
-# shellcheck disable=SC2034
-readonly LIB_VERSION="1.2.0"
-```
-
-### Language baseline
+## Language baseline
 
 Scripts target **Bash 4.4 or later**. Earlier versions treat an empty array as
 unset under `set -u`, and versions before 4.0 lack `mapfile` and associative

@@ -11,42 +11,7 @@ This guide covers how code looks. For how to design and structure it
 (calling conventions, register and stack discipline, interfacing with C and
 other idioms), see [idioms.md](idioms.md).
 
-## Tools
-
-All tools are free/open source.
-
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [GNU as](https://sourceware.org/binutils/) (GNU Binutils), driven by [GCC](https://gcc.gnu.org/) | GPL-3.0-or-later | Preprocessing and assembling `.S` files on Linux and BSD |
-| [LLVM](https://llvm.org/): Clang's integrated assembler and `llvm-mc` | Apache-2.0 WITH LLVM-exception | Assembling on Apple platforms and with Clang, and inspecting encodings |
-
-### Assembler warnings
-
-Assembler warnings are the lint gate. Code must assemble with **no warnings**
-using at least these flags:
-
-```sh
-# Linux and BSD, with GCC and GNU as
-aarch64-linux-gnu-gcc -c -g -mbranch-protection=standard \
-    -Wa,--fatal-warnings -o buf.o buf.S
-
-# Apple platforms, with Clang
-clang -c -g -arch arm64 -Wa,--fatal-warnings -o buf.o buf.S
-```
-
-- Always assemble through the compiler driver (`gcc` or `clang`), never by
-  calling `as` directly. The driver runs the C preprocessor over `.S` files
-  and passes the right target options.
-- `-Wa,--fatal-warnings` turns assembler warnings into errors, so a warning
-  can't slip through a build.
-- `-g` records source line information, so debuggers and profilers can map
-  addresses back to assembly lines.
-- `-mbranch-protection=standard` turns on the branch-protection macros that
-  the [function macros](idioms.md#a-shared-header) use (see
-  [Branch protection](idioms.md#branch-protection)).
-- To review instruction encodings, disassemble the object with
-  `objdump -d buf.o`, or assemble preprocessed source with
-  `llvm-mc --triple=aarch64 --show-encoding`.
+The tools that check ARM64 Assembly (GNU as) code are listed in [tools.md](tools.md).
 
 ## Files
 

@@ -11,41 +11,7 @@ This guide covers how code looks. For how to design and structure it (calling
 conventions, register preservation, interfacing with C and other idioms), see
 [idioms.md](idioms.md).
 
-## Tools
-
-All tools are free/open source.
-
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [GNU as](https://sourceware.org/binutils/) (GNU Binutils) | GPLv3 | Assembling, and linting through its warnings |
-| [GCC](https://gcc.gnu.org/) | GPLv3 | Running the C preprocessor over `.S` files and driving `as` |
-
-### Assembler warnings
-
-Assembler warnings are the lint gate. Code must assemble with **no warnings**
-using at least these flags:
-
-```sh
-# 64-bit ELF (Linux, BSD)
-gcc -c -g -Wall -Werror -Wa,--fatal-warnings -o buf.o buf.S
-
-# 32-bit ELF
-gcc -m32 -c -g -Wall -Werror -Wa,--fatal-warnings -o buf.o buf.S
-
-# 64-bit Windows (MinGW-w64)
-x86_64-w64-mingw32-gcc -c -g -Wall -Werror -Wa,--fatal-warnings -o buf.o buf.S
-```
-
-- `-Wa,--fatal-warnings` makes the assembler treat warnings as errors, and
-  `-Wall -Werror` does the same for the preprocessor, so a warning can't slip
-  through a build.
-- `-g` emits debug information, so debuggers and profilers can map addresses
-  back to source lines.
-- GNU as can't silence a warning for a few lines only. When a warning fires,
-  change the code so it no longer triggers. Never turn warnings off for the
-  whole build.
-- When reviewing instruction encodings, generate a listing with
-  `-Wa,-adhln=buf.lst`.
+The tools that check x86 Assembly (GNU as) code are listed in [tools.md](tools.md).
 
 ## Syntax
 

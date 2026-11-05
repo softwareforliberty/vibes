@@ -10,76 +10,11 @@ This guide covers how code looks. For how to design and structure it (value
 types, optionals, errors, memory, concurrency and other idioms), see
 [idioms.md](idioms.md).
 
-## Tools
+The tools that check Swift code are listed in [tools.md](tools.md).
 
-All tools are free/open source.
+## Language baseline
 
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [swiftc](https://www.swift.org/) (Swift compiler) | Apache-2.0 with Runtime Library Exception | Compiling, and linting through its warnings and concurrency checks |
-| [swift-format](https://github.com/swiftlang/swift-format) | Apache-2.0 with Runtime Library Exception | Formatting: owns all of [Layout](#layout), [Braces](#braces) and [Spacing](#spacing) |
-| [SwiftLint](https://github.com/realm/SwiftLint) | MIT | Linting for unsafe and error-prone patterns that the formatter doesn't check |
-
-### Recommended setup
-
-Format, then check. Code must build with **no warnings** and no findings.
-
-```sh
-# Format in place, then lint what the formatter couldn't fix
-swift-format format --in-place --recursive Sources Tests
-swift-format lint --strict --recursive Sources Tests
-
-# Lint for unsafe and error-prone patterns
-swiftlint lint --strict
-```
-
-Configure swift-format with `.swift-format` at the repository root:
-
-```json
-{
-  "version": 1,
-  "lineLength": 100,
-  "indentation": { "spaces": 2 },
-  "respectsExistingLineBreaks": true,
-  "rules": {
-    "AllPublicDeclarationsHaveDocumentation": true,
-    "OrderedImports": true,
-    "UseTripleSlashForDocumentationComments": true,
-    "ValidateDocumentationComments": true
-  }
-}
-```
-
-Configure SwiftLint with `.swiftlint.yml`. swift-format owns layout, so the
-SwiftLint rules that would disagree with it are turned off:
-
-```yaml
----
-disabled_rules:
-  - opening_brace
-  - trailing_comma
-opt_in_rules:
-  - empty_count
-  - fatal_error_message
-  - first_where
-  - force_unwrapping
-  - implicitly_unwrapped_optional
-  - unowned_variable_capture
-line_length: 100
-excluded:
-  - .build
-```
-
-- A `Tests/.swiftlint.yml` turns off `force_unwrapping`, `force_try` and
-  `force_cast`, because a crash is an acceptable test failure.
-- Treat warnings as errors: pass `-warnings-as-errors` to `swiftc`, or set
-  `SWIFT_TREAT_WARNINGS_AS_ERRORS` in Xcode.
-- Build in the **Swift 6 language mode**. On Swift 5.9 and 5.10, pass
-  `-strict-concurrency=complete` instead, so data-race checks are already
-  on before the move to Swift 6.
-- Because the formatter owns layout, never hand-format code it will rewrite.
-  Run it before every commit.
-- The baseline language is **Swift 5.9**.
+The baseline language is **Swift 5.9**.
 
 ## Source files
 

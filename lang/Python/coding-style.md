@@ -9,62 +9,12 @@ A general-purpose coding style for Python projects. It builds on
 This guide covers how code looks. For how to design and structure it (errors,
 resources, typing, security and other idioms), see [idioms.md](idioms.md).
 
-## Tools
+The tools that check Python code are listed in [tools.md](tools.md).
 
-All tools are free/open source.
+## Language baseline
 
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [Ruff](https://docs.astral.sh/ruff/) | MIT | Formatting, import sorting and linting |
-| [mypy](https://mypy-lang.org/) | MIT | Static type checking |
-
-### Configuration
-
-Code must pass all three checks with **no errors or warnings**:
-
-```sh
-ruff format .
-ruff check .
-mypy .
-```
-
-Put the settings in `pyproject.toml`:
-
-```toml
-[tool.ruff]
-line-length = 88
-target-version = "py310"
-
-[tool.ruff.lint]
-select = [
-    "E",    # pycodestyle errors
-    "W",    # pycodestyle warnings
-    "F",    # Pyflakes
-    "I",    # import sorting
-    "N",    # naming
-    "D",    # docstrings
-    "UP",   # modern syntax
-    "B",    # likely bugs
-    "SIM",  # simplifications
-    "S",    # security
-    "RUF",  # Ruff-specific checks
-]
-ignore = ["W191", "E111", "E114", "E117", "D206", "D300"]  # formatter conflicts
-
-[tool.ruff.lint.pydocstyle]
-convention = "google"
-
-[tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "D"]  # pytest uses assert; tests need no docstrings
-
-[tool.mypy]
-strict = true
-```
-
-- The baseline language is **Python 3.10**. That version adds the `X | None`
-  union syntax and `zip(strict=True)`, which this guide relies on.
-- `ruff format` owns layout. Don't hand-format code it will rewrite, and
-  don't argue with its output in review.
+The baseline language is **Python 3.10**. That version adds the `X | None`
+union syntax and `zip(strict=True)`, which this guide relies on.
 
 ## Layout
 

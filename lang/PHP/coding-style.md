@@ -9,60 +9,13 @@ A general-purpose coding style for PHP projects. It builds on the
 This guide covers how code looks. For how to design and structure it (errors,
 types, resources, security and other idioms), see [idioms.md](idioms.md).
 
-## Tools
+The tools that check PHP code are listed in [tools.md](tools.md).
 
-All tools are free/open source.
+## Language baseline
 
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [PHP-CS-Fixer](https://cs.symfony.com/) | MIT | Formatting and style fixes |
-| [PHPStan](https://phpstan.org/) | MIT | Static analysis and type checking |
-
-### Configuration
-
-Code must pass both tools with **no errors**:
-
-```sh
-vendor/bin/php-cs-fixer fix --dry-run --diff   # check
-vendor/bin/php-cs-fixer fix                    # apply fixes
-vendor/bin/phpstan analyse
-```
-
-`.php-cs-fixer.dist.php` at the project root:
-
-```php
-<?php
-
-declare(strict_types=1);
-
-$finder = PhpCsFixer\Finder::create()
-    ->in([__DIR__ . '/src', __DIR__ . '/tests']);
-
-return (new PhpCsFixer\Config())
-    ->setRiskyAllowed(true)
-    ->setRules([
-        '@PER-CS' => true,
-        'declare_strict_types' => true,
-    ])
-    ->setFinder($finder);
-```
-
-`phpstan.neon` at the project root:
-
-```neon
-parameters:
-    level: max
-    paths:
-        - src
-        - tests
-```
-
-- The baseline language is **PHP 8.2**. That version adds readonly classes,
-  which [idioms.md](idioms.md) relies on for value objects, and 8.1 added
-  enums.
-- `declare_strict_types` is marked "risky" because it changes how PHP
-  converts arguments, which is why risky rules are allowed.
-- PHPStan runs at its highest level, so every value needs a known type.
+The baseline language is **PHP 8.2**. That version adds readonly classes,
+which [idioms.md](idioms.md) relies on for value objects, and 8.1 added
+enums.
 
 ## Files
 

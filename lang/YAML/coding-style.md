@@ -10,66 +10,7 @@ This guide covers how YAML looks. For how to write YAML that every parser
 reads the same way (typing traps, quoting, anchors, multi-line strings and
 safe loading), see [idioms.md](idioms.md).
 
-## Tools
-
-All tools are free/open source.
-
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [yamllint](https://github.com/adrienverge/yamllint) | GPL-3.0 | Syntax, layout and typing-trap checks |
-
-### Recommended setup
-
-Lint every YAML file. Files must pass with **no warnings**.
-
-```sh
-yamllint --strict .
-```
-
-Configure yamllint with `.yamllint.yaml` at the repository root:
-
-```yaml
----
-extends: default
-
-rules:
-  anchors:
-    forbid-unused-anchors: true
-  braces:
-    forbid: non-empty
-  brackets:
-    forbid: non-empty
-  empty-values:
-    forbid-in-block-mappings: true
-    forbid-in-flow-mappings: true
-  float-values:
-    forbid-inf: true
-    forbid-nan: true
-    require-numeral-before-decimal: true
-  indentation:
-    spaces: 2
-    indent-sequences: true
-  line-length:
-    max: 80
-  octal-values:
-    forbid-explicit-octal: true
-    forbid-implicit-octal: true
-  quoted-strings:
-    quote-type: double
-    required: only-when-needed
-    allow-quoted-quotes: true
-  truthy:
-    allowed-values:
-      - "true"
-      - "false"
-    check-keys: true
-```
-
-- `--strict` makes warnings fail the run, so nothing is left as "only a
-  warning".
-- The `default` preset also turns on `key-duplicates`, `trailing-spaces`,
-  `new-line-at-end-of-file` and `document-start`, which this guide relies on.
-- The file follows its own rules, so it's a working example of this style.
+The tools that check YAML code are listed in [tools.md](tools.md).
 
 ## Files
 

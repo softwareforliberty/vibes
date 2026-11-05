@@ -13,59 +13,7 @@ cascade, naming, layout, responsive design and accessibility), see
 the [HTML](../HTML/coding-style.md) and
 [JavaScript](../JavaScript/coding-style.md) guides.
 
-## Tools
-
-All tools are free/open source.
-
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [Prettier](https://prettier.io/) | MIT | Formatting (shared with HTML and JavaScript) |
-| [Stylelint](https://stylelint.io/) with [stylelint-config-standard](https://github.com/stylelint/stylelint-config-standard) | MIT | Linting for errors, modern notation and naming |
-
-### Configuration
-
-Stylesheets must pass both checks with **no errors or warnings**:
-
-```sh
-npx prettier --check "**/*.css"
-npx stylelint "**/*.css"
-```
-
-`.prettierrc.json`, shared by CSS, HTML and JavaScript:
-
-```json
-{
-  "printWidth": 80,
-  "tabWidth": 2,
-  "useTabs": false,
-  "semi": true,
-  "singleQuote": true,
-  "trailingComma": "all",
-  "endOfLine": "lf"
-}
-```
-
-`.stylelintrc.json`:
-
-```json
-{
-  "extends": ["stylelint-config-standard"],
-  "rules": {
-    "declaration-no-important": true,
-    "selector-class-pattern": [
-      "^[a-z][a-z0-9]*(-[a-z0-9]+)*(__[a-z0-9]+(-[a-z0-9]+)*)?(--[a-z0-9]+(-[a-z0-9]+)*)?$",
-      { "message": "Use BEM in kebab-case: block__element--modifier" }
-    ],
-    "selector-max-id": 0
-  }
-}
-```
-
-- Prettier owns layout. Stylelint (since version 15) checks only for errors
-  and conventions, not layout, so the two never conflict.
-- The standard config's class-name pattern allows only kebab-case. The
-  override above also allows the BEM `__element` and `--modifier` parts used
-  by the [naming rules](#naming).
+The tools that check CSS code are listed in [tools.md](tools.md).
 
 ## Layout
 

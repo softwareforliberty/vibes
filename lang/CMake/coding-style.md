@@ -9,49 +9,7 @@ This guide covers how build scripts look. For how to structure a build
 (targets, usage requirements, dependencies, installing and testing), see
 [idioms.md](idioms.md).
 
-## Tools
-
-All tools are free/open source.
-
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [CMake](https://cmake.org/) 3.24 or later | BSD-3-Clause | Configuring and building, and linting through its own warnings |
-| [gersemi](https://github.com/BlankSpruce/gersemi) | MPL-2.0 | Formatting `CMakeLists.txt` and `.cmake` files |
-
-### CMake warnings
-
-CMake's own warnings are the lint gate. A project must configure with **no
-warnings** using:
-
-```sh
-cmake --preset dev --warn-uninitialized -Werror=dev -Werror=deprecated
-```
-
-- `--warn-uninitialized` reports variables that are read before they're
-  set, which is almost always a typo.
-- `-Werror=dev` turns warnings meant for project authors into errors, such as
-  policy warnings and misused commands.
-- `-Werror=deprecated` turns uses of deprecated features into errors, so they
-  get fixed before a CMake release removes them.
-
-### Formatting
-
-gersemi formats every CMake file. Check formatting in CI with:
-
-```sh
-gersemi --check --diff .
-```
-
-Commit a `.gersemirc` at the repository root so every editor and CI run uses
-the same settings:
-
-```yaml
-line_length: 80
-indent: 4
-```
-
-Formatting is the formatter's job. Where this guide and gersemi's output could
-disagree on layout, gersemi wins, so reviews never argue about whitespace.
+The tools that check CMake code are listed in [tools.md](tools.md).
 
 ## Files
 

@@ -11,43 +11,7 @@ This guide covers how code looks. For how to design and structure it (calling
 conventions, register preservation, interfacing with C and other idioms), see
 [idioms.md](idioms.md).
 
-## Tools
-
-Microsoft's own assemblers, `ml` and `ml64`, are proprietary, so they aren't
-listed here. The open-source assemblers below accept the MASM language.
-
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [UASM](https://github.com/Terraspace/UASM) | Sybase Open Watcom Public License 1.0 | Assembling 32- and 64-bit code, and linting through its warnings |
-| [JWasm](https://github.com/Baron-von-Riedesel/JWasm) | Sybase Open Watcom Public License 1.0 | A second assembler, to check that code doesn't depend on one assembler's extensions |
-| [llvm-ml](https://llvm.org/) (part of LLVM) | Apache-2.0 with LLVM exception | A MASM-compatible assembler that covers part of the MASM language |
-
-The Sybase Open Watcom Public License is OSI-approved. The FSF and Debian
-don't consider it free, because it requires publishing changes even when the
-changed program is only used privately. Projects that accept only FSF-free
-tools can use llvm-ml, after checking that it supports every feature their
-code uses.
-
-### Assembler warnings
-
-Assembler warnings are the lint gate. Code must assemble with **no warnings**
-using at least these flags:
-
-```sh
-# 64-bit Windows (COFF)
-uasm -win64 -Zi -W3 -WX buf.asm
-
-# 32-bit Windows (COFF)
-uasm -coff -Zi -W3 -WX buf.asm
-```
-
-- `-W3` raises the warning level, and `-WX` turns warnings into errors, so a
-  warning can't slip through a build.
-- `-Zi` emits debug information, so debuggers and profilers can map addresses
-  back to source lines.
-- When a warning fires, change the code so it no longer triggers. Never lower
-  the warning level for the whole build.
-- When reviewing instruction encodings, generate a listing with `-Fl`.
+The tools that check x86 Assembly (MASM) code are listed in [tools.md](tools.md).
 
 ## Files
 

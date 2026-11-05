@@ -11,58 +11,7 @@ For the styles and scripts that work with it, see the
 [CSS](../CSS/coding-style.md) and [JavaScript](../JavaScript/coding-style.md)
 guides.
 
-## Tools
-
-All tools are free/open source.
-
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [Prettier](https://prettier.io/) | MIT | Formatting (shared with CSS and JavaScript) |
-| [html-validate](https://html-validate.org/) | MIT | Offline validation, accessibility and best-practice checks |
-| [Nu HTML Checker](https://validator.github.io/validator/) (`vnu`) | MIT | Validation against the HTML standard |
-
-### Configuration
-
-Markup must pass all three checks with **no errors**:
-
-```sh
-npx prettier --check "**/*.html"
-npx html-validate "**/*.html"
-java -jar vnu.jar --skip-non-html .
-```
-
-`.prettierrc.json`, shared by HTML, CSS and JavaScript:
-
-```json
-{
-  "printWidth": 80,
-  "tabWidth": 2,
-  "useTabs": false,
-  "semi": true,
-  "singleQuote": true,
-  "trailingComma": "all",
-  "endOfLine": "lf"
-}
-```
-
-`.htmlvalidate.json`:
-
-```json
-{
-  "extends": ["html-validate:recommended"],
-  "rules": {
-    "void-style": ["error", { "style": "selfclose" }]
-  }
-}
-```
-
-- Prettier owns layout. Don't hand-format markup it will rewrite.
-- Prettier writes void elements with a closing slash (`<br />`), and
-  html-validate is set to expect that, so the formatter and the validator
-  agree. In HTML the slash is optional and has no effect.
-- `vnu` checks against the current standard. html-validate adds rules the
-  standard doesn't cover, such as accessibility checks and banned inline
-  styles. Run both.
+The tools that check HTML code are listed in [tools.md](tools.md).
 
 ## Layout
 

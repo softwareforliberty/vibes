@@ -21,89 +21,11 @@ or class follows the C++ rules. Each language's names and idioms then stay
 recognisable, even when they sit side by side. Rules that apply to the whole
 file (indentation, braces, spacing, comments) are shared by both languages.
 
-## Tools
+The tools that check Objective-C++ code are listed in [tools.md](tools.md).
 
-All tools are free/open source.
+## Language baseline
 
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [clang-format](https://clang.llvm.org/docs/ClangFormat.html) | Apache-2.0 with LLVM exception | Formatting, applied automatically |
-| [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) | Apache-2.0 with LLVM exception | Linting modernisation and bug-prone patterns |
-| [Clang Static Analyzer](https://clang-analyzer.llvm.org/) | Apache-2.0 with LLVM exception | Finding leaks, nil misuse and API misuse along every code path |
-| [Clang](https://clang.llvm.org/) | Apache-2.0 with LLVM exception | Compiling, and linting through its warning flags |
-
-### Formatting
-
-Commit this `.clang-format` at the repository root, and run clang-format on
-every changed file before committing. A formatter ends layout debates and
-keeps diffs free of whitespace noise.
-
-```yaml
----
-Language: Cpp
-BasedOnStyle: Google
-DerivePointerAlignment: false
-PointerAlignment: Right
----
-Language: ObjC
-BasedOnStyle: Google
-ColumnLimit: 100
-DerivePointerAlignment: false
-PointerAlignment: Right
-```
-
-clang-format formats `.mm` files and Objective-C headers with the `ObjC`
-section, and pure C++ files with the `Cpp` section.
-
-### Linting
-
-Commit this `.clang-tidy` at the repository root. Code must pass it with no
-warnings.
-
-```yaml
-Checks: >
-  bugprone-*,
-  clang-analyzer-*,
-  cppcoreguidelines-*,
-  google-*,
-  misc-*,
-  modernize-*,
-  objc-*,
-  performance-*,
-  readability-*,
-  -bugprone-easily-swappable-parameters,
-  -google-readability-todo,
-  -modernize-use-trailing-return-type,
-  -readability-identifier-length,
-  -readability-identifier-naming
-WarningsAsErrors: '*'
-CheckOptions:
-  readability-implicit-bool-conversion.AllowPointerConditions: true
-```
-
-- Identifier naming is checked by review, not clang-tidy. One file holds two
-  naming schemes, and the check can't tell which applies where.
-- Suppress a warning only on the line that needs it, with
-  `// NOLINT(check-name)` and a reason. A bare `NOLINT` hides every check,
-  including ones nobody meant to silence.
-- Run the static analyzer over the whole build with `scan-build`, for example
-  `scan-build make`. It follows paths across functions, and finds bugs that
-  per-file checks miss.
-
-### Compiler warnings
-
-Code must build with **no warnings** using at least these flags:
-
-```sh
-clang++ -std=c++20 -fobjc-arc -Wall -Wextra -Wconversion -Wshadow \
-    -Wnon-virtual-dtor -Woverloaded-virtual -Wdocumentation \
-    -Wimplicit-retain-self -Wnullable-to-nonnull-conversion
-```
-
-- The baseline C++ language is **C++20**, and all code uses ARC.
-- `-Wold-style-cast` is left out, because ARC bridging casts
-  (`(__bridge T)`) must use C-style cast syntax. In C++ code, reviewers check
-  the no C-style casts rule (see [Language usage](#language-usage)).
+The baseline C++ language is **C++20**, and all code uses ARC.
 
 ## Files
 

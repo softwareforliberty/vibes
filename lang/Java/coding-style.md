@@ -9,41 +9,12 @@ This guide covers how code looks. For how to design and structure it
 (immutability, null handling, exceptions, concurrency and other idioms), see
 [idioms.md](idioms.md).
 
-## Tools
+The tools that check Java code are listed in [tools.md](tools.md).
 
-All tools are free/open source.
+## Language baseline
 
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [javac](https://openjdk.org/) (OpenJDK) | GPLv2 with Classpath Exception | Compiling, and linting through its warning flags |
-| [google-java-format](https://github.com/google/google-java-format) | Apache-2.0 | Formatting: applies the whole [Layout](#layout) section automatically |
-| [Checkstyle](https://checkstyle.org/) | LGPL-2.1+ | Checking naming, Javadoc and the style rules the formatter can't fix |
-| [Error Prone](https://errorprone.info/) | Apache-2.0 | Compile-time bug detection |
-| [PMD](https://pmd.github.io/) | BSD-style | Static analysis for unused code, error-prone patterns and complexity |
-
-### Recommended setup
-
-Format, then check. Code must build with **no warnings** and no findings.
-
-```sh
-# Format every Java file in place
-java -jar google-java-format-<version>-all-deps.jar --replace $(git ls-files '*.java')
-
-# Style checks, using the Google configuration that ships with Checkstyle
-java -jar checkstyle-<version>-all.jar -c /google_checks.xml src/
-
-# Static analysis with PMD's general-purpose rule set
-pmd check -d src -R rulesets/java/quickstart.xml -f text
-```
-
-- Compile with `-Xlint:all -Werror`, so every compiler warning fails the
-  build.
-- Run Error Prone as a compiler plugin (`-Xplugin:ErrorProne`). Its install
-  guide lists the extra flags each build tool needs.
-- Because the formatter owns layout, never hand-format code it will rewrite.
-  Run it before every commit.
-- The baseline language is **Java 17**. Records, sealed types, switch
-  expressions and text blocks are all available.
+The baseline language is **Java 17**. Records, sealed types, switch
+expressions and text blocks are all available.
 
 ## Source files
 

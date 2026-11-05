@@ -7,41 +7,12 @@ A general-purpose coding style for Ruby projects. It builds on the community
 This guide covers how code looks. For how to design and structure it (errors,
 resources, objects, security and other idioms), see [idioms.md](idioms.md).
 
-## Tools
+The tools that check Ruby code are listed in [tools.md](tools.md).
 
-All tools are free/open source.
+## Language baseline
 
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [RuboCop](https://rubocop.org/) | MIT | Linting and formatting |
-
-### Configuration
-
-Code must pass RuboCop with **no offences**:
-
-```sh
-rubocop        # check
-rubocop -a     # apply safe automatic fixes
-```
-
-Put the settings in `.rubocop.yml` at the project root:
-
-```yaml
-AllCops:
-  TargetRubyVersion: 3.2
-  NewCops: enable
-
-Layout/LineLength:
-  Max: 80
-
-Style/AndOr:
-  EnforcedStyle: always
-```
-
-- The baseline language is **Ruby 3.2**. That version adds `Data.define`,
-  which [idioms.md](idioms.md) relies on for value objects.
-- New cops are enabled as RuboCop adds them, so the rules keep up with the
-  language.
+The baseline language is **Ruby 3.2**. That version adds `Data.define`,
+which [idioms.md](idioms.md) relies on for value objects.
 
 ## Layout
 

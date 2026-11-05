@@ -10,39 +10,7 @@ This guide covers how code looks. For how to design and structure it (calling
 conventions, register preservation, interfacing with C and other idioms), see
 [idioms.md](idioms.md).
 
-## Tools
-
-All tools are free/open source.
-
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [NASM](https://www.nasm.us/) 2.15 or later | BSD-2-Clause | Assembling, and linting through its warning classes |
-
-### Assembler warnings
-
-Assembler warnings are the lint gate. Code must assemble with **no warnings**
-using at least these flags:
-
-```sh
-# 64-bit ELF (Linux, BSD)
-nasm -f elf64 -g -F dwarf -w+all -w+error -o buf.o buf.asm
-
-# 32-bit ELF
-nasm -f elf32 -g -F dwarf -w+all -w+error -o buf.o buf.asm
-
-# 64-bit Windows
-nasm -f win64 -g -F cv8 -w+all -w+error -o buf.obj buf.asm
-```
-
-- `-w+all` turns on every warning class, and `-w+error` turns warnings into
-  errors, so a warning can't slip through a build.
-- `-g` with the format's debug format (`dwarf` or `cv8`) lets debuggers and
-  profilers map addresses back to source lines.
-- When a warning is a deliberate exception, turn it off for those lines only,
-  with `[warning push]`, `[warning -<class>]` and `[warning pop]`, plus a
-  comment explaining why. Never turn a warning off for the whole build.
-- When reviewing instruction encodings, generate a listing with
-  `-l buf.lst`.
+The tools that check x86 Assembly (NASM) code are listed in [tools.md](tools.md).
 
 ## Files
 

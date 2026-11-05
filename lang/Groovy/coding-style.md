@@ -9,32 +9,11 @@ This guide covers how code looks. For how to design and structure it (typing,
 null handling, closures, exceptions and other idioms), see
 [idioms.md](idioms.md).
 
-## Tools
+The tools that check Groovy code are listed in [tools.md](tools.md).
 
-All tools are free/open source.
+## Language baseline
 
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [CodeNarc](https://codenarc.github.io/CodeNarc/) | Apache-2.0 | Static analysis: style, naming, formatting and error-prone patterns |
-| [npm-groovy-lint](https://nvuillam.github.io/npm-groovy-lint/) | MIT | Runs CodeNarc from the command line, and formats and auto-fixes code |
-
-### Recommended setup
-
-Format, then check. Code must have no findings.
-
-```sh
-# Format and auto-fix every Groovy file, then report what's left
-npm-groovy-lint --format
-npm-groovy-lint
-```
-
-- In a Gradle build, also run CodeNarc through Gradle's built-in `codenarc`
-  plugin, so the build fails on any finding.
-- Set CodeNarc's formatting rules to match this guide: `Indentation` with 4
-  spaces per level, and `LineLength` at 120.
-- Because the formatter owns layout, never hand-format code it will rewrite.
-  Run it before every commit.
-- The baseline language is **Groovy 4**.
+The baseline language is **Groovy 4**.
 
 ## Source files
 

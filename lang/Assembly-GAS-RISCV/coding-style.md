@@ -12,49 +12,7 @@ This guide covers how code looks. For how to design and structure it
 (calling conventions, register and stack discipline, interfacing with C and
 other idioms), see [idioms.md](idioms.md).
 
-## Tools
-
-All tools are free/open source.
-
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [GNU as](https://sourceware.org/binutils/) (GNU Binutils), driven by [GCC](https://gcc.gnu.org/) | GPL-3.0-or-later | Preprocessing and assembling `.S` files |
-| [LLVM](https://llvm.org/): Clang's integrated assembler and `llvm-mc` | Apache-2.0 WITH LLVM-exception | Assembling with Clang, and inspecting encodings |
-
-### Assembler warnings
-
-Assembler warnings are the lint gate. Code must assemble with **no warnings**
-using at least these flags:
-
-```sh
-# RV64, with GCC and GNU as
-riscv64-linux-gnu-gcc -c -g -march=rv64gc -mabi=lp64d \
-    -Wa,--fatal-warnings -o buf.o buf.S
-
-# RV64, with Clang
-clang -c -g --target=riscv64-linux-gnu -march=rv64gc -mabi=lp64d \
-    -Wa,--fatal-warnings -o buf.o buf.S
-
-# RV32 bare metal, with GCC and GNU as
-riscv64-unknown-elf-gcc -c -g -march=rv32imac -mabi=ilp32 \
-    -Wa,--fatal-warnings -o buf.o buf.S
-```
-
-- Always assemble through the compiler driver (`gcc` or `clang`), never by
-  calling `as` directly. The driver runs the C preprocessor over `.S` files
-  and passes the right target options.
-- Set `-march` to exactly the extensions the target guarantees. The assembler
-  then rejects any instruction the target doesn't have, instead of leaving it
-  to fault at run time.
-- Set `-mabi` to match the C code the routine links with. Mixing ABIs links
-  without complaint but passes arguments in the wrong registers.
-- `-Wa,--fatal-warnings` turns assembler warnings into errors, so a warning
-  can't slip through a build.
-- `-g` records source line information, so debuggers and profilers can map
-  addresses back to assembly lines.
-- To review instruction encodings, disassemble the object with
-  `objdump -d buf.o`, or assemble preprocessed source with
-  `llvm-mc --triple=riscv64 --show-encoding`.
+The tools that check RISC-V Assembly (GNU as) code are listed in [tools.md](tools.md).
 
 ## Files
 

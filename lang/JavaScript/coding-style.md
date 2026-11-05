@@ -13,83 +13,12 @@ immutability, errors, async code, DOM and injection safety), see
 see the [HTML](../HTML/coding-style.md) and [CSS](../CSS/coding-style.md)
 guides.
 
-## Tools
+The tools that check JavaScript code are listed in [tools.md](tools.md).
 
-All tools are free/open source.
+## Language baseline
 
-| Tool | Licence | Used for |
-| --- | --- | --- |
-| [Prettier](https://prettier.io/) | MIT | Formatting (shared with HTML and CSS) |
-| [ESLint](https://eslint.org/) | MIT | Linting for bugs and unsafe patterns |
-| [TypeScript](https://www.typescriptlang.org/) compiler (`tsc`) | Apache-2.0 | Optional: checking JSDoc type annotations |
-
-### Configuration
-
-Code must pass both checks with **no errors or warnings**:
-
-```sh
-npx prettier --check .
-npx eslint .
-```
-
-`.prettierrc.json`, shared by JavaScript, HTML and CSS:
-
-```json
-{
-  "printWidth": 80,
-  "tabWidth": 2,
-  "useTabs": false,
-  "semi": true,
-  "singleQuote": true,
-  "trailingComma": "all",
-  "endOfLine": "lf"
-}
-```
-
-`eslint.config.js` (ESLint's flat config format):
-
-```js
-import js from '@eslint/js';
-import globals from 'globals';
-
-export default [
-  js.configs.recommended,
-  {
-    languageOptions: {
-      ecmaVersion: 2022,
-      sourceType: 'module',
-      globals: { ...globals.browser }, // globals.node for Node.js code
-    },
-    rules: {
-      'curly': ['error', 'all'],
-      'eqeqeq': ['error', 'always'],
-      'func-style': ['error', 'declaration', { allowArrowFunctions: true }],
-      'no-eval': 'error',
-      'no-implied-eval': 'error',
-      'no-new-func': 'error',
-      'no-param-reassign': 'error',
-      'no-shadow': 'error',
-      'no-throw-literal': 'error',
-      'no-var': 'error',
-      'object-shorthand': 'error',
-      'prefer-arrow-callback': 'error',
-      'prefer-const': 'error',
-      'prefer-object-has-own': 'error',
-      'prefer-promise-reject-errors': 'error',
-      'prefer-template': 'error',
-    },
-  },
-];
-```
-
-- The baseline language is **ES2022**: modules, class fields with `#private`
-  members, `Object.hasOwn()`, top-level `await` and `Error` causes.
-- Prettier owns layout. Don't hand-format code it will rewrite, and don't
-  argue with its output in review. ESLint checks only for bugs and unsafe
-  patterns, so the two never conflict.
-- Optional type checking: add `// @ts-check` to the top of a file, or run
-  `npx tsc --noEmit --allowJs --checkJs`, to check the
-  [JSDoc](#comments) types. The source stays plain JavaScript.
+The baseline language is **ES2022**: modules, class fields with `#private`
+members, `Object.hasOwn()`, top-level `await` and `Error` causes.
 
 ## Layout
 
