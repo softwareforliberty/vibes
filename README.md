@@ -97,3 +97,9 @@ ln -s /path/to/vibes/hooks/git_pre_commit .git/hooks/pre-commit
 
 The hooks need Bash, git and `realpath`. The Claude Code hook also uses `jq`
 or Python 3 to read its input.
+
+## License
+
+[0BSD](LICENSE): use, copy, modify and share any of it, for any purpose, with
+no conditions and no need to credit the source. That includes copying the
+style guides, skills, agents and config templates into your own projects.
