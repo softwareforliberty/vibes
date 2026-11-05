@@ -1,0 +1,8 @@
+{
+  "name": "vibes",
+  "description": "Clean vibe coding: spike, review with a panel of critic agents, then rebuild test-first in atomic, gated commits, using per-language style, idiom and tool guides.",
+  "author": {
+    "name": "Reece Fowell"
+  },
+  "keywords": ["tdd", "code-review", "atomic-commits", "style-guides"]
+}

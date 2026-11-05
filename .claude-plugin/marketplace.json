@@ -1,0 +1,14 @@
+{
+  "name": "vibes",
+  "description": "Skills, reviewer agents and a commit gate for clean vibe coding, with per-language style, idiom and tool guides.",
+  "owner": {
+    "name": "Reece Fowell"
+  },
+  "plugins": [
+    {
+      "name": "vibes",
+      "source": "./",
+      "description": "Clean vibe coding: spike, review with a panel of critic agents, then rebuild test-first in atomic, gated commits."
+    }
+  ]
+}
