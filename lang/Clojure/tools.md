@@ -15,6 +15,23 @@ to run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [cloverage](https://github.com/cloverage/cloverage) | EPL-1.0 | Code quality | Measuring test coverage |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.cljfmt.edn`](.cljfmt.edn) | cljfmt, and Calva when it formats |
+| [`.clj-kondo/config.edn`](.clj-kondo/config.edn) | clj-kondo |
+| [`deps.edn`](deps.edn) | Clojure CLI: the `cljfmt` and `coverage` aliases |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`.opengrep/clojure.yaml`](.opengrep/clojure.yaml) | Opengrep |
+
+`deps.edn` is a template: merge its aliases into the project's own
+`deps.edn`.
+
 ## Recommended setup
 
 Format, then check. Code must pass with **no warnings** and no findings.
@@ -24,19 +41,38 @@ clojure -M:cljfmt check
 clj-kondo --lint src test --fail-level warning
 ```
 
-Add the formatter as an alias in `deps.edn`:
+Add the formatter and coverage aliases in [`deps.edn`](deps.edn):
 
 ```clojure
+;; Template: merge these aliases into the project's deps.edn.
 {:aliases
  {:cljfmt {:deps {dev.weavejester/cljfmt {:mvn/version "0.13.0"}}
-           :main-opts ["-m" "cljfmt.main"]}}}
+           :main-opts ["-m" "cljfmt.main"]}
+  :coverage {:extra-paths ["test"]
+             :extra-deps {cloverage/cloverage {:mvn/version "1.2.4"}}
+             :main-opts ["-m" "cloverage.coverage"
+                         "-p" "src" "-s" "test"
+                         "--line-fail-threshold" "80"]}}}
 ```
 
-Configure clj-kondo in `.clj-kondo/config.edn`, turning on the linters the
-style guide relies on:
+Configure cljfmt in [`.cljfmt.edn`](.cljfmt.edn). It turns on every
+whitespace rule the [Layout](coding-style.md#layout) section asks for:
 
 ```clojure
-{:linters {:missing-docstring {:level :warning}
+{:insert-missing-whitespace? true
+ :remove-consecutive-blank-lines? true
+ :remove-multiple-non-indenting-spaces? true
+ :remove-surrounding-whitespace? true
+ :remove-trailing-whitespace? true}
+```
+
+Configure clj-kondo in [`.clj-kondo/config.edn`](.clj-kondo/config.edn),
+turning on the linters the style guide relies on, including the 80-column
+line limit:
+
+```clojure
+{:linters {:line-length {:level :warning :max-line-length 80}
+           :missing-docstring {:level :warning}
            :refer-all {:level :error}
            :use {:level :error}
            :unused-namespace {:level :warning}
@@ -138,15 +174,8 @@ Measure line coverage on every test run, and fail the build when it falls
 below 80%. Raise the minimum as coverage grows; never lower it to make a
 build pass.
 
-```clojure
-;; deps.edn
-{:aliases
- {:coverage {:extra-paths ["test"]
-             :extra-deps {cloverage/cloverage {:mvn/version "1.2.4"}}
-             :main-opts ["-m" "cloverage.coverage"
-                         "-p" "src" "-s" "test"
-                         "--line-fail-threshold" "80"]}}}
-```
+The `coverage` alias in [`deps.edn`](deps.edn) runs cloverage with an 80%
+line-coverage minimum:
 
 ```sh
 clojure -M:coverage

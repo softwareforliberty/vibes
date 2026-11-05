@@ -1,0 +1,43 @@
+---
+rules:
+  - id: csharp-no-binaryformatter
+    message: >-
+      Don't use BinaryFormatter; deserialise with System.Text.Json into a
+      known target type.
+    severity: ERROR
+    languages:
+      - csharp
+    pattern: new BinaryFormatter(...)
+  - id: csharp-no-type-name-handling
+    message: >-
+      Don't let JSON input choose the type to create; leave TypeNameHandling
+      at None and deserialise into a known target type.
+    severity: ERROR
+    languages:
+      - csharp
+    patterns:
+      - pattern: TypeNameHandling.$KIND
+      - metavariable-regex:
+          metavariable: $KIND
+          regex: ^(All|Auto|Objects|Arrays)$
+  - id: csharp-no-sql-concatenation
+    message: >-
+      Don't build SQL by concatenating strings; use a parameterised query.
+    severity: ERROR
+    languages:
+      - csharp
+    pattern-either:
+      - pattern: new SqlCommand($LEFT + $RIGHT, ...)
+      - pattern: new SqlCommand(string.Format(...), ...)
+      - pattern: $COMMAND.CommandText = $LEFT + $RIGHT
+  - id: csharp-no-process-concatenation
+    message: >-
+      Don't build a command line by concatenating strings; pass each argument
+      through ProcessStartInfo.ArgumentList.
+    severity: ERROR
+    languages:
+      - csharp
+    pattern-either:
+      - pattern: Process.Start($LEFT + $RIGHT, ...)
+      - pattern: Process.Start($FILE, $LEFT + $RIGHT)
+      - pattern: new ProcessStartInfo($FILE, $LEFT + $RIGHT)

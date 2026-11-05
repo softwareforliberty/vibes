@@ -1,0 +1,24 @@
+---
+# Overrides on top of detekt's default config (buildUponDefaultConfig).
+# detekt reports a function that reaches a threshold, so each threshold is one
+# more than lizard's limit: complexity over 10, or more than 60 lines.
+complexity:
+  CyclomaticComplexMethod:
+    active: true
+    threshold: 11
+  LongMethod:
+    active: true
+    threshold: 61
+style:
+  MaxLineLength:
+    active: true
+    maxLineLength: 120
+  UnusedParameter:
+    active: true
+  UnusedPrivateMember:
+    active: true
+  UnusedPrivateProperty:
+    active: true
+  WildcardImport:
+    active: true
+    excludeImports: []

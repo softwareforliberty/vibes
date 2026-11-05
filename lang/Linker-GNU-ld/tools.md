@@ -16,6 +16,16 @@ code, and how to run them. They enforce the rules in
 No dedicated linter or formatter for linker scripts exists, so the linkers
 themselves are the check.
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Linker warnings
 
 Linker warnings are the lint gate. An image must link with **no warnings**,

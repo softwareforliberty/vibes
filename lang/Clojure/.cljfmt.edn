@@ -1,0 +1,5 @@
+{:insert-missing-whitespace? true
+ :remove-consecutive-blank-lines? true
+ :remove-multiple-non-indenting-spaces? true
+ :remove-surrounding-whitespace? true
+ :remove-trailing-whitespace? true}

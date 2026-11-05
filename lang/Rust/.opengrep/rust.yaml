@@ -1,0 +1,26 @@
+---
+rules:
+  - id: rust-no-forced-send-sync
+    message: >-
+      Don't force Send or Sync with unsafe impl; fix the design so the
+      compiler can prove the type is safe to share across threads.
+    severity: ERROR
+    languages:
+      - rust
+    pattern-either:
+      - pattern: unsafe impl Send for $T {}
+      - pattern: unsafe impl Sync for $T {}
+      - pattern: unsafe impl<$...P> Send for $T {}
+      - pattern: unsafe impl<$...P> Sync for $T {}
+  - id: rust-no-shell-command
+    message: >-
+      Don't run commands through a shell; call Command::new with the program
+      and pass each argument with arg(), so arguments can't inject commands.
+    severity: ERROR
+    languages:
+      - rust
+    pattern-either:
+      - pattern: Command::new("sh")
+      - pattern: Command::new("bash")
+      - pattern: std::process::Command::new("sh")
+      - pattern: std::process::Command::new("bash")

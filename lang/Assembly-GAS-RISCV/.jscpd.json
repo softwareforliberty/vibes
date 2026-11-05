@@ -1,0 +1,10 @@
+{
+  "format": ["nasm"],
+  "minTokens": 50,
+  "exitCode": 1,
+  "reporters": ["console"],
+  "ignore": ["**/build/**", "**/dist/**", "**/vendor/**", "**/node_modules/**"],
+  "formatsExts": {
+    "nasm": ["S"]
+  }
+}

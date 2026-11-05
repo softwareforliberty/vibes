@@ -15,6 +15,18 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [coverage](https://pub.dev/packages/coverage) | BSD-3-Clause | Code quality | Measuring test coverage |
 
+## Config files
+
+Copy these files into the project root. Each one matches the settings this
+guide describes.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, including IntelliJ IDEA and Android Studio |
+| [`analysis_options.yaml`](analysis_options.yaml) | `dart analyze` and dart_code_linter |
+| [`.opengrep/dart.yaml`](.opengrep/dart.yaml) | Opengrep: starter rules for the [security idioms](idioms.md#security) |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Configuration
 
 Code must pass both checks with **no errors, warnings or lints**:
@@ -30,6 +42,7 @@ otherwise reports only as information.
 `analysis_options.yaml`:
 
 ```yaml
+---
 include: package:lints/recommended.yaml
 
 analyzer:
@@ -51,6 +64,12 @@ linter:
     - type_annotate_public_apis
     - unawaited_futures
     - unreachable_from_main
+
+dart_code_linter:
+  metrics:
+    cyclomatic-complexity: 10
+    source-lines-of-code: 60
+    maximum-nesting-level: 3
 ```
 
 - The three `strict-` modes stop implicit casts from `dynamic`, inference
@@ -60,6 +79,8 @@ linter:
   imports, single quotes, annotated and documented public APIs, and `final`
   locals. `unawaited_futures` enforces the
   [async rules](idioms.md#async-code).
+- The `dart_code_linter` block sets the limits that
+  [Complexity](#complexity) checks.
 - `dart format` owns layout, and the analyzer checks only for bugs and
   conventions, so the two never conflict. Run `dart fix --apply` to apply
   the analyzer's automatic fixes.
@@ -119,15 +140,8 @@ Dart Code Metrics. Fail the build on any function with a cyclomatic
 complexity over 10 or more than 60 lines of code. A function past either
 limit is hard to test and should be split.
 
-Add the limits to `analysis_options.yaml`:
-
-```yaml
-dart_code_linter:
-  metrics:
-    cyclomatic-complexity: 10
-    source-lines-of-code: 60
-    maximum-nesting-level: 3
-```
+The limits are in the `dart_code_linter` block of `analysis_options.yaml`
+(see [Configuration](#configuration)):
 
 ```sh
 dart run dart_code_linter:metrics analyze lib --fatal-warnings

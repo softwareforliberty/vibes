@@ -1,0 +1,7 @@
+---
+# A crash is an acceptable test failure, so tests may force-unwrap,
+# force-try and force-cast.
+disabled_rules:
+  - force_unwrapping
+  - force_try
+  - force_cast

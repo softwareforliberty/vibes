@@ -19,6 +19,22 @@ them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [PHPUnit](https://phpunit.de/) | BSD-3-Clause | Code quality | Running tests and reporting coverage |
 | [PCOV](https://github.com/krakjoe/pcov) | PHP-3.01 | Code quality | Collecting coverage data for PHPUnit |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.php-cs-fixer.dist.php`](.php-cs-fixer.dist.php) | PHP-CS-Fixer |
+| [`phpstan.neon`](phpstan.neon) | PHPStan and dead-code-detector |
+| [`psalm.xml`](psalm.xml) | Psalm |
+| [`phpunit.xml.dist`](phpunit.xml.dist) | PHPUnit |
+| [`bin/check-coverage.php`](bin/check-coverage.php) | The coverage check in CI |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`.opengrep/php.yaml`](.opengrep/php.yaml) | Opengrep |
+
 ## Configuration
 
 Code must pass both tools with **no errors**:
@@ -51,6 +67,9 @@ return (new PhpCsFixer\Config())
 `phpstan.neon` at the project root:
 
 ```neon
+includes:
+    - vendor/shipmonk/dead-code-detector/rules.neon
+
 parameters:
     level: max
     paths:
@@ -88,11 +107,11 @@ vendor/bin/psalm --taint-analysis
 `psalm.xml` at the project root:
 
 ```xml
-<?xml version="1.0"?>
+<?xml version="1.0" encoding="UTF-8"?>
 <psalm errorLevel="1">
-    <projectFiles>
-        <directory name="src" />
-    </projectFiles>
+  <projectFiles>
+    <directory name="src"/>
+  </projectFiles>
 </psalm>
 ```
 
@@ -153,12 +172,8 @@ jscpd --format php --min-tokens 50 --exitCode 1 src
 dead-code-detector is a PHPStan extension, so it runs as part of
 `phpstan analyse` and reports unused classes, methods and constants. PHPStan
 already analyses `tests` as well as `src`, so code used only by tests isn't
-reported as dead. Load its rules in `phpstan.neon`:
-
-```neon
-includes:
-    - vendor/shipmonk/dead-code-detector/rules.neon
-```
+reported as dead. The `includes` entry in `phpstan.neon` (see
+[Configuration](#configuration)) loads its rules.
 
 ### Coverage
 
@@ -167,8 +182,26 @@ falls below 80%. Raise the minimum as coverage grows; never lower it to make
 a build pass.
 
 PCOV collects line coverage for PHPUnit, and is faster than a debugger-based
-driver. PHPUnit has no built-in minimum, so write a Clover report and check
-it:
+driver. `phpunit.xml.dist` tells PHPUnit which code to measure:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit bootstrap="vendor/autoload.php" failOnWarning="true" failOnRisky="true">
+  <testsuites>
+    <testsuite name="default">
+      <directory>tests</directory>
+    </testsuite>
+  </testsuites>
+  <!-- Coverage is measured for this code only. -->
+  <source>
+    <include>
+      <directory>src</directory>
+    </include>
+  </source>
+</phpunit>
+```
+
+PHPUnit has no built-in minimum, so write a Clover report and check it:
 
 ```sh
 php -d pcov.enabled=1 vendor/bin/phpunit --coverage-clover build/clover.xml

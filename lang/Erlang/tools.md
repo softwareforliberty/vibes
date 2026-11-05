@@ -15,6 +15,19 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [lizard](https://github.com/terryyin/lizard) | MIT | Code quality | Measuring function complexity and length |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
+## Config files
+
+These files are drop-in templates: copy them into the project root.
+
+| File | Read by |
+| --- | --- |
+| [.editorconfig](.editorconfig) | Every editor and IDE, through EditorConfig |
+| [rebar.config](rebar.config) | rebar3: plugins, compiler warnings, erlfmt, Dialyzer and xref (merge into the project's `rebar.config`) |
+| [elvis.config](elvis.config) | Elvis, through `rebar3 lint` |
+| [.jscpd.json](.jscpd.json) | jscpd |
+
+The `rebar.config` excerpts below are copied from that file.
+
 Add the rebar3 plugins to `rebar.config`:
 
 ```erlang
@@ -45,8 +58,7 @@ every build, and turn warnings into errors only in a CI profile, so a newer
 OTP with new warnings doesn't break a user's build:
 
 ```erlang
-{erl_opts, [debug_info, warn_export_vars, warn_unused_import,
-            warn_missing_spec]}.
+{erl_opts, [debug_info, warn_export_vars, warn_unused_import, warn_missing_spec]}.
 
 {profiles, [
     {ci, [{erl_opts, [warnings_as_errors]}]}
@@ -65,6 +77,15 @@ slow:
 
 ```sh
 rebar3 dialyzer
+```
+
+Turn on the warnings that catch ignored return values and specs that don't
+match the code:
+
+```erlang
+{dialyzer, [
+    {warnings, [error_handling, extra_return, missing_return, unknown, unmatched_returns]}
+]}.
 ```
 
 Elvis checks style rules the formatter doesn't cover:
@@ -151,9 +172,13 @@ exported functions nothing calls, and calls to functions that don't exist.
 Set its checks in `rebar.config`:
 
 ```erlang
-{xref_checks, [undefined_function_calls, undefined_functions,
-               locals_not_used, exports_not_used,
-               deprecated_function_calls]}.
+{xref_checks, [
+    undefined_function_calls,
+    undefined_functions,
+    locals_not_used,
+    exports_not_used,
+    deprecated_function_calls
+]}.
 ```
 
 ```sh

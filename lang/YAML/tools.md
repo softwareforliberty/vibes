@@ -12,6 +12,18 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [Opengrep](https://github.com/opengrep/opengrep) | LGPL-2.1 | Auditing | Security analysis with pattern and taint rules |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.yamllint.yaml`](.yamllint.yaml) | yamllint |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`.opengrep/yaml.yaml`](.opengrep/yaml.yaml) | Opengrep |
+
 ## Recommended setup
 
 Lint every YAML file. Files must pass with **no warnings**.
@@ -87,8 +99,8 @@ check-jsonschema --schemafile schemas/settings.schema.json config/*.yaml
 ### Security analysis
 
 YAML is data, so the main risk is a loader that turns tags into objects.
-Write Opengrep rules that reject language-specific tags such as
-`!!python/object`, and keep loaders safe, as the
+The starter rules in [`.opengrep/yaml.yaml`](.opengrep/yaml.yaml) reject
+language-specific tags such as `!!python/object`; keep loaders safe, as the
 [loading rules](idioms.md#loading-yaml-safely) require. Schema validation
 also rejects any value the program doesn't expect.
 

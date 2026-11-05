@@ -1,0 +1,10 @@
+---
+lint:
+  rules:
+    no_default: true
+    add:
+      - IMPORTS_SORTED
+      - MAX_LINE_LENGTH
+  rules_option:
+    max_line_length:
+      max_chars: 80

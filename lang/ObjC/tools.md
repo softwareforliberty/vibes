@@ -16,6 +16,18 @@ and [idioms.md](idioms.md).
 | [lizard](https://github.com/terryyin/lizard) | MIT | Code quality | Measuring function complexity and length |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
+## Config files
+
+Copy these files to the same paths in the repository. Every config shown
+below is the full contents of one of these files.
+
+| File | Read by |
+| --- | --- |
+| [.editorconfig](.editorconfig) | Every editor with EditorConfig support, including Xcode; CLion |
+| [.clang-format](.clang-format) | clang-format, and CLion when set to use it |
+| [.clang-tidy](.clang-tidy) | clang-tidy |
+| [.jscpd.json](.jscpd.json) | jscpd |
+
 ## Formatting
 
 Commit this `.clang-format` at the repository root, and run clang-format on
@@ -37,6 +49,7 @@ Commit this `.clang-tidy` at the repository root. Code must pass it with no
 warnings.
 
 ```yaml
+---
 Checks: >
   bugprone-*,
   clang-analyzer-*,
@@ -44,7 +57,7 @@ Checks: >
   objc-*,
   readability-braces-around-statements,
   -bugprone-easily-swappable-parameters
-WarningsAsErrors: '*'
+WarningsAsErrors: "*"
 ```
 
 - Suppress a warning only on the line that needs it, with

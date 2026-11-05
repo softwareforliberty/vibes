@@ -17,6 +17,19 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [coverlet](https://github.com/coverlet-coverage/coverlet) | MIT | Code quality | Measuring test coverage, and failing the build below a minimum |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, and Fantomas |
+| [`Directory.Build.props`](Directory.Build.props) | MSBuild, for every project in the repository |
+| [`.config/dotnet-tools.json`](.config/dotnet-tools.json) | `dotnet tool restore`, which installs Fantomas, FSharpLint and fsharp-analyzers |
+| [`fsharplint.json`](fsharplint.json) | FSharpLint |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Configuration
 
 Code must build with **no warnings**, Fantomas must have nothing to change,
@@ -29,19 +42,38 @@ dotnet fsharplint lint MySolution.sln
 ```
 
 Install Fantomas, FSharpLint and fsharp-analyzers as local tools, so every
-developer and CI run the same versions:
+developer and CI run the same versions. The tool manifest
+`.config/dotnet-tools.json` pins them:
+
+```json
+{
+  "version": 1,
+  "isRoot": true,
+  "tools": {
+    "fantomas": { "version": "8.1.1", "commands": ["fantomas"] },
+    "dotnet-fsharplint": {
+      "version": "0.27.0",
+      "commands": ["dotnet-fsharplint"]
+    },
+    "fsharp-analyzers": {
+      "version": "0.41.0",
+      "commands": ["fsharp-analyzers"]
+    }
+  }
+}
+```
+
+Restore them once after cloning, and in CI before the checks:
 
 ```sh
-dotnet new tool-manifest
-dotnet tool install fantomas
-dotnet tool install dotnet-fsharplint
-dotnet tool install fsharp-analyzers
+dotnet tool restore
 ```
 
 Put the shared build settings in `Directory.Build.props` at the repository
 root, so every project gets them:
 
 ```xml
+<?xml version="1.0" encoding="UTF-8"?>
 <Project>
   <PropertyGroup>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
@@ -52,6 +84,14 @@ root, so every project gets them:
     <NuGetAuditMode>all</NuGetAuditMode>
     <NuGetAuditLevel>low</NuGetAuditLevel>
   </PropertyGroup>
+
+  <!-- Coverage minimum for projects that reference coverlet.msbuild -->
+  <PropertyGroup>
+    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
+    <Threshold>80</Threshold>
+    <ThresholdType>branch</ThresholdType>
+    <ThresholdStat>total</ThresholdStat>
+  </PropertyGroup>
 </Project>
 ```
 
@@ -61,11 +101,16 @@ root, so every project gets them:
   (`FS1182`) and malformed XML documentation (`FS3390`).
 - The compiler doesn't report public functions that lack documentation, so
   reviewers check that rule.
+- The second group sets coverlet's coverage minimum for every test project
+  (see [Coverage](#coverage)).
 
-Fantomas reads its settings from `.editorconfig`. The defaults implement this
-guide, so only the shared settings are needed:
+Fantomas reads its settings from `.editorconfig`. Its defaults implement this
+guide; the `fsharp_*` values pin the ones the guide relies on, so a new
+Fantomas release can't change the layout, and allow at most one blank line in
+a row:
 
 ```ini
+# EditorConfig: https://editorconfig.org
 root = true
 
 [*]
@@ -78,6 +123,23 @@ trim_trailing_whitespace = true
 indent_style = space
 indent_size = 4
 max_line_length = 120
+
+# Fantomas. The values below are Fantomas's defaults, pinned so a new release
+# can't change the layout, plus one blank line at most between definitions.
+fsharp_space_before_lowercase_invocation = true
+fsharp_space_before_uppercase_invocation = false
+fsharp_space_before_colon = false
+fsharp_space_after_comma = true
+fsharp_space_around_delimiter = true
+fsharp_keep_max_number_of_blank_lines = 1
+
+# JetBrains Rider, Visual Studio and VS Code (Ionide) format F# with Fantomas,
+# which reads the properties above, so no IDE-specific keys are needed.
+
+[*.json]
+indent_style = space
+indent_size = 2
+max_line_length = 80
 ```
 
 - Leave layout to Fantomas: don't turn on FSharpLint's formatting rules,
@@ -141,14 +203,13 @@ lizard doesn't support F#, so FSharpLint enforces the same limits: a
 cyclomatic complexity over 10 or more than 60 lines in a function fails the
 lint. A function past either limit is hard to test and should be split.
 
-Put the limits in `fsharplint.json`:
-
-```json
-{
-  "cyclomaticComplexity": { "enabled": true, "config": { "maxComplexity": 10 } },
-  "maxLinesInFunction": { "enabled": true, "config": { "maxLines": 60 } }
-}
-```
+FSharpLint reads `fsharplint.json` from the directory it runs in. A rule
+that's missing from the file doesn't run at all, so the file lists every rule:
+it's FSharpLint 0.27.0's default configuration with two changes.
+`cyclomaticComplexity` is turned on with `maxComplexity` 10, and
+`maxLinesInFunction` is turned on with `maxLines` 60. When you upgrade
+FSharpLint, start from the new release's default file and make the same two
+changes.
 
 ### Duplication
 
@@ -158,6 +219,9 @@ fixed in one place and not the other.
 ```sh
 jscpd --format fsharp --min-tokens 50 --exitCode 1 src/
 ```
+
+`.jscpd.json` holds the same settings, so `jscpd src/` alone runs the same
+check.
 
 ### Dead code
 
@@ -172,9 +236,10 @@ Measure branch coverage on every test run, and fail the build when it falls
 below 80%. Raise the minimum as coverage grows; never lower it to make a
 build pass.
 
-Add the `coverlet.msbuild` package to each test project, then:
+Add the `coverlet.msbuild` package to each test project.
+`Directory.Build.props` sets the 80% branch minimum on the combined total, so
+the test run only has to turn coverage on:
 
 ```sh
-dotnet test /p:CollectCoverage=true /p:CoverletOutputFormat=cobertura \
-    /p:Threshold=80 /p:ThresholdType=branch /p:ThresholdStat=total
+dotnet test /p:CollectCoverage=true
 ```

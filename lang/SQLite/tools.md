@@ -11,10 +11,21 @@ to run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
+## Config files
+
+These files are in this directory, ready to copy to the root of a project:
+
+| File | Read by |
+| --- | --- |
+| [.editorconfig](.editorconfig) | Editors and IDEs |
+| [.sqlfluff](.sqlfluff) | SQLFluff |
+| [checks/schema.sql](checks/schema.sql) | The SQLite shell, for the schema checks |
+| [.jscpd.json](.jscpd.json) | jscpd |
+
 ## Configuration
 
-Put this `.sqlfluff` file at the root of the project. It sets every rule in
-this guide that SQLFluff can check:
+Put this [.sqlfluff](.sqlfluff) file at the root of the project. It sets
+every rule in this guide that SQLFluff can check:
 
 ```ini
 [sqlfluff]
@@ -81,14 +92,15 @@ SQLFluff equivalent is checked in review.
 
 SQLFluff can't tell built-in functions from your own, so the configuration
 skips function names written in lowercase with an underscore, which is how
-[your own functions](coding-style.md#case) are named. Review checks that built-in functions
-with an underscore in their name, such as `ROW_NUMBER()`, are uppercase.
+[your own functions](coding-style.md#case) are named. Review checks that
+built-in functions with an underscore in their name, such as `ROW_NUMBER()`,
+are uppercase.
 
 ## Schema checks
 
 SQLite can check a schema itself, which catches problems SQLFluff can't see.
 In CI, apply the migrations to an empty database, then run these checks
-against it. Put them in `checks/schema.sql`:
+against it. Put them in [checks/schema.sql](checks/schema.sql):
 
 ```sql
 PRAGMA integrity_check;

@@ -12,6 +12,18 @@ them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [PurgeCSS](https://purgecss.com/) | MIT | Code quality | Reporting selectors no page uses |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.prettierrc.json`](.prettierrc.json) | Prettier |
+| [`.stylelintrc.json`](.stylelintrc.json) | Stylelint |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Configuration
 
 Stylesheets must pass both checks with **no errors or warnings**:

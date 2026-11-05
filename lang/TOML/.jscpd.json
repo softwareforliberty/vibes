@@ -1,0 +1,7 @@
+{
+  "format": ["toml"],
+  "minTokens": 50,
+  "exitCode": 1,
+  "reporters": ["console"],
+  "ignore": ["**/build/**", "**/dist/**", "**/vendor/**", "**/node_modules/**"]
+}

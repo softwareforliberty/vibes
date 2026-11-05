@@ -17,6 +17,22 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [Kover](https://github.com/Kotlin/kotlinx-kover) | Apache-2.0 | Code quality | Measuring test coverage, and failing the build below a minimum |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig; ktlint |
+| [`detekt.yml`](detekt.yml) | detekt |
+| [`build.gradle.kts`](build.gradle.kts) | Gradle: compiler warnings, explicit API mode, detekt, dependency locking, OWASP Dependency-Check and Kover |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`.opengrep/kotlin.yaml`](.opengrep/kotlin.yaml) | Opengrep |
+
+`build.gradle.kts` is a template: merge its settings into the project's own
+build script.
+
 ## Recommended setup
 
 Format, then check. Code must build with **no warnings** and no findings.
@@ -30,14 +46,57 @@ ktlint
 detekt --input src --config detekt.yml --build-upon-default-config
 ```
 
-Configure ktlint through `.editorconfig` at the repository root:
+Configure ktlint through `.editorconfig` at the repository root. IntelliJ IDEA
+reads the same file, so the IDE and ktlint agree:
 
 ```ini
+# EditorConfig: https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
 [*.{kt,kts}]
-ktlint_code_style = intellij_idea
+indent_style = space
+indent_size = 4
 max_line_length = 120
+# ktlint
+ktlint_code_style = intellij_idea
+# JetBrains IDEs (ktlint reads these too)
+ij_continuation_indent_size = 4
 ij_kotlin_allow_trailing_comma = true
 ij_kotlin_allow_trailing_comma_on_call_site = true
+ij_kotlin_code_style_defaults = KOTLIN_OFFICIAL
+ij_kotlin_imports_layout = *,java.**,javax.**,kotlin.**,^
+ij_kotlin_name_count_to_use_star_import = 2147483647
+ij_kotlin_name_count_to_use_star_import_for_members = 2147483647
+ij_kotlin_packages_to_use_import_on_demand = unset
+
+[*.json]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+
+[*.{yaml,yml}]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+# JetBrains IDEs
+ij_yaml_align_values_properties = do_not_align
+ij_yaml_autoinsert_sequence_marker = true
+ij_yaml_block_mapping_on_new_line = false
+ij_yaml_indent_sequence_value = true
+ij_yaml_keep_indents_on_empty_lines = false
+ij_yaml_keep_line_breaks = true
+ij_yaml_sequence_on_new_line = false
+ij_yaml_space_before_colon = false
+ij_yaml_spaces_within_braces = false
+ij_yaml_spaces_within_brackets = false
+
+# VS Code, Vim, Emacs and Neovim read only the standard properties above.
 ```
 
 - Treat warnings as errors: pass `-Werror` to `kotlinc`, or set
@@ -78,7 +137,9 @@ osv-scanner scan source -r .
   dependencies through deps.dev, which needs network access.
 - OWASP Dependency-Check's Gradle and Maven plugins check the resolved
   classpath during the build. Use it when the build itself must fail on a
-  vulnerable dependency. It needs an NVD API key to download its database.
+  vulnerable dependency. The template fails the build on any vulnerability
+  with a CVSS score of 7 or more. It needs an NVD API key to download its
+  database.
 
 ### Secrets
 
@@ -104,8 +165,9 @@ lizard -l kotlin -C 10 -L 60 -w src/
 ```
 
 detekt's `CyclomaticComplexMethod` and `LongMethod` rules check the same
-things inside the build. Set their thresholds in `detekt.yml` to match these
-limits, so both tools agree.
+things inside the build. detekt reports a function that reaches a threshold,
+so [`detekt.yml`](detekt.yml) sets them to 11 and 61, one more than these
+limits, and both tools agree.
 
 ### Duplication
 
@@ -124,7 +186,9 @@ also warns about unused variables, so `-Werror` makes them build failures.
 
 ### Coverage
 
-Measure line and branch coverage with Kover on every test run, and fail the
-build when coverage drops below the project's agreed minimum (for example,
-80% of lines). Set the minimum with `minBound` in a Kover `verify` rule, then
-run `./gradlew koverVerify`.
+Measure branch coverage on every test run, and fail the build when it falls
+below 80%. Raise the minimum as coverage grows; never lower it to make a
+build pass.
+
+Kover enforces the minimum: the template sets `minBound` to 80% for both
+lines and branches in a `verify` rule. Run `./gradlew koverVerify`.

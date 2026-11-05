@@ -1,0 +1,8 @@
+{:linters {:line-length {:level :warning :max-line-length 80}
+           :missing-docstring {:level :warning}
+           :refer-all {:level :error}
+           :use {:level :error}
+           :unused-namespace {:level :warning}
+           :unused-private-var {:level :warning}
+           :unused-binding {:level :warning}
+           :single-key-in {:level :warning}}}

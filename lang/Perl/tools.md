@@ -13,6 +13,18 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [Devel::Cover](https://metacpan.org/pod/Devel::Cover) | Artistic-1.0-Perl OR GPL-1.0-or-later | Code quality | Measuring test coverage |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.perltidyrc`](.perltidyrc) | perltidy |
+| [`.perlcriticrc`](.perlcriticrc) | Perl::Critic |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Formatting
 
 perltidy owns layout. Put the settings in `.perltidyrc`, starting from the

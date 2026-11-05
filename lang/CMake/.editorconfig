@@ -1,0 +1,28 @@
+# EditorConfig: https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# CMake: 4-space indentation and 80 columns, matching .gersemirc.
+[{CMakeLists.txt,*.cmake}]
+indent_style = space
+indent_size = 4
+max_line_length = 80
+# JetBrains IDEs
+ij_continuation_indent_size = 4
+ij_smart_tabs = false
+ij_visual_guides = 80
+ij_wrap_on_typing = false
+# VS Code, Visual Studio, Vim, Emacs and Neovim read only the standard
+# properties above.
+
+# CMake presets are JSON: 2-space indentation.
+
+[*.json]
+indent_style = space
+indent_size = 2
+max_line_length = 80

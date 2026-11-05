@@ -1,0 +1,44 @@
+# Template: merge these tool settings into the project's pyproject.toml.
+
+[tool.ruff]
+line-length = 88
+target-version = "py310"
+
+[tool.ruff.lint]
+select = [
+  "E", # pycodestyle errors
+  "W", # pycodestyle warnings
+  "F", # Pyflakes
+  "I", # import sorting
+  "N", # naming
+  "D", # docstrings
+  "UP", # modern syntax
+  "B", # likely bugs
+  "SIM", # simplifications
+  "S", # security
+  "RUF", # Ruff-specific checks
+]
+# Rules that conflict with the formatter.
+ignore = ["W191", "E111", "E114", "E117", "D206", "D300"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.per-file-ignores]
+# pytest uses assert, and tests need no docstrings.
+"tests/**" = ["S101", "D"]
+
+[tool.mypy]
+strict = true
+
+[tool.vulture]
+paths = ["src", "vulture_whitelist.py"]
+min_confidence = 80
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true

@@ -16,6 +16,18 @@ them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [covr](https://covr.r-lib.org/) | MIT | Code quality | Measuring test coverage |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.lintr`](.lintr) | lintr |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`.opengrep/r.yaml`](.opengrep/r.yaml) | Opengrep |
+
 ## Configuration
 
 Code must pass all three checks with **no errors, warnings or notes**:
@@ -61,9 +73,10 @@ them.
 opengrep scan --config .opengrep/ --error
 ```
 
-Opengrep's R support is experimental, so write rules for the unsafe calls in
-the [security idioms](idioms.md#security), such as `eval(parse(...))` and
-`readRDS()`, and test them against known examples.
+Opengrep's R support is experimental. The starter rules in
+[`.opengrep/r.yaml`](.opengrep/r.yaml) cover the unsafe calls in the
+[security idioms](idioms.md#security), such as `eval(parse(...))` and
+`readRDS()`; test them against known examples before relying on them.
 
 ### Dependency vulnerabilities
 

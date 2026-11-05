@@ -1,0 +1,19 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "at-rule-disallowed-list": ["import"],
+    "declaration-no-important": true,
+    "function-url-scheme-allowed-list": ["data", "https"],
+    "max-nesting-depth": [
+      0,
+      { "ignoreAtRules": ["container", "layer", "media", "supports"] }
+    ],
+    "selector-class-pattern": [
+      "^[a-z][a-z0-9]*(-[a-z0-9]+)*(__[a-z0-9]+(-[a-z0-9]+)*)?(--[a-z0-9]+(-[a-z0-9]+)*)?$",
+      { "message": "Use BEM in kebab-case: block__element--modifier" }
+    ],
+    "selector-max-compound-selectors": 2,
+    "selector-max-id": 0,
+    "selector-max-specificity": "0,3,0"
+  }
+}

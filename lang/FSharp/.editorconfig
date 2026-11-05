@@ -1,0 +1,30 @@
+# EditorConfig: https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{fs,fsi,fsx}]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+
+# Fantomas. The values below are Fantomas's defaults, pinned so a new release
+# can't change the layout, plus one blank line at most between definitions.
+fsharp_space_before_lowercase_invocation = true
+fsharp_space_before_uppercase_invocation = false
+fsharp_space_before_colon = false
+fsharp_space_after_comma = true
+fsharp_space_around_delimiter = true
+fsharp_keep_max_number_of_blank_lines = 1
+
+# JetBrains Rider, Visual Studio and VS Code (Ionide) format F# with Fantomas,
+# which reads the properties above, so no IDE-specific keys are needed.
+
+[*.json]
+indent_style = space
+indent_size = 2
+max_line_length = 80

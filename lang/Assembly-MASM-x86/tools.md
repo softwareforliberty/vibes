@@ -23,6 +23,16 @@ changed program is only used privately. Projects that accept only FSF-free
 tools can use llvm-ml, after checking that it supports every feature their
 code uses.
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Assembler warnings
 
 Assembler warnings are the lint gate. Code must assemble with **no warnings**

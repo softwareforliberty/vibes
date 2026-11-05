@@ -1,0 +1,18 @@
+# EditorConfig: https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Fixed reference format: Area A starts at column 8 and Area B at column 12,
+# and the compiler ignores everything past column 72. Indent with spaces,
+# never tabs, so every column lands where the format expects.
+[*.{cob,cpy}]
+indent_style = space
+indent_size = 4
+max_line_length = 72
+# No verified IDE-specific EditorConfig keys exist for COBOL. VS Code, Vim,
+# Emacs and Neovim read only the standard properties above.

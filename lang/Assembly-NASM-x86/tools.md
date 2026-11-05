@@ -15,6 +15,16 @@ code, and how to run them. They enforce the rules in
 | [kcov](https://github.com/SimonKagstrom/kcov) | GPL-2.0 | Code quality | Measuring line coverage of the tests on Linux |
 | [DynamoRIO](https://dynamorio.org/) (drcov) | BSD-3-Clause | Code quality | Measuring line coverage of the tests on Linux and Windows |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Assembler warnings
 
 Assembler warnings are the lint gate. Code must assemble with **no warnings**

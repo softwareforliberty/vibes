@@ -1,0 +1,9 @@
+---
+Checks: >
+  bugprone-*,
+  clang-analyzer-*,
+  google-objc-*,
+  objc-*,
+  readability-braces-around-statements,
+  -bugprone-easily-swappable-parameters
+WarningsAsErrors: "*"

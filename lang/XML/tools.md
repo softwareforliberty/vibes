@@ -10,6 +10,16 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Recommended setup
 
 Every XML file must be well-formed and match `xmllint --format` exactly.

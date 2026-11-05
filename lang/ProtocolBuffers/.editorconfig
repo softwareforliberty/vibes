@@ -1,0 +1,44 @@
+# EditorConfig: https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.proto]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+# JetBrains IDEs
+ij_protobuf_keep_blank_lines_in_code = 1
+ij_protobuf_keep_indents_on_empty_lines = false
+ij_protobuf_keep_line_breaks = true
+ij_protobuf_space_after_comma = true
+ij_protobuf_space_before_comma = false
+ij_protobuf_spaces_within_braces = false
+ij_protobuf_spaces_within_brackets = false
+
+[*.json]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+
+[*.{yaml,yml}]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+# JetBrains IDEs
+ij_yaml_align_values_properties = do_not_align
+ij_yaml_autoinsert_sequence_marker = true
+ij_yaml_block_mapping_on_new_line = false
+ij_yaml_indent_sequence_value = true
+ij_yaml_keep_indents_on_empty_lines = false
+ij_yaml_keep_line_breaks = true
+ij_yaml_sequence_on_new_line = false
+ij_yaml_space_before_colon = false
+ij_yaml_spaces_within_braces = false
+ij_yaml_spaces_within_brackets = false
+
+# VS Code, Vim, Emacs and Neovim read only the standard properties above.

@@ -12,6 +12,19 @@ to run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.prettierrc.json`](.prettierrc.json) | Prettier |
+| [`.graphqlrc.yaml`](.graphqlrc.yaml) | GraphQL-ESLint, through graphql-config |
+| [`eslint.config.js`](eslint.config.js) | ESLint |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Configuration
 
 The examples assume the schema lives in `schema/` and client operations in
@@ -26,10 +39,11 @@ npx eslint "**/*.graphql"
 Prettier uses the same `.prettierrc.json` as the
 [JavaScript tools](../JavaScript/tools.md#configuration).
 
-`.graphqlrc.yml` tells GraphQL-ESLint where the schema and operations are,
+`.graphqlrc.yaml` tells GraphQL-ESLint where the schema and operations are,
 so rules can check one against the other:
 
 ```yaml
+---
 schema: schema/**/*.graphql
 documents: operations/**/*.graphql
 ```
@@ -78,6 +92,8 @@ export default [
   a description on every type, field, argument and enum value.
 - The recommended operation rules reject anonymous operations, check every
   operation against the schema, and report unused fragments and variables.
+- `eslint.config.js` is an ES module, like all code in this guide, so the
+  project's `package.json` sets `"type": "module"`.
 - Prettier owns layout, and ESLint checks only for errors and conventions,
   so the two never conflict.
 

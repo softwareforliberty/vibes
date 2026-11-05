@@ -11,6 +11,18 @@ and [idioms.md](idioms.md).
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`PSScriptAnalyzerSettings.psd1`](PSScriptAnalyzerSettings.psd1) | PSScriptAnalyzer and `Invoke-Formatter` |
+| [`PesterConfiguration.psd1`](PesterConfiguration.psd1) | Pester |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Formatting
 
 PSScriptAnalyzer's `Invoke-Formatter` owns layout, using the same settings
@@ -153,16 +165,29 @@ Measure command coverage on every test run, and fail the build when it
 falls below 80%. Raise the minimum as coverage grows; never lower it to make
 a build pass.
 
-Pester measures which commands the tests run. Its `CoveragePercentTarget`
-setting only reports against the target, so check the result in CI:
+Pester measures which commands the tests run. Its settings are in
+`PesterConfiguration.psd1`:
 
 ```powershell
-$config = New-PesterConfiguration
-$config.Run.Path = './tests'
-$config.Run.PassThru = $true
-$config.CodeCoverage.Enabled = $true
-$config.CodeCoverage.Path = './src'
-$config.CodeCoverage.CoveragePercentTarget = 80
+@{
+    Run          = @{
+        Path     = './tests'
+        PassThru = $true
+    }
+    CodeCoverage = @{
+        Enabled               = $true
+        Path                  = './src'
+        CoveragePercentTarget = 80
+    }
+}
+```
+
+`CoveragePercentTarget` only reports against the target, so check the result
+in CI:
+
+```powershell
+$settings = Import-PowerShellDataFile -Path ./PesterConfiguration.psd1
+$config = New-PesterConfiguration -Hashtable $settings
 
 $result = Invoke-Pester -Configuration $config
 if ($result.FailedCount -gt 0) {

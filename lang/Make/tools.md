@@ -11,6 +11,17 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`checkmake.ini`](checkmake.ini) | checkmake |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Make warnings
 
 GNU Make's warning for undefined variables is the lint gate. It catches typos

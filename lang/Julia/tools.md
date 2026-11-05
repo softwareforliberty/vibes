@@ -14,6 +14,18 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [Coverage.jl](https://github.com/JuliaCI/Coverage.jl) | MIT | Code quality | Measuring test coverage |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.JuliaFormatter.toml`](.JuliaFormatter.toml) | JuliaFormatter.jl |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`.opengrep/julia.yaml`](.opengrep/julia.yaml) | Opengrep |
+
 ## Configuration
 
 Put the formatter settings in `.JuliaFormatter.toml` at the project root:
@@ -64,9 +76,10 @@ them.
 opengrep scan --config .opengrep/ --error
 ```
 
-Opengrep's Julia support is experimental, so write rules for the unsafe calls
-in the [security idioms](idioms.md#security), such as `eval(Meta.parse(...))`
-and `deserialize()`, and test them against known examples.
+Opengrep's Julia support is experimental. The starter rules in
+[`.opengrep/julia.yaml`](.opengrep/julia.yaml) cover the unsafe calls in the
+[security idioms](idioms.md#security), such as `eval(Meta.parse(...))` and
+`deserialize()`; test them against known examples before relying on them.
 
 ### Dependency vulnerabilities
 

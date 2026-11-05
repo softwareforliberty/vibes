@@ -16,6 +16,20 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [lizard](https://github.com/terryyin/lizard) | MIT | Code quality | Measuring function complexity and length |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
+## Config files
+
+Copy these files to the same paths in the repository. Every config shown
+below is the full contents of one of these files.
+
+| File | Read by |
+| --- | --- |
+| [.editorconfig](.editorconfig) | Every editor with EditorConfig support, including Xcode |
+| [.swift-format](.swift-format) | swift-format |
+| [.swiftlint.yml](.swiftlint.yml) | SwiftLint |
+| [Tests/.swiftlint.yml](Tests/.swiftlint.yml) | SwiftLint, for the test target |
+| [.jscpd.json](.jscpd.json) | jscpd |
+| [.opengrep/swift.yaml](.opengrep/swift.yaml) | Opengrep |
+
 ## Recommended setup
 
 Format, then check. Code must build with **no warnings** and no findings.

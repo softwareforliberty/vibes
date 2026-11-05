@@ -1,0 +1,37 @@
+---
+rules:
+  - id: c-no-gets
+    message: Don't call gets(); read with fgets() and pass the buffer size.
+    severity: ERROR
+    languages:
+      - c
+    pattern: gets(...)
+  - id: c-no-unbounded-string-functions
+    message: >-
+      Don't use sprintf(), strcpy() or strcat() on data you don't control;
+      use snprintf() and check its return value for truncation.
+    severity: WARNING
+    languages:
+      - c
+    pattern-either:
+      - pattern: sprintf(...)
+      - pattern: strcpy(...)
+      - pattern: strcat(...)
+  - id: c-realloc-to-self
+    message: >-
+      Don't assign realloc() back to its argument, which leaks the block when
+      it fails; assign to a temporary and check it first.
+    severity: ERROR
+    languages:
+      - c
+    pattern: $PTR = realloc($PTR, $SIZE)
+  - id: c-non-literal-format-string
+    message: >-
+      Don't pass data you don't control as a format string; write
+      printf("%s", msg) instead.
+    severity: ERROR
+    languages:
+      - c
+    patterns:
+      - pattern: printf($FMT)
+      - pattern-not: printf("...")

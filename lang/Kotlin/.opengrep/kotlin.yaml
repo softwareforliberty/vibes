@@ -1,0 +1,38 @@
+---
+rules:
+  - id: kotlin-no-not-null-assertion
+    message: >-
+      Don't use !!; handle null with ?., ?:, requireNotNull() or
+      checkNotNull(), so a failure says what was missing.
+    severity: ERROR
+    languages:
+      - kotlin
+    pattern: $X!!
+  - id: kotlin-no-global-scope
+    message: >-
+      Don't launch coroutines in GlobalScope; launch them in a scope tied to
+      a lifecycle, so they're cancelled when it ends.
+    severity: ERROR
+    languages:
+      - kotlin
+    pattern-either:
+      - pattern: GlobalScope.launch(...)
+      - pattern: GlobalScope.async(...)
+  - id: kotlin-no-thread-sleep
+    message: >-
+      Don't call Thread.sleep(); it blocks the thread. Use delay() inside a
+      coroutine.
+    severity: WARNING
+    languages:
+      - kotlin
+    pattern: Thread.sleep(...)
+  - id: kotlin-no-object-input-stream
+    message: >-
+      Don't deserialise with ObjectInputStream; it can run code chosen by
+      whoever wrote the bytes. Read a data format such as JSON instead.
+    severity: ERROR
+    languages:
+      - kotlin
+    pattern-either:
+      - pattern: ObjectInputStream(...)
+      - pattern: java.io.ObjectInputStream(...)

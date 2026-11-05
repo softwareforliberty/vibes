@@ -1,0 +1,29 @@
+cabal-version: 3.0
+-- Template: merge these settings into your package's .cabal file. Every
+-- component imports the shared stanza, so they all build the same way.
+name:          project
+version:       0.1.0.0
+
+common shared
+    default-language:   GHC2021
+    default-extensions:
+        DerivingStrategies
+        DuplicateRecordFields
+        LambdaCase
+        OverloadedRecordDot
+        OverloadedStrings
+    ghc-options:
+        -Wall
+        -Wcompat
+        -Widentities
+        -Wincomplete-record-updates
+        -Wincomplete-uni-patterns
+        -Wmissing-export-lists
+        -Wpartial-fields
+        -Wredundant-constraints
+        -Wunused-packages
+
+library
+    import:          shared
+    hs-source-dirs:  src
+    exposed-modules: Project

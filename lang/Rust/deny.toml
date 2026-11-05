@@ -1,0 +1,8 @@
+# cargo-deny settings: allowed licences and dependency sources.
+
+[licenses]
+allow = ["Apache-2.0", "BSD-3-Clause", "ISC", "MIT", "Unicode-3.0"]
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"

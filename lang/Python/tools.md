@@ -17,6 +17,19 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [Vulture](https://github.com/jendrikseipp/vulture) | MIT | Code quality | Finding unused code |
 | [Coverage.py](https://coverage.readthedocs.io/) | Apache-2.0 | Code quality | Measuring test coverage |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`pyproject.toml`](pyproject.toml) | Ruff, mypy, Vulture and Coverage.py |
+| [`vulture_whitelist.py`](vulture_whitelist.py) | Vulture |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`.opengrep/python.yaml`](.opengrep/python.yaml) | Opengrep |
+
 ## Configuration
 
 Code must pass all three checks with **no errors or warnings**:
@@ -27,37 +40,53 @@ ruff check .
 mypy .
 ```
 
-Put the settings in `pyproject.toml`:
+Put the settings for every Python tool on this page in `pyproject.toml`:
 
 ```toml
+# Template: merge these tool settings into the project's pyproject.toml.
+
 [tool.ruff]
 line-length = 88
 target-version = "py310"
 
 [tool.ruff.lint]
 select = [
-    "E",    # pycodestyle errors
-    "W",    # pycodestyle warnings
-    "F",    # Pyflakes
-    "I",    # import sorting
-    "N",    # naming
-    "D",    # docstrings
-    "UP",   # modern syntax
-    "B",    # likely bugs
-    "SIM",  # simplifications
-    "S",    # security
-    "RUF",  # Ruff-specific checks
+  "E", # pycodestyle errors
+  "W", # pycodestyle warnings
+  "F", # Pyflakes
+  "I", # import sorting
+  "N", # naming
+  "D", # docstrings
+  "UP", # modern syntax
+  "B", # likely bugs
+  "SIM", # simplifications
+  "S", # security
+  "RUF", # Ruff-specific checks
 ]
-ignore = ["W191", "E111", "E114", "E117", "D206", "D300"]  # formatter conflicts
+# Rules that conflict with the formatter.
+ignore = ["W191", "E111", "E114", "E117", "D206", "D300"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
 
 [tool.ruff.lint.per-file-ignores]
-"tests/**" = ["S101", "D"]  # pytest uses assert; tests need no docstrings
+# pytest uses assert, and tests need no docstrings.
+"tests/**" = ["S101", "D"]
 
 [tool.mypy]
 strict = true
+
+[tool.vulture]
+paths = ["src", "vulture_whitelist.py"]
+min_confidence = 80
+
+[tool.coverage.run]
+branch = true
+source = ["src"]
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
 ```
 
 - `ruff format` owns layout. Don't hand-format code it will rewrite, and
@@ -138,8 +167,11 @@ it, and list names that are used indirectly (for example, by a framework) in
 a whitelist file.
 
 ```sh
-vulture src vulture_whitelist.py --min-confidence 80
+vulture
 ```
+
+The paths and the confidence threshold come from `[tool.vulture]` in
+`pyproject.toml`.
 
 ### Coverage
 
@@ -152,14 +184,5 @@ coverage run -m pytest
 coverage report
 ```
 
-Add the settings to `pyproject.toml`:
-
-```toml
-[tool.coverage.run]
-branch = true
-source = ["src"]
-
-[tool.coverage.report]
-fail_under = 80
-show_missing = true
-```
+The settings are in `[tool.coverage]` in `pyproject.toml` (see
+[Configuration](#configuration)).

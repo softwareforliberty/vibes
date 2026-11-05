@@ -1,0 +1,31 @@
+---
+rules:
+  - id: swift-no-force-try
+    message: >-
+      Don't use try! outside tests; handle the error with do/catch, or
+      propagate it with try.
+    severity: ERROR
+    languages:
+      - swift
+    paths:
+      exclude:
+        - Tests/
+    pattern: try! $EXPR
+  - id: swift-no-force-cast
+    message: >-
+      Don't use as! outside tests; cast with as? and handle the nil case.
+    severity: ERROR
+    languages:
+      - swift
+    paths:
+      exclude:
+        - Tests/
+    pattern: $EXPR as! $TYPE
+  - id: swift-unchecked-sendable
+    message: >-
+      Don't use @unchecked Sendable to silence a warning; make the type
+      Sendable, or say in a comment how it's made thread-safe.
+    severity: WARNING
+    languages:
+      - swift
+    pattern-regex: "@unchecked\\s+Sendable"

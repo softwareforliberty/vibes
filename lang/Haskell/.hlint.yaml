@@ -1,0 +1,24 @@
+---
+# Partial and unsafe functions are banned everywhere. A module that has a
+# real reason to call one lists itself in that function's `within`.
+- functions:
+    - name: head
+      within: []
+    - name: tail
+      within: []
+    - name: init
+      within: []
+    - name: last
+      within: []
+    - name: "!!"
+      within: []
+    - name: fromJust
+      within: []
+    - name: read
+      within: []
+    - name: undefined
+      within: []
+    - name: unsafePerformIO
+      within: []
+    - name: unsafeCoerce
+      within: []

@@ -1,0 +1,12 @@
+; Template: the env stanza goes in the project's root dune file, and the
+; instrumentation field in every library's own dune file.
+
+(env
+ (dev
+  (flags
+   (:standard -w @a-40-41-42-44-45))))
+
+(library
+ (name app)
+ (instrumentation
+  (backend bisect_ppx)))

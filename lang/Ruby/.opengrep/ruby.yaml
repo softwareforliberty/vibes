@@ -1,0 +1,38 @@
+---
+rules:
+  - id: ruby-no-eval
+    message: >-
+      Don't run input as code with eval or instance_eval; call the method you
+      need directly, choosing it from a fixed list if it varies.
+    severity: ERROR
+    languages:
+      - ruby
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: $OBJ.instance_eval(...)
+  - id: ruby-no-unsafe-deserialisation
+    message: >-
+      Don't load untrusted data with Marshal.load or YAML.load; use
+      JSON.parse, or YAML.safe_load for YAML.
+    severity: ERROR
+    languages:
+      - ruby
+    pattern-either:
+      - pattern: Marshal.load(...)
+      - pattern: YAML.load(...)
+  - id: ruby-no-shell-string
+    message: >-
+      Don't run a command as a single shell string; pass system the command
+      and each argument separately.
+    severity: ERROR
+    languages:
+      - ruby
+    pattern: system($COMMAND)
+  - id: ruby-no-interpolated-sql
+    message: >-
+      Don't build SQL by string interpolation; pass values as query parameters
+      so the driver escapes them.
+    severity: ERROR
+    languages:
+      - ruby
+    pattern: $DB.execute("...#{$VALUE}...", ...)

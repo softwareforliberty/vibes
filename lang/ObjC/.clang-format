@@ -1,0 +1,6 @@
+---
+Language: ObjC
+BasedOnStyle: Google
+ColumnLimit: 100
+DerivePointerAlignment: false
+PointerAlignment: Right

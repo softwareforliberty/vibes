@@ -1,0 +1,34 @@
+---
+rules:
+  - id: bash-no-eval
+    message: >-
+      Don't use eval; it runs data as code. Use the positional parameters,
+      case or parameter expansion instead.
+    severity: ERROR
+    languages:
+      - bash
+    pattern: eval ...
+  - id: bash-no-setuid
+    message: >-
+      Never make a script SUID or SGID; run it as another user with sudo
+      instead.
+    severity: ERROR
+    languages:
+      - bash
+    pattern-regex: chmod\s+(?:[ugoa]*\+[rwx]*s|[2-7][0-7]{3}\b)
+  - id: bash-no-fixed-tmp-path
+    message: >-
+      Create temporary files and directories with mktemp; a fixed name in /tmp
+      can be predicted and created first by an attacker.
+    severity: WARNING
+    languages:
+      - bash
+    pattern-regex: (?:^|[\s"'=])/tmp/[A-Za-z0-9_.-]
+  - id: bash-no-which
+    message: >-
+      Check that a program exists with command -v, which is built into the
+      shell; which isn't.
+    severity: WARNING
+    languages:
+      - bash
+    pattern: which ...

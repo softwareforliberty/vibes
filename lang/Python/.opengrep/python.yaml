@@ -1,0 +1,51 @@
+---
+rules:
+  - id: python-no-eval
+    message: >-
+      Don't run input as code with eval() or exec(); read Python literals with
+      ast.literal_eval() and data with json.
+    severity: ERROR
+    languages:
+      - python
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: exec(...)
+  - id: python-no-shell-true
+    message: >-
+      Don't run commands through a shell; pass subprocess an argument list
+      and leave shell=False.
+    severity: ERROR
+    languages:
+      - python
+    pattern: subprocess.$FUNC(..., shell=True, ...)
+  - id: python-no-unsafe-deserialisation
+    message: >-
+      Don't load untrusted data with pickle or marshal; they can run code while
+      loading. Use json for data from outside the program.
+    severity: ERROR
+    languages:
+      - python
+    pattern-either:
+      - pattern: pickle.load(...)
+      - pattern: pickle.loads(...)
+      - pattern: marshal.load(...)
+      - pattern: marshal.loads(...)
+  - id: python-no-yaml-load
+    message: >-
+      Don't call yaml.load(); it can build arbitrary objects. Use
+      yaml.safe_load() instead.
+    severity: ERROR
+    languages:
+      - python
+    pattern: yaml.load(...)
+  - id: python-no-formatted-sql
+    message: >-
+      Don't build SQL with string formatting; pass values as query parameters
+      so the driver escapes them.
+    severity: ERROR
+    languages:
+      - python
+    pattern-either:
+      - pattern: $CURSOR.execute(f"...", ...)
+      - pattern: $CURSOR.execute("..." % $ARGS, ...)
+      - pattern: $CURSOR.execute("...".format(...), ...)

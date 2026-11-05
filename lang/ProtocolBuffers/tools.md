@@ -11,6 +11,18 @@ and how to run them. They enforce the rules in
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`buf.yaml`](buf.yaml) | Buf |
+| [`.protolint.yaml`](.protolint.yaml) | protolint |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Recommended setup
 
 Configure Buf with `buf.yaml` at the repository root, naming the directory

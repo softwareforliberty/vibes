@@ -14,6 +14,17 @@ to run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [gcovr](https://gcovr.com/) | BSD-3-Clause | Code quality | Summarising gcov test coverage |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`fortitude.toml`](fortitude.toml) | Fortitude |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Compiler warnings
 
 Compiler warnings are the lint gate. Code must build with **no warnings**

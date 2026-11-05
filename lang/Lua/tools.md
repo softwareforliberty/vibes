@@ -15,6 +15,20 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [busted](https://github.com/lunarmodules/busted) | MIT | Code quality | Running tests |
 | [LuaCov](https://github.com/lunarmodules/luacov) | MIT | Code quality | Measuring test coverage |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.stylua.toml`](.stylua.toml) | StyLua |
+| [`selene.toml`](selene.toml) | selene |
+| [`.luacov`](.luacov) | LuaCov |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`.opengrep/lua.yaml`](.opengrep/lua.yaml) | Opengrep |
+
 ## Formatting
 
 StyLua owns layout. Code must be formatted with no changes left:

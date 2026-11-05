@@ -1,0 +1,8 @@
+---
+detectors:
+  # RuboCop's Metrics cops already limit method length and parameter
+  # lists, so Reek doesn't report the same problems a second time.
+  TooManyStatements:
+    enabled: false
+  LongParameterList:
+    enabled: false

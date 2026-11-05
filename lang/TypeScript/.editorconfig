@@ -1,0 +1,64 @@
+# EditorConfig: https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{ts,mts,cts}]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+# JetBrains IDEs
+ij_continuation_indent_size = 2
+ij_typescript_enforce_trailing_comma = whenmultiline
+ij_typescript_force_quote_style = true
+ij_typescript_force_semicolon_style = true
+ij_typescript_spaces_within_imports = true
+ij_typescript_spaces_within_object_literal_braces = true
+ij_typescript_spaces_within_object_type_braces = true
+ij_typescript_use_double_quotes = false
+ij_typescript_use_import_type = always
+ij_typescript_use_semicolon_after_statement = true
+
+[*.{js,mjs,cjs}]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+# JetBrains IDEs
+ij_continuation_indent_size = 2
+ij_javascript_enforce_trailing_comma = whenmultiline
+ij_javascript_force_quote_style = true
+ij_javascript_force_semicolon_style = true
+ij_javascript_spaces_within_imports = true
+ij_javascript_spaces_within_object_literal_braces = true
+ij_javascript_use_double_quotes = false
+ij_javascript_use_explicit_js_extension = always_js
+ij_javascript_use_semicolon_after_statement = true
+
+[*.json]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+
+[*.{yaml,yml}]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+# JetBrains IDEs
+ij_yaml_align_values_properties = do_not_align
+ij_yaml_autoinsert_sequence_marker = true
+ij_yaml_block_mapping_on_new_line = false
+ij_yaml_indent_sequence_value = true
+ij_yaml_keep_indents_on_empty_lines = false
+ij_yaml_keep_line_breaks = true
+ij_yaml_sequence_on_new_line = false
+ij_yaml_space_before_colon = false
+ij_yaml_spaces_within_braces = false
+ij_yaml_spaces_within_brackets = false
+
+# Prettier owns layout: in JetBrains IDEs, turn on Prettier's "Run on
+# Reformat" so a reformat gives exactly the same output.
+# VS Code, Vim, Emacs and Neovim read only the standard properties above.

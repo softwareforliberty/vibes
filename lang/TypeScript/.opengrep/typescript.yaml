@@ -1,0 +1,43 @@
+---
+rules:
+  - id: typescript-no-inner-html
+    message: >-
+      Don't assign markup to innerHTML or outerHTML; set textContent, or build
+      the nodes with createElement() or a <template>.
+    severity: ERROR
+    languages:
+      - typescript
+    patterns:
+      - pattern-either:
+          - pattern: $EL.innerHTML = $VALUE
+          - pattern: $EL.outerHTML = $VALUE
+      - pattern-not: $EL.innerHTML = "..."
+      - pattern-not: $EL.outerHTML = "..."
+  - id: typescript-no-insert-adjacent-html
+    message: >-
+      Don't pass built markup to insertAdjacentHTML(); use
+      insertAdjacentElement() or insertAdjacentText().
+    severity: ERROR
+    languages:
+      - typescript
+    patterns:
+      - pattern: $EL.insertAdjacentHTML($POSITION, $VALUE)
+      - pattern-not: $EL.insertAdjacentHTML($POSITION, "...")
+  - id: typescript-no-shell-exec
+    message: >-
+      Don't run shell commands built from data; call execFile() or spawn()
+      with an argument array.
+    severity: ERROR
+    languages:
+      - typescript
+    patterns:
+      - pattern-either:
+          - pattern-inside: |
+              import { exec } from 'node:child_process';
+              ...
+          - pattern-inside: |
+              import { execSync } from 'node:child_process';
+              ...
+      - pattern-either:
+          - pattern: exec(...)
+          - pattern: execSync(...)

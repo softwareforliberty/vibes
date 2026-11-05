@@ -1,0 +1,13 @@
+severity = 3
+verbose  = 8
+
+# use v5.36 turns on warnings, which this policy doesn't recognise in
+# every Perl::Critic release. It already treats use v5.12 or later as
+# turning on strict.
+[-TestingAndDebugging::RequireUseWarnings]
+
+# Signatures look like prototypes to this policy.
+[-Subroutines::ProhibitSubroutinePrototypes]
+
+[Subroutines::ProhibitExcessComplexity]
+max_mccabe = 10

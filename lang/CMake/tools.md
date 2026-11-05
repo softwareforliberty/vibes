@@ -12,6 +12,18 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.gersemirc`](.gersemirc) | gersemi |
+| [`CMakePresets.json`](CMakePresets.json) | CMake and CTest |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## CMake warnings
 
 CMake's own warnings are the lint gate. A project must configure with **no
@@ -40,6 +52,7 @@ Commit a `.gersemirc` at the repository root so every editor and CI run uses
 the same settings:
 
 ```yaml
+---
 line_length: 80
 indent: 4
 ```

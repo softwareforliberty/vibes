@@ -14,6 +14,16 @@ code, and how to run them. They enforce the rules in
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [QEMU](https://www.qemu.org/) (`drcov` plugin) | GPL-2.0 | Code quality | Logging which code the tests execute, for coverage review |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Assembler warnings
 
 Assembler warnings are the lint gate. Code must assemble with **no warnings**

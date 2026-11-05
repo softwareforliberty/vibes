@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset xmlns="http://codenarc.org/ruleset/1.0">
+  <description>Project CodeNarc rules, matching the Groovy coding style.</description>
+  <ruleset-ref path="rulesets/basic.xml"/>
+  <ruleset-ref path="rulesets/braces.xml"/>
+  <ruleset-ref path="rulesets/formatting.xml">
+    <include name="ConsecutiveBlankLines"/>
+    <include name="FileEndsWithoutNewline"/>
+    <include name="Indentation"/>
+    <include name="LineLength"/>
+    <include name="TrailingWhitespace"/>
+    <rule-config name="Indentation">
+      <property name="spacesPerIndentLevel" value="4"/>
+    </rule-config>
+    <rule-config name="LineLength">
+      <property name="length" value="120"/>
+    </rule-config>
+  </ruleset-ref>
+  <ruleset-ref path="rulesets/imports.xml"/>
+  <ruleset-ref path="rulesets/security.xml"/>
+  <ruleset-ref path="rulesets/size.xml">
+    <rule-config name="CyclomaticComplexity">
+      <property name="maxMethodComplexity" value="10"/>
+    </rule-config>
+    <rule-config name="MethodSize">
+      <property name="maxLines" value="60"/>
+    </rule-config>
+  </ruleset-ref>
+  <ruleset-ref path="rulesets/unused.xml"/>
+</ruleset>

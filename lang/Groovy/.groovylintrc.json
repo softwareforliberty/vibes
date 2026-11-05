@@ -1,0 +1,17 @@
+{
+  "extends": "recommended",
+  "rules": {
+    "formatting.Indentation": {
+      "spacesPerIndentLevel": 4
+    },
+    "formatting.LineLength": {
+      "length": 120
+    },
+    "size.CyclomaticComplexity": {
+      "maxMethodComplexity": 10
+    },
+    "size.MethodSize": {
+      "maxLines": 60
+    }
+  }
+}

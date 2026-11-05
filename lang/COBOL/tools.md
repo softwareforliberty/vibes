@@ -13,6 +13,15 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 COBOL has few FOSS tools beyond the compiler. Where no maintained tool
 exists, the section below says so and gives the closest check.
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+
 ## Compiler warnings
 
 Compiler warnings are the lint gate. Code must build with **no warnings**

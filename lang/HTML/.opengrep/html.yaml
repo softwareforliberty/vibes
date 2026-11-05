@@ -1,0 +1,30 @@
+---
+rules:
+  - id: html-no-inline-event-handler
+    message: >-
+      Don't use on* attributes; attach the handler with addEventListener() in
+      a module script, so the page works under a strict Content Security
+      Policy.
+    severity: ERROR
+    languages:
+      - html
+    pattern-regex: >-
+      <[a-zA-Z][^>]*\son[a-z]+\s*=
+  - id: html-no-javascript-url
+    message: >-
+      Don't use javascript: URLs; use a button and attach the behaviour with
+      addEventListener().
+    severity: ERROR
+    languages:
+      - html
+    pattern-regex: >-
+      (?i)\b(?:href|src|action|formaction)\s*=\s*["']?\s*javascript:
+  - id: html-blank-target-without-noopener
+    message: >-
+      Add rel="noopener noreferrer" to every link with target="_blank", so the
+      opened page can't control this one.
+    severity: WARNING
+    languages:
+      - html
+    pattern-regex: >-
+      <a\b(?=[^>]*\btarget\s*=\s*["']?_blank)(?![^>]*\brel\s*=\s*["'](?=[^"']*\bnoopener\b)(?=[^"']*\bnoreferrer\b)[^"']*["'])[^>]*>

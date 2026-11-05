@@ -1,0 +1,36 @@
+---
+rules:
+  - id: go-sql-built-with-sprintf
+    message: >-
+      Don't format values into SQL; pass them to the driver as query
+      parameters, which it escapes.
+    severity: ERROR
+    languages:
+      - go
+    pattern-either:
+      - pattern: $DB.Query(fmt.Sprintf(...), ...)
+      - pattern: $DB.QueryContext($CTX, fmt.Sprintf(...), ...)
+      - pattern: $DB.QueryRow(fmt.Sprintf(...), ...)
+      - pattern: $DB.QueryRowContext($CTX, fmt.Sprintf(...), ...)
+      - pattern: $DB.Exec(fmt.Sprintf(...), ...)
+      - pattern: $DB.ExecContext($CTX, fmt.Sprintf(...), ...)
+  - id: go-no-shell-command
+    message: >-
+      Don't run commands through a shell; call exec.Command with the program
+      and an argument list, so arguments can't inject commands.
+    severity: ERROR
+    languages:
+      - go
+    pattern-either:
+      - pattern: exec.Command("sh", "-c", ...)
+      - pattern: exec.Command("bash", "-c", ...)
+      - pattern: exec.CommandContext($CTX, "sh", "-c", ...)
+      - pattern: exec.CommandContext($CTX, "bash", "-c", ...)
+  - id: go-html-with-text-template
+    message: >-
+      Render HTML with html/template, which escapes by context; text/template
+      doesn't escape anything.
+    severity: WARNING
+    languages:
+      - go
+    pattern: import "text/template"

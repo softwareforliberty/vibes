@@ -1,0 +1,18 @@
+---
+rules:
+  - id: yaml-no-language-tags
+    message: >-
+      Don't use language-specific tags; load the file with a safe loader and
+      build objects from plain mappings in code.
+    severity: ERROR
+    languages:
+      - yaml
+    pattern-regex: "!!(python|ruby|perl|php|js)/"
+  - id: yaml-no-java-class-tags
+    message: >-
+      Don't name a Java class in a tag; a loader that honours it can run that
+      class's code. Use plain mappings and a safe loader.
+    severity: ERROR
+    languages:
+      - yaml
+    pattern-regex: "!!(?:[a-z][a-z0-9_]*\\.)+[A-Z][A-Za-z0-9_]*"

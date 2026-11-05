@@ -1,0 +1,22 @@
+---
+rules:
+  - id: lua-no-load
+    message: >-
+      Don't run untrusted code with load or loadstring; if you must evaluate
+      data as Lua, pass an empty environment and allow only text chunks.
+    severity: ERROR
+    languages:
+      - lua
+    pattern-either:
+      - pattern: load(...)
+      - pattern: loadstring(...)
+  - id: lua-review-shell
+    message: >-
+      Don't build shell commands from input; validate every argument against
+      an allowlist before calling os.execute or io.popen.
+    severity: WARNING
+    languages:
+      - lua
+    pattern-either:
+      - pattern: os.execute(...)
+      - pattern: io.popen(...)

@@ -1,0 +1,2 @@
+; Template: merge into your project's dune-project file.
+(lang dune 3.0)

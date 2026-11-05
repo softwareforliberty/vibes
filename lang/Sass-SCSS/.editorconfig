@@ -1,0 +1,32 @@
+# EditorConfig: https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.scss]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+# JetBrains IDEs
+ij_continuation_indent_size = 2
+ij_scss_blank_lines_between_blocks = 1
+ij_scss_enforce_quotes_on_format = true
+ij_scss_hex_color_lower_case = true
+ij_scss_hex_color_short_format = true
+ij_scss_keep_single_line_blocks = false
+ij_scss_space_after_colon = true
+ij_scss_space_before_opening_brace = true
+ij_scss_use_double_quotes = false
+
+[*.json]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+
+# Prettier owns layout: in JetBrains IDEs, turn on Prettier's "Run on
+# Reformat" so a reformat gives exactly the same output.
+# VS Code, Vim, Emacs and Neovim read only the standard properties above.

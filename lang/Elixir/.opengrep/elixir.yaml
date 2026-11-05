@@ -1,0 +1,28 @@
+---
+rules:
+  - id: elixir-no-string-to-atom
+    message: >-
+      Don't create atoms from strings, which the VM never frees; use
+      String.to_existing_atom/1 or match the string explicitly.
+    severity: ERROR
+    languages:
+      - elixir
+    pattern: String.to_atom(...)
+  - id: elixir-no-eval-string
+    message: >-
+      Don't evaluate strings as code; parse the input into data and act on
+      that instead.
+    severity: ERROR
+    languages:
+      - elixir
+    pattern-either:
+      - pattern: Code.eval_string(...)
+      - pattern: Code.eval_quoted(...)
+  - id: elixir-no-unsafe-binary-to-term
+    message: >-
+      Don't decode untrusted binaries with :erlang.binary_to_term/1; pass the
+      [:safe] option, which refuses to create new atoms.
+    severity: ERROR
+    languages:
+      - elixir
+    pattern: :erlang.binary_to_term($BIN)

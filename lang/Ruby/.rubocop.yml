@@ -1,0 +1,10 @@
+---
+AllCops:
+  TargetRubyVersion: 3.2
+  NewCops: enable
+
+Layout/LineLength:
+  Max: 80
+
+Style/AndOr:
+  EnforcedStyle: always

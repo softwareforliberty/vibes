@@ -15,6 +15,19 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [Weeder](https://github.com/ocharles/weeder) | BSD-3-Clause | Code quality | Finding unused code |
 | [hpc](https://hackage.haskell.org/package/hpc) | BSD-3-Clause | Code quality | Measuring test coverage (ships with GHC) |
 
+## Config files
+
+These files are drop-in templates: copy them into the project root.
+
+| File | Read by |
+| --- | --- |
+| [.editorconfig](.editorconfig) | Every editor and IDE, through EditorConfig |
+| [fourmolu.yaml](fourmolu.yaml) | Fourmolu |
+| [.hlint.yaml](.hlint.yaml) | HLint |
+| [weeder.toml](weeder.toml) | Weeder |
+| [project.cabal](project.cabal) | Cabal and GHC (merge into the package's `.cabal` file) |
+| [.jscpd.json](.jscpd.json) | jscpd |
+
 ## Formatting
 
 Fourmolu owns layout. Check formatting in CI, and fix it locally with
@@ -27,6 +40,7 @@ fourmolu --mode check $(git ls-files '*.hs')
 Put the settings in `fourmolu.yaml` at the project root:
 
 ```yaml
+---
 indentation: 4
 column-limit: 80
 comma-style: leading
@@ -38,20 +52,40 @@ unicode: never
 ## Compiler warnings
 
 Compiler warnings are the main lint gate. Code must build with **no
-warnings** using at least these flags, set in every component of the
-`.cabal` file:
+warnings** using at least these flags. Put them, with the language
+settings from [coding-style.md](coding-style.md#language-baseline), in a
+`common` stanza that every component of the `.cabal` file imports:
 
 ```cabal
-ghc-options:
-    -Wall
-    -Wcompat
-    -Widentities
-    -Wincomplete-record-updates
-    -Wincomplete-uni-patterns
-    -Wmissing-export-lists
-    -Wpartial-fields
-    -Wredundant-constraints
-    -Wunused-packages
+cabal-version: 3.0
+-- Template: merge these settings into your package's .cabal file. Every
+-- component imports the shared stanza, so they all build the same way.
+name:          project
+version:       0.1.0.0
+
+common shared
+    default-language:   GHC2021
+    default-extensions:
+        DerivingStrategies
+        DuplicateRecordFields
+        LambdaCase
+        OverloadedRecordDot
+        OverloadedStrings
+    ghc-options:
+        -Wall
+        -Wcompat
+        -Widentities
+        -Wincomplete-record-updates
+        -Wincomplete-uni-patterns
+        -Wmissing-export-lists
+        -Wpartial-fields
+        -Wredundant-constraints
+        -Wunused-packages
+
+library
+    import:          shared
+    hs-source-dirs:  src
+    exposed-modules: Project
 ```
 
 Turn warnings into errors in CI rather than in the `.cabal` file, so a
@@ -74,17 +108,30 @@ Put the settings in `.hlint.yaml`. The `functions` list bans partial and
 unsafe functions everywhere:
 
 ```yaml
+---
+# Partial and unsafe functions are banned everywhere. A module that has a
+# real reason to call one lists itself in that function's `within`.
 - functions:
-    - {name: head, within: []}
-    - {name: tail, within: []}
-    - {name: init, within: []}
-    - {name: last, within: []}
-    - {name: "!!", within: []}
-    - {name: fromJust, within: []}
-    - {name: read, within: []}
-    - {name: undefined, within: []}
-    - {name: unsafePerformIO, within: []}
-    - {name: unsafeCoerce, within: []}
+    - name: head
+      within: []
+    - name: tail
+      within: []
+    - name: init
+      within: []
+    - name: last
+      within: []
+    - name: "!!"
+      within: []
+    - name: fromJust
+      within: []
+    - name: read
+      within: []
+    - name: undefined
+      within: []
+    - name: unsafePerformIO
+      within: []
+    - name: unsafeCoerce
+      within: []
 ```
 
 A module that has a real reason to call one of these lists itself in that

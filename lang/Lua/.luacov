@@ -1,0 +1,4 @@
+return {
+  include = { 'src/' },
+  exclude = { 'spec/' },
+}

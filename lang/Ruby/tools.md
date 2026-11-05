@@ -18,6 +18,21 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [debride](https://github.com/seattlerb/debride) | MIT | Code quality | Finding unused methods |
 | [SimpleCov](https://github.com/simplecov-ruby/simplecov) | MIT | Code quality | Measuring test coverage |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.rubocop.yml`](.rubocop.yml) | RuboCop |
+| [`.reek.yml`](.reek.yml) | Reek |
+| [`.simplecov`](.simplecov) | SimpleCov |
+| [`debride_whitelist.txt`](debride_whitelist.txt) | debride |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`.opengrep/ruby.yaml`](.opengrep/ruby.yaml) | Opengrep |
+
 ## Configuration
 
 Code must pass RuboCop with **no offences**:
@@ -30,6 +45,7 @@ rubocop -a     # apply safe automatic fixes
 Put the settings in `.rubocop.yml` at the project root:
 
 ```yaml
+---
 AllCops:
   TargetRubyVersion: 3.2
   NewCops: enable
@@ -103,11 +119,25 @@ lizard -l ruby -C 10 -L 60 -w lib
 RuboCop's `Metrics` cops already hold methods to tighter limits than these,
 so lizard acts as a backstop for code where a cop has been disabled.
 
-Reek finds design smells the metrics miss, such as feature envy, long
-parameter lists and data clumps:
+Reek finds design smells the metrics miss, such as feature envy, data
+clumps and utility functions:
 
 ```sh
 reek lib
+```
+
+`.reek.yml` turns off Reek's statement-count and parameter-count checks,
+because RuboCop's `Metrics` cops already enforce those limits:
+
+```yaml
+---
+detectors:
+  # RuboCop's Metrics cops already limit method length and parameter
+  # lists, so Reek doesn't report the same problems a second time.
+  TooManyStatements:
+    enabled: false
+  LongParameterList:
+    enabled: false
 ```
 
 ### Duplication
@@ -137,19 +167,28 @@ file.
 debride --whitelist debride_whitelist.txt lib
 ```
 
+`debride_whitelist.txt` lists one method name per line. It starts empty;
+add a name only after confirming the method is called indirectly.
+
 ### Coverage
 
 Measure branch coverage on every test run, and fail the build when it falls
 below 80%. Raise the minimum as coverage grows; never lower it to make a
 build pass.
 
-Start SimpleCov at the top of the test helper, before any application code
-loads:
+SimpleCov reads its settings from `.simplecov` when it's required, so
+require it at the top of the test helper, before any application code loads:
 
 ```ruby
 # frozen_string_literal: true
 
 require 'simplecov'
+```
+
+`.simplecov`:
+
+```ruby
+# frozen_string_literal: true
 
 SimpleCov.start do
   enable_coverage :branch

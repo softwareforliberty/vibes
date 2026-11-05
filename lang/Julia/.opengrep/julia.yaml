@@ -1,0 +1,28 @@
+---
+rules:
+  - id: julia-no-eval-parse
+    message: >-
+      Don't evaluate code built from a string; pass data to a function
+      instead.
+    severity: ERROR
+    languages:
+      - julia
+    pattern: eval(Meta.parse(...))
+  - id: julia-no-include-string
+    message: >-
+      Don't evaluate code from a string with include_string(); include only
+      files that are part of your own code.
+    severity: ERROR
+    languages:
+      - julia
+    pattern: include_string(...)
+  - id: julia-no-deserialize
+    message: >-
+      Don't deserialize() untrusted data; exchange data as CSV, JSON or
+      Arrow.
+    severity: WARNING
+    languages:
+      - julia
+    pattern-either:
+      - pattern: deserialize(...)
+      - pattern: Serialization.deserialize(...)

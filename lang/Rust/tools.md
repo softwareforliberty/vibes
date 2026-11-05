@@ -19,6 +19,24 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [cargo-machete](https://github.com/bnjbvr/cargo-machete) | MIT | Code quality | Finding unused dependencies |
 | [cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov) | Apache-2.0 OR MIT | Code quality | Measuring test coverage |
 
+## Config files
+
+Copy these files into the project root, merging the `Cargo.toml` settings
+into the project's own manifest. Each one matches the settings this guide
+describes.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, including RustRover |
+| [`Cargo.toml`](Cargo.toml) | Cargo, rustc and Clippy: the edition, the minimum Rust version and the lints |
+| [`clippy.toml`](clippy.toml) | Clippy |
+| [`deny.toml`](deny.toml) | cargo-deny |
+| [`.opengrep/rust.yaml`](.opengrep/rust.yaml) | Opengrep: starter rules for the [unsafe code](idioms.md#unsafe-code) and [concurrency](idioms.md#concurrency) idioms |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
+There's no `rustfmt.toml`: rustfmt runs with its defaults, and `cargo fmt`
+takes the edition from `Cargo.toml`.
+
 ## Formatting
 
 `rustfmt` owns layout, with its default settings. Code must come out of it
@@ -40,6 +58,14 @@ cargo clippy --all-targets --all-features -- -D warnings
 Set the lints in `Cargo.toml`, so every build and editor applies them:
 
 ```toml
+# Template: merge these settings into the project's Cargo.toml.
+
+[package]
+name = "example"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+
 [lints.rust]
 missing_docs = "warn"
 unsafe_op_in_unsafe_fn = "deny"
@@ -54,11 +80,15 @@ unwrap_used = "warn"
 - `pedantic` includes the cast lints that enforce
   [converting with `From` and `TryFrom`](coding-style.md#expressions).
 - `unwrap_used` and `panic` enforce the rule that
-  [library code doesn't panic](idioms.md#errors). Allow `unwrap()` in tests
-  with a `clippy.toml` next to `Cargo.toml`:
+  [library code doesn't panic](idioms.md#errors). `clippy.toml`, next to
+  `Cargo.toml`, allows `unwrap()` in tests. It also lowers the
+  `too_many_lines` limit, which `pedantic` turns on, to the 60 lines that
+  [Complexity](#complexity) sets:
 
   ```toml
+  # Clippy settings. Keep this file next to Cargo.toml.
   allow-unwrap-in-tests = true
+  too-many-lines-threshold = 60
   ```
 
 - `undocumented_unsafe_blocks` enforces the
@@ -110,6 +140,8 @@ allowed licences, and only crates from crates.io. Put the settings in
 `deny.toml`:
 
 ```toml
+# cargo-deny settings: allowed licences and dependency sources.
+
 [licenses]
 allow = ["Apache-2.0", "BSD-3-Clause", "ISC", "MIT", "Unicode-3.0"]
 

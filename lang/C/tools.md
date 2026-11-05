@@ -16,6 +16,17 @@ them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [gcovr](https://gcovr.com/) | BSD-3-Clause | Code quality | Summarising gcov coverage |
 
+## Config files
+
+Copy these files to the same paths in the repository. Every config shown
+below is the full contents of one of these files.
+
+| File | Read by |
+| --- | --- |
+| [.editorconfig](.editorconfig) | Every editor with EditorConfig support; CLion; Visual Studio and VS Code (C/C++ extension) |
+| [.jscpd.json](.jscpd.json) | jscpd |
+| [.opengrep/c.yaml](.opengrep/c.yaml) | Opengrep |
+
 ## Compiler warnings
 
 Compiler warnings are the lint gate. Code must build with **no warnings**

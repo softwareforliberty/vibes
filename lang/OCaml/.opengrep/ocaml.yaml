@@ -1,0 +1,35 @@
+---
+rules:
+  - id: ocaml-no-sys-command
+    message: >-
+      Don't run a shell command string with Sys.command; run the program with
+      Unix.create_process and an argument array.
+    severity: ERROR
+    languages:
+      - ocaml
+    patterns:
+      - pattern: Sys.command $CMD
+      - pattern-not: Sys.command "..."
+  - id: ocaml-no-shell-open-process
+    message: >-
+      Don't start a process through the shell; use Unix.open_process_args_in
+      or Unix.open_process_args_out with an argument array.
+    severity: ERROR
+    languages:
+      - ocaml
+    pattern-either:
+      - pattern: Unix.open_process $CMD
+      - pattern: Unix.open_process_in $CMD
+      - pattern: Unix.open_process_out $CMD
+      - pattern: Unix.open_process_full $CMD $ENV
+  - id: ocaml-no-marshal-input
+    message: >-
+      Don't unmarshal external data, which isn't type-safe; decode it with a
+      typed parser instead.
+    severity: ERROR
+    languages:
+      - ocaml
+    pattern-either:
+      - pattern: Marshal.from_string $DATA $POS
+      - pattern: Marshal.from_bytes $DATA $POS
+      - pattern: Marshal.from_channel $CHANNEL

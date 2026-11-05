@@ -15,6 +15,19 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [bisect_ppx](https://github.com/aantron/bisect_ppx) | MIT | Code quality | Measuring test coverage |
 
+## Config files
+
+These files are drop-in templates: copy them into the project root.
+
+| File | Read by |
+| --- | --- |
+| [.editorconfig](.editorconfig) | Every editor and IDE, through EditorConfig |
+| [.ocamlformat](.ocamlformat) | ocamlformat |
+| [dune-project](dune-project) | dune (merge into the project's `dune-project`) |
+| [dune](dune) | dune: warning flags and bisect_ppx instrumentation |
+| [.opengrep/ocaml.yaml](.opengrep/ocaml.yaml) | Opengrep |
+| [.jscpd.json](.jscpd.json) | jscpd |
+
 ## Formatting
 
 ocamlformat owns layout. Check formatting in CI, and fix it locally with
@@ -37,13 +50,22 @@ margin = 80
 
 Compiler warnings are the main lint gate. dune's default development
 profile makes the standard warnings errors; turn on the rest in the root
-`dune` file:
+`dune` file. The template also enables coverage instrumentation (see
+[Coverage](#coverage)):
 
 ```lisp
+; Template: the env stanza goes in the project's root dune file, and the
+; instrumentation field in every library's own dune file.
+
 (env
  (dev
   (flags
    (:standard -w @a-40-41-42-44-45))))
+
+(library
+ (name app)
+ (instrumentation
+  (backend bisect_ppx)))
 ```
 
 This enables every warning except the ones about name resolution and
@@ -84,9 +106,10 @@ them.
 opengrep scan --config .opengrep/ --error
 ```
 
-Write rules for the calls the project must not make with untrusted input,
-such as `Sys.command` and `Unix.open_process` with a built-up command
-string, and `Marshal.from_string` on external data.
+The starter rules in [.opengrep/ocaml.yaml](.opengrep/ocaml.yaml) flag the
+calls the project must not make with untrusted input: `Sys.command` and
+`Unix.open_process` with a built-up command string, and `Marshal` on
+external data. Add rules as the project finds new risks.
 
 ### Dependency vulnerabilities
 

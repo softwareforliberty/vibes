@@ -1,0 +1,17 @@
+---
+disabled_rules:
+  - opening_brace
+  - trailing_comma
+opt_in_rules:
+  - empty_count
+  - fatal_error_message
+  - first_where
+  - force_unwrapping
+  - implicitly_unwrapped_optional
+  - unowned_variable_capture
+analyzer_rules:
+  - unused_declaration
+  - unused_import
+line_length: 100
+excluded:
+  - .build

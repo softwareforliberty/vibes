@@ -18,6 +18,21 @@ to run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [Knip](https://knip.dev/) | ISC | Code quality | Finding unused files, exports and dependencies |
 | [c8](https://github.com/bcoe/c8) | ISC | Code quality | Measuring test coverage |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.prettierrc.json`](.prettierrc.json) | Prettier |
+| [`eslint.config.js`](eslint.config.js) | ESLint |
+| [`knip.json`](knip.json) | Knip |
+| [`.c8rc.json`](.c8rc.json) | c8 |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`.opengrep/javascript.yaml`](.opengrep/javascript.yaml) | Opengrep |
+
 ## Configuration
 
 Code must pass both checks with **no errors or warnings**:
@@ -77,6 +92,8 @@ export default [
 ];
 ```
 
+- `eslint.config.js` is an ES module, like all code in this guide, so the
+  project's `package.json` sets `"type": "module"`.
 - Prettier owns layout. Don't hand-format code it will rewrite, and don't
   argue with its output in review. ESLint checks only for bugs and unsafe
   patterns, so the two never conflict.
@@ -100,9 +117,12 @@ them.
 opengrep scan --config .opengrep/ --error
 ```
 
-Write rules for the DOM sinks the [idioms](idioms.md#the-dom) forbid with
-untrusted data, such as `innerHTML`, `outerHTML` and
-`insertAdjacentHTML()`.
+The starter rules in
+[`.opengrep/javascript.yaml`](.opengrep/javascript.yaml) reject markup
+assigned to `innerHTML` or `outerHTML`, markup passed to
+`insertAdjacentHTML()`, and shell commands run with `exec()`, as the
+[idioms](idioms.md#the-dom) forbid. Add a rule for each new unsafe pattern
+you find.
 
 ### Dependency vulnerabilities
 
@@ -180,7 +200,8 @@ Measure branch coverage on every test run, and fail the build when it falls
 below 80%. Raise the minimum as coverage grows; never lower it to make a
 build pass.
 
-c8 reads the coverage V8 collects natively, so the code runs unmodified:
+c8 reads the coverage V8 collects natively, so the code runs unmodified.
+[`.c8rc.json`](.c8rc.json) sets the same minimums as the flags below:
 
 ```sh
 npx c8 --check-coverage --branches 80 --lines 80 node --test

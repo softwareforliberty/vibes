@@ -1,0 +1,17 @@
+# EditorConfig: https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# zig fmt's layout: 4 spaces, no tabs. It doesn't wrap lines, so 100 columns
+# is the limit the style guide sets. zig fmt formats build.zig.zon too.
+[*.{zig,zon}]
+indent_style = space
+indent_size = 4
+max_line_length = 100
+# No major IDE defines Zig-specific EditorConfig properties. VS Code, the
+# JetBrains IDEs, Vim, Emacs and Neovim read the standard properties above.

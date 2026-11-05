@@ -18,6 +18,22 @@ and [idioms.md](idioms.md).
 | [Knip](https://knip.dev/) | ISC | Code quality | Finding unused files, exports, types and dependencies |
 | [c8](https://github.com/bcoe/c8) | ISC | Code quality | Measuring test coverage |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.prettierrc.json`](.prettierrc.json) | Prettier |
+| [`tsconfig.json`](tsconfig.json) | `tsc` and typescript-eslint |
+| [`eslint.config.js`](eslint.config.js) | ESLint |
+| [`knip.json`](knip.json) | Knip |
+| [`.c8rc.json`](.c8rc.json) | c8 |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`.opengrep/typescript.yaml`](.opengrep/typescript.yaml) | Opengrep |
+
 ## Configuration
 
 Code must pass all three checks with **no errors or warnings**:
@@ -107,6 +123,10 @@ export default [
       '@typescript-eslint/switch-exhaustiveness-check': 'error',
     },
   },
+  {
+    ...tseslint.configs.disableTypeChecked,
+    files: ['**/*.js'],
+  },
 ];
 ```
 
@@ -118,6 +138,10 @@ export default [
 - `strictTypeChecked` also bans `any`, non-null assertions and floating
   promises, as the [style guide](coding-style.md#forbidden-constructs) and
   [JavaScript idioms](../JavaScript/idioms.md#async-code) require.
+- The last block turns off type-aware rules for JavaScript files, such as
+  `eslint.config.js` itself, which `tsconfig.json` doesn't include.
+- `eslint.config.js` is an ES module, like all code in this guide, so the
+  project's `package.json` sets `"type": "module"`.
 - Prettier owns layout, and ESLint checks only for bugs and unsafe patterns,
   so the two never conflict.
 
@@ -138,9 +162,12 @@ them.
 opengrep scan --config .opengrep/ --error
 ```
 
-Write rules for the DOM sinks the
-[JavaScript idioms](../JavaScript/idioms.md#the-dom) forbid with untrusted
-data, such as `innerHTML`, `outerHTML` and `insertAdjacentHTML()`.
+The starter rules in
+[`.opengrep/typescript.yaml`](.opengrep/typescript.yaml) reject markup
+assigned to `innerHTML` or `outerHTML`, markup passed to
+`insertAdjacentHTML()`, and shell commands run with `exec()`, as the
+[JavaScript idioms](../JavaScript/idioms.md#the-dom) forbid. Add a rule for
+each new unsafe pattern you find.
 
 ### Dependency vulnerabilities
 
@@ -221,7 +248,8 @@ build pass.
 
 Node.js 22.18 and later run the `.ts` tests directly by stripping the types,
 which keeps line and column positions intact. c8 reads the coverage V8
-collects, so it maps straight back to the source:
+collects, so it maps straight back to the source.
+[`.c8rc.json`](.c8rc.json) sets the same minimums as the flags below:
 
 ```sh
 npx c8 --check-coverage --branches 80 --lines 80 node --test 'src/**/*.test.ts'

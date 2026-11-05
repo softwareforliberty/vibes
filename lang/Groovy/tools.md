@@ -14,6 +14,24 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [JaCoCo](https://www.jacoco.org/jacoco/) | EPL-2.0 | Code quality | Measuring test coverage, and failing the build below a minimum |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`codenarc.xml`](codenarc.xml) | CodeNarc, through Gradle's `codenarc` plugin |
+| [`.groovylintrc.json`](.groovylintrc.json) | npm-groovy-lint |
+| [`build.gradle.kts`](build.gradle.kts) | Gradle: CodeNarc, dependency locking, OWASP Dependency-Check and JaCoCo |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
+`build.gradle.kts` is a template: merge its settings into the project's own
+build script. `.groovylintrc.json` builds on npm-groovy-lint's recommended
+rules and sets the same indentation, line length, complexity and method size
+limits as `codenarc.xml`.
+
 ## Recommended setup
 
 Format, then check. Code must have no findings.
@@ -31,22 +49,41 @@ npm-groovy-lint
 - Because the formatter owns layout, never hand-format code it will rewrite.
   Run it before every commit.
 
-Add CodeNarc's security, size and unused-code rule sets to the project's
-rule set file, so the checks in [Auditing](#auditing) and
+The project's rule set, [`codenarc.xml`](codenarc.xml), adds CodeNarc's
+security, size and unused-code rule sets to the formatting, import and brace
+rules, so the checks in [Auditing](#auditing) and
 [Code quality](#code-quality) run with the rest of the build:
 
 ```xml
+<?xml version="1.0" encoding="UTF-8"?>
 <ruleset xmlns="http://codenarc.org/ruleset/1.0">
-    <ruleset-ref path="rulesets/security.xml"/>
-    <ruleset-ref path="rulesets/size.xml">
-        <rule-config name="CyclomaticComplexity">
-            <property name="maxMethodComplexity" value="10"/>
-        </rule-config>
-        <rule-config name="MethodSize">
-            <property name="maxLines" value="60"/>
-        </rule-config>
-    </ruleset-ref>
-    <ruleset-ref path="rulesets/unused.xml"/>
+  <description>Project CodeNarc rules, matching the Groovy coding style.</description>
+  <ruleset-ref path="rulesets/basic.xml"/>
+  <ruleset-ref path="rulesets/braces.xml"/>
+  <ruleset-ref path="rulesets/formatting.xml">
+    <include name="ConsecutiveBlankLines"/>
+    <include name="FileEndsWithoutNewline"/>
+    <include name="Indentation"/>
+    <include name="LineLength"/>
+    <include name="TrailingWhitespace"/>
+    <rule-config name="Indentation">
+      <property name="spacesPerIndentLevel" value="4"/>
+    </rule-config>
+    <rule-config name="LineLength">
+      <property name="length" value="120"/>
+    </rule-config>
+  </ruleset-ref>
+  <ruleset-ref path="rulesets/imports.xml"/>
+  <ruleset-ref path="rulesets/security.xml"/>
+  <ruleset-ref path="rulesets/size.xml">
+    <rule-config name="CyclomaticComplexity">
+      <property name="maxMethodComplexity" value="10"/>
+    </rule-config>
+    <rule-config name="MethodSize">
+      <property name="maxLines" value="60"/>
+    </rule-config>
+  </ruleset-ref>
+  <ruleset-ref path="rulesets/unused.xml"/>
 </ruleset>
 ```
 
@@ -76,7 +113,9 @@ osv-scanner scan source -r .
   dependencies through deps.dev, which needs network access.
 - OWASP Dependency-Check's Gradle and Maven plugins check the resolved
   classpath during the build. Use it when the build itself must fail on a
-  vulnerable dependency. It needs an NVD API key to download its database.
+  vulnerable dependency. The template fails the build on any vulnerability
+  with a CVSS score of 7 or more. It needs an NVD API key to download its
+  database.
 - Scripts that fetch dependencies with Grape (`@Grab`) have no lockfile, so
   no scanner can see them. Declare dependencies in the build instead.
 
@@ -118,8 +157,11 @@ variables and parameters.
 
 ### Coverage
 
-Measure line and branch coverage with JaCoCo on every test run, and fail the
-build when coverage drops below the project's agreed minimum (for example,
-80% of lines). In Gradle, apply the `jacoco` plugin and run
-`jacocoTestCoverageVerification`. In Maven, run the `jacoco-maven-plugin`
-`check` goal.
+Measure branch coverage on every test run, and fail the build when it falls
+below 80%. Raise the minimum as coverage grows; never lower it to make a
+build pass.
+
+In Gradle, the `jacoco` plugin's `jacocoTestCoverageVerification` task
+enforces the minimum; the template sets 80% for both lines and branches and
+runs it as part of `check`. In Maven, run the `jacoco-maven-plugin` `check`
+goal with the same limits.

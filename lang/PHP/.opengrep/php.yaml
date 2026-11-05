@@ -1,0 +1,44 @@
+---
+rules:
+  - id: php-no-unserialize
+    message: >-
+      Don't call unserialize(); it can create arbitrary objects. Use
+      json_decode() for data from outside the program.
+    severity: ERROR
+    languages:
+      - php
+    pattern: unserialize(...)
+  - id: php-no-eval
+    message: >-
+      Don't run input as code with eval() or import variables with extract();
+      call the code you need directly and read values from the array.
+    severity: ERROR
+    languages:
+      - php
+    pattern-either:
+      - pattern: eval(...)
+      - pattern: extract(...)
+  - id: php-review-shell
+    message: >-
+      Avoid running shell commands; when you must, pass every argument through
+      escapeshellarg().
+    severity: WARNING
+    languages:
+      - php
+    pattern-either:
+      - pattern: exec(...)
+      - pattern: passthru(...)
+      - pattern: shell_exec(...)
+      - pattern: system(...)
+      - pattern: proc_open(...)
+      - pattern: popen(...)
+  - id: php-no-weak-random
+    message: >-
+      Don't use rand() or mt_rand() for tokens; use random_bytes() or
+      random_int().
+    severity: WARNING
+    languages:
+      - php
+    pattern-either:
+      - pattern: rand(...)
+      - pattern: mt_rand(...)

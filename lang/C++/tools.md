@@ -19,6 +19,19 @@ them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [lizard](https://github.com/terryyin/lizard) | MIT | Code quality | Measuring function complexity and length |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
+## Config files
+
+Copy these files to the same paths in the repository. Every config shown
+below is the full contents of one of these files.
+
+| File | Read by |
+| --- | --- |
+| [.editorconfig](.editorconfig) | Every editor with EditorConfig support; CLion; Visual Studio and VS Code (C/C++ extension) |
+| [.clang-format](.clang-format) | clang-format, and CLion and Visual Studio when set to use it |
+| [.clang-tidy](.clang-tidy) | clang-tidy |
+| [.jscpd.json](.jscpd.json) | jscpd |
+| [.opengrep/cpp.yaml](.opengrep/cpp.yaml) | Opengrep |
+
 ## Formatting
 
 Commit this `.clang-format` at the repository root, and run clang-format on
@@ -26,6 +39,8 @@ every changed file before committing. A formatter ends layout debates and
 keeps diffs free of whitespace noise.
 
 ```yaml
+---
+Language: Cpp
 BasedOnStyle: Google
 DerivePointerAlignment: false
 PointerAlignment: Right
@@ -37,6 +52,7 @@ Commit this `.clang-tidy` at the repository root. Code must pass it with no
 warnings.
 
 ```yaml
+---
 Checks: >
   bugprone-*,
   cppcoreguidelines-*,
@@ -49,7 +65,7 @@ Checks: >
   -google-readability-todo,
   -modernize-use-trailing-return-type,
   -readability-identifier-length
-WarningsAsErrors: '*'
+WarningsAsErrors: "*"
 CheckOptions:
   readability-identifier-naming.ClassCase: CamelCase
   readability-identifier-naming.StructCase: CamelCase

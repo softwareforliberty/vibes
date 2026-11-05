@@ -15,6 +15,19 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [OSV-Scanner](https://github.com/google/osv-scanner) | Apache-2.0 | Auditing | Checking dependencies against known vulnerabilities |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
+## Config files
+
+These files are drop-in templates: copy them into the project root.
+
+| File | Read by |
+| --- | --- |
+| [.editorconfig](.editorconfig) | Every editor and IDE, through EditorConfig |
+| [.formatter.exs](.formatter.exs) | `mix format` |
+| [.credo.exs](.credo.exs) | Credo |
+| [mix.exs](mix.exs) | Mix: Dialyxir flags, coverage minimum and tool dependencies (merge into the project's `mix.exs`) |
+| [.opengrep/elixir.yaml](.opengrep/elixir.yaml) | Opengrep |
+| [.jscpd.json](.jscpd.json) | jscpd |
+
 ## Formatting
 
 `mix format` owns layout. Check formatting in CI, and fix it locally by
@@ -59,6 +72,37 @@ slow:
 mix dialyzer
 ```
 
+Dialyzer's warning flags, the coverage minimum and the tool dependencies
+live in `mix.exs`:
+
+```elixir
+# Template: merge these settings into your project's mix.exs.
+defmodule MyApp.MixProject do
+  use Mix.Project
+
+  def project do
+    [
+      app: :my_app,
+      version: "0.1.0",
+      elixir: "~> 1.17",
+      deps: deps(),
+      dialyzer: [
+        flags: [:error_handling, :extra_return, :missing_return, :unknown, :unmatched_returns]
+      ],
+      test_coverage: [summary: [threshold: 80]]
+    ]
+  end
+
+  defp deps do
+    [
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
+      {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
+      {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false}
+    ]
+  end
+end
+```
+
 ## Auditing
 
 ### Security analysis
@@ -72,9 +116,10 @@ them.
 opengrep scan --config .opengrep/ --error
 ```
 
-Write rules for the calls the idioms forbid on untrusted input, such as
-`String.to_atom/1`, `Code.eval_string/1` and `:erlang.binary_to_term/1`
-without the `:safe` option.
+The starter rules in [.opengrep/elixir.yaml](.opengrep/elixir.yaml) flag the
+calls the idioms forbid on untrusted input: `String.to_atom/1`,
+`Code.eval_string/1` and `:erlang.binary_to_term/1` without the `:safe`
+option. Add rules as the project finds new risks.
 
 ### Dependency vulnerabilities
 
@@ -151,17 +196,10 @@ Measure line coverage on every test run, and fail the build when it falls
 below 80%. Raise the minimum as coverage grows; never lower it to make a
 build pass.
 
-Set the minimum in `mix.exs`. `mix test --cover` exits with status 3 when
-coverage is below it:
-
-```elixir
-def project do
-  [
-    app: :my_app,
-    test_coverage: [summary: [threshold: 80]]
-  ]
-end
-```
+The minimum is set in `mix.exs` with
+`test_coverage: [summary: [threshold: 80]]` (see the template under
+[Linting](#linting)). `mix test --cover` exits with status 3 when coverage
+is below it:
 
 ```sh
 mix test --cover

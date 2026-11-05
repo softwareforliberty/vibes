@@ -1,0 +1,34 @@
+---
+rules:
+  - id: r-no-eval-parse
+    message: >-
+      Don't evaluate code built from a string; pass data to a function
+      instead.
+    severity: ERROR
+    languages:
+      - r
+    pattern: eval(parse(...))
+  - id: r-no-readrds
+    message: >-
+      Don't load .rds files from untrusted sources; exchange data as CSV,
+      JSON or Parquet.
+    severity: WARNING
+    languages:
+      - r
+    pattern: readRDS(...)
+  - id: r-no-load
+    message: >-
+      Don't load .RData files from untrusted sources; exchange data as CSV,
+      JSON or Parquet.
+    severity: WARNING
+    languages:
+      - r
+    pattern: load(...)
+  - id: r-no-system
+    message: >-
+      Run external programs with system2() and a vector of arguments, quoting
+      outside values with shQuote().
+    severity: WARNING
+    languages:
+      - r
+    pattern: system(...)

@@ -16,6 +16,20 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [lychee](https://github.com/lycheeverse/lychee) | Apache-2.0 OR MIT | Code quality | Finding broken links |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`.prettierrc.json`](.prettierrc.json) | Prettier |
+| [`.htmlvalidate.json`](.htmlvalidate.json) | html-validate |
+| [`lighthouserc.json`](lighthouserc.json) | Lighthouse CI |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`.opengrep/html.yaml`](.opengrep/html.yaml) | Opengrep |
+
 ## Configuration
 
 Markup must pass all three checks with **no errors**:
@@ -66,8 +80,10 @@ java -jar vnu.jar --skip-non-html .
 html-validate's recommended rules already reject inline `style` attributes,
 which keeps markup compatible with the
 [security rules](idioms.md#security). Opengrep adds checks the validator
-can't express, such as inline `on*` handlers, `javascript:` URLs and
-`target="_blank"` links without `rel="noopener noreferrer"`.
+can't express: the starter rules in
+[`.opengrep/html.yaml`](.opengrep/html.yaml) reject inline `on*` handlers,
+`javascript:` URLs and `target="_blank"` links without
+`rel="noopener noreferrer"`.
 
 Opengrep is the open-source fork of Semgrep. Run it with rules you write, or
 with rule sets under a FOSS licence. The Semgrep Registry rules are under the

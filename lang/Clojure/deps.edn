@@ -1,0 +1,9 @@
+;; Template: merge these aliases into the project's deps.edn.
+{:aliases
+ {:cljfmt {:deps {dev.weavejester/cljfmt {:mvn/version "0.13.0"}}
+           :main-opts ["-m" "cljfmt.main"]}
+  :coverage {:extra-paths ["test"]
+             :extra-deps {cloverage/cloverage {:mvn/version "1.2.4"}}
+             :main-opts ["-m" "cloverage.coverage"
+                         "-p" "src" "-s" "test"
+                         "--line-fail-threshold" "80"]}}}

@@ -10,6 +10,18 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [kcov](https://github.com/SimonKagstrom/kcov) | GPL-2.0 | Code quality | Measuring test coverage of the compiled test binary |
 
+## Config files
+
+Copy this file into the project root. It matches the layout `zig fmt`
+produces.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs |
+
+The Zig tools need no other config files: `zig fmt` has no settings, and the
+compiler's checks are on by default.
+
 ## Formatting
 
 `zig fmt` owns layout. Code must come out of it unchanged:

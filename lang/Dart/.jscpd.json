@@ -1,0 +1,7 @@
+{
+  "format": ["dart"],
+  "minTokens": 50,
+  "exitCode": 1,
+  "reporters": ["console"],
+  "ignore": ["**/build/**", "**/dist/**", "**/vendor/**", "**/node_modules/**", "**/.dart_tool/**"]
+}

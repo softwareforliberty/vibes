@@ -14,26 +14,43 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [bats-core](https://github.com/bats-core/bats-core) | MIT | Code quality | Testing scripts |
 | [kcov](https://github.com/SimonKagstrom/kcov) | GPL-2.0 | Code quality | Measuring test coverage |
 
+## Config files
+
+These files are in this directory, ready to copy to the root of a project:
+
+| File | Read by |
+| --- | --- |
+| [.editorconfig](.editorconfig) | Editors and IDEs, and shfmt |
+| [.shellcheckrc](.shellcheckrc) | ShellCheck |
+| [.opengrep/bash.yaml](.opengrep/bash.yaml) | Opengrep |
+| [.jscpd.json](.jscpd.json) | jscpd |
+
 ## Formatting
 
-shfmt is the formatter. Run it in check mode in CI, and in write mode
-locally:
+shfmt is the formatter. It reads its settings from
+[.editorconfig](.editorconfig), so run it with no formatting flags: shfmt
+ignores `.editorconfig` entirely when any formatting flag is given. Run it in
+check mode in CI, and in write mode locally:
 
 ```sh
-shfmt -ln bash -i 2 -ci -bn -d .   # show what would change
-shfmt -ln bash -i 2 -ci -bn -w .   # rewrite the files
+shfmt -d .   # show what would change
+shfmt -w .   # rewrite the files
 ```
 
-- `-i 2` indents with 2 spaces.
-- `-ci` indents the branches of a `case`.
-- `-bn` lets `|`, `&&` and `||` start a continuation line.
+- `shell_variant = bash` parses scripts as Bash.
+- `indent_size = 2` indents with 2 spaces.
+- `switch_case_indent = true` indents the branches of a `case`.
+- `binary_next_line = true` lets `|`, `&&` and `||` start a continuation line.
 - Given a directory, shfmt also finds scripts with no extension by their
-  shebang.
+  shebang. The `[[bash]]` section gives them the same settings, because they
+  have no extension for an editor section to match.
+- `*.bats` test files are parsed with `shell_variant = bats`.
 
 ## Linting
 
-Code must pass ShellCheck with **no warnings**. Put this `.shellcheckrc` at the
-root of the repository to turn on the optional checks this guide relies on:
+Code must pass ShellCheck with **no warnings**. Put this
+[.shellcheckrc](.shellcheckrc) at the root of the repository to turn on the
+optional checks this guide relies on:
 
 ```ini
 enable=add-default-case
@@ -70,6 +87,10 @@ them.
 ```sh
 opengrep scan --config .opengrep/ --error
 ```
+
+The starter rules in [.opengrep/bash.yaml](.opengrep/bash.yaml) catch the
+patterns [idioms.md](idioms.md) forbids: `eval`, SUID and SGID modes,
+fixed paths in `/tmp`, and `which`.
 
 ### Dependency vulnerabilities
 

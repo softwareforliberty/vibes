@@ -1,0 +1,21 @@
+---
+rules:
+  - id: dart-no-run-in-shell
+    message: >-
+      Don't run processes through a shell; pass the executable and an argument
+      list to Process.run or Process.start without runInShell.
+    severity: ERROR
+    languages:
+      - dart
+    pattern-either:
+      - pattern: "Process.run(..., runInShell: true, ...)"
+      - pattern: "Process.start(..., runInShell: true, ...)"
+      - pattern: "Process.runSync(..., runInShell: true, ...)"
+  - id: dart-no-mirrors
+    message: >-
+      Don't import dart:mirrors; it's unavailable on most platforms and
+      defeats tree shaking. Generate code or pass the types explicitly.
+    severity: WARNING
+    languages:
+      - dart
+    pattern: import 'dart:mirrors';

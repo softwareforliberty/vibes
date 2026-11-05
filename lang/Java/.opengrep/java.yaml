@@ -1,0 +1,40 @@
+---
+rules:
+  - id: java-no-sql-concatenation
+    message: >-
+      Don't build SQL by concatenating strings; use a PreparedStatement and
+      bind every value as a parameter.
+    severity: ERROR
+    languages:
+      - java
+    pattern-either:
+      - pattern: $STMT.executeQuery("..." + $X)
+      - pattern: $STMT.executeUpdate("..." + $X)
+      - pattern: $STMT.execute("..." + $X)
+  - id: java-no-object-input-stream
+    message: >-
+      Don't deserialise with ObjectInputStream; it can run code chosen by
+      whoever wrote the bytes. Read a data format such as JSON instead.
+    severity: ERROR
+    languages:
+      - java
+    pattern-either:
+      - pattern: new ObjectInputStream(...)
+      - pattern: new java.io.ObjectInputStream(...)
+  - id: java-no-runtime-exec
+    message: >-
+      Don't run commands with Runtime.exec(); use ProcessBuilder with each
+      argument as a separate list element, never a shell command string.
+    severity: ERROR
+    languages:
+      - java
+    pattern: Runtime.getRuntime().exec(...)
+  - id: java-no-catch-throwable
+    message: >-
+      Don't catch Throwable; catch the specific exceptions this code can
+      handle, and let errors propagate.
+    severity: WARNING
+    languages:
+      - java
+    pattern: |
+      try { ... } catch (Throwable $E) { ... }

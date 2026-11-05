@@ -21,6 +21,18 @@ them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [deadcode](https://pkg.go.dev/golang.org/x/tools/cmd/deadcode) | BSD-3-Clause | Code quality | Finding functions no program path can reach |
 | [go test](https://pkg.go.dev/cmd/go#hdr-Test_packages) | BSD-3-Clause | Code quality | Running tests, the race detector and coverage |
 
+## Config files
+
+Copy these files into the project root. Each one matches the settings this
+guide describes.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, including GoLand's import settings |
+| [`.golangci.yml`](.golangci.yml) | golangci-lint |
+| [`.opengrep/go.yaml`](.opengrep/go.yaml) | Opengrep: starter rules for the [security idioms](idioms.md#security) |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+
 ## Formatting
 
 `gofmt` owns layout, and `goimports` adds import maintenance on top. Code must
@@ -46,6 +58,7 @@ golangci-lint run ./...
 Put the golangci-lint settings in `.golangci.yml`:
 
 ```yaml
+---
 version: "2"
 
 linters:

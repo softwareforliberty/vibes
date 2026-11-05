@@ -21,6 +21,23 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [JaCoCo](https://www.jacoco.org/jacoco/) | EPL-2.0 | Code quality | Measuring test coverage, and failing the build below a minimum |
 
+## Config files
+
+Copy these files into the repository root. Each one matches the
+settings on this page.
+
+| File | Read by |
+| --- | --- |
+| [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`build.gradle.kts`](build.gradle.kts) | Gradle: javac warnings, Error Prone, PMD, SpotBugs, Find Security Bugs, dependency locking, OWASP Dependency-Check and JaCoCo |
+| [`pmd-ruleset.xml`](pmd-ruleset.xml) | PMD |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`.opengrep/java.yaml`](.opengrep/java.yaml) | Opengrep |
+
+`build.gradle.kts` is a template: merge its settings into the project's own
+build script. Checkstyle uses the `google_checks.xml` configuration bundled
+in its jar, which matches this guide, so there's no Checkstyle file to copy.
+
 ## Recommended setup
 
 Format, then check. Code must build with **no warnings** and no findings.
@@ -32,8 +49,8 @@ java -jar google-java-format-<version>-all-deps.jar --replace $(git ls-files '*.
 # Style checks, using the Google configuration that ships with Checkstyle
 java -jar checkstyle-<version>-all.jar -c /google_checks.xml src/
 
-# Static analysis with PMD's general-purpose rule set
-pmd check -d src -R rulesets/java/quickstart.xml -f text
+# Static analysis with the project rule set, which builds on PMD's quickstart rules
+pmd check -d src -R pmd-ruleset.xml -f text
 ```
 
 - Compile with `-Xlint:all -Werror`, so every compiler warning fails the
@@ -79,7 +96,9 @@ osv-scanner scan source -r .
   dependencies through deps.dev, which needs network access.
 - OWASP Dependency-Check's Gradle and Maven plugins check the resolved
   classpath during the build. Use it when the build itself must fail on a
-  vulnerable dependency. It needs an NVD API key to download its database.
+  vulnerable dependency. The template fails the build on any vulnerability
+  with a CVSS score of 7 or more. It needs an NVD API key to download its
+  database.
 
 ### Secrets
 
@@ -122,8 +141,11 @@ also reports unused private fields, methods and local variables.
 
 ### Coverage
 
-Measure line and branch coverage with JaCoCo on every test run, and fail the
-build when coverage drops below the project's agreed minimum (for example,
-80% of lines). In Gradle, apply the `jacoco` plugin and run
-`jacocoTestCoverageVerification`. In Maven, run the `jacoco-maven-plugin`
-`check` goal.
+Measure branch coverage on every test run, and fail the build when it falls
+below 80%. Raise the minimum as coverage grows; never lower it to make a
+build pass.
+
+In Gradle, the `jacoco` plugin's `jacocoTestCoverageVerification` task
+enforces the minimum; the template sets 80% for both lines and branches and
+runs it as part of `check`. In Maven, run the `jacoco-maven-plugin` `check`
+goal with the same limits.
