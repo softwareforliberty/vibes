@@ -12,6 +12,13 @@ safe loading), see [idioms.md](idioms.md).
 
 The tools that check YAML code are listed in [tools.md](tools.md).
 
+## Language baseline
+
+Write **YAML 1.2** (revision 1.2.2 of the spec), in a form that YAML 1.1
+parsers read the same way. Many widely used parsers still implement 1.1, which
+reads values such as `yes`, `no`, `on` and `off` as booleans (see
+[implicit typing traps](idioms.md#implicit-typing-traps)).
+
 ## Files
 
 - Name YAML files with the **`.yaml`** extension, the one the YAML project

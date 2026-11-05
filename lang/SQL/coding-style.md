@@ -11,6 +11,13 @@ migrations), see [idioms.md](idioms.md).
 
 The tools that check SQL code are listed in [tools.md](tools.md).
 
+## Language baseline
+
+Write for **ISO SQL:2008 or later**, as far as the target engine implements it.
+Identity columns (SQL:2003) and `FETCH FIRST` (SQL:2008), which this guide
+uses, are both in that edition. Before relying on any other standard feature,
+check that every engine the code must run on supports it.
+
 ## Layout
 
 ### Indentation and line length

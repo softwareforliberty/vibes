@@ -12,6 +12,12 @@ management, nullability, error handling and other idioms), see
 
 The tools that check Objective-C code are listed in [tools.md](tools.md).
 
+## Language baseline
+
+The baseline language is **Objective-C 2.0 with ARC**, compiled with Clang. The
+guide relies on lightweight generics and the `_Nullable` spelling of
+nullability annotations, both added in Xcode 7 (2015).
+
 ## Files
 
 - Name each file after the class it defines: `ABCImageCache.h` and

@@ -13,6 +13,16 @@ conventions, register preservation, interfacing with C and other idioms), see
 
 The tools that check x86 Assembly (GNU as) code are listed in [tools.md](tools.md).
 
+## Language baseline
+
+Assemble with **GNU Binutils 2.39 or later**. From 2.39, the GNU linker warns
+when an ELF object lacks the `.note.GNU-stack` marker this guide requires, so a
+missing marker can't slip through.
+
+Use only instructions that every CPU the program supports is guaranteed to
+have: the same baseline the C code is compiled for. Use a newer extension only
+behind a runtime check that picks a fallback on CPUs without it.
+
 ## Syntax
 
 - Write **AT&T syntax**: the syntax of GNU toolchains, compiler output

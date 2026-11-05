@@ -14,6 +14,21 @@ other idioms), see [idioms.md](idioms.md).
 
 The tools that check RISC-V Assembly (GNU as) code are listed in [tools.md](tools.md).
 
+## Language baseline
+
+Assemble with **GNU Binutils 2.39 or later**, or a current Clang. From 2.39,
+the GNU linker warns when an ELF object lacks the `.note.GNU-stack` marker this
+guide requires, so a missing marker can't slip through.
+
+Both **RV32** and **RV64** are supported. Set `-march` to exactly the
+extensions the target guarantees (see
+[Assembler warnings](tools.md#assembler-warnings)): the examples use RV64GC
+with the `lp64d` ABI on Linux, and RV32IMAC with `ilp32` on bare-metal targets.
+
+Use only instructions that every CPU the program supports is guaranteed to
+have: the same baseline the C code is compiled for. Use a newer extension only
+behind a runtime check that picks a fallback on CPUs without it.
+
 ## Files
 
 - Assembly sources use `.S` (uppercase), so the C preprocessor runs first.

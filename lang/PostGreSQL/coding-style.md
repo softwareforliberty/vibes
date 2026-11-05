@@ -13,6 +13,11 @@ migrations), see [idioms.md](idioms.md).
 
 The tools that check PostgreSQL code are listed in [tools.md](tools.md).
 
+## Language baseline
+
+Write for **PostgreSQL 15 or later**. `MERGE`, which this guide uses, arrived
+in PostgreSQL 15.
+
 ## Layout
 
 ### Indentation and line length

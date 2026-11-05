@@ -13,6 +13,13 @@ migrations), see [idioms.md](idioms.md).
 
 The tools that check MySQL code are listed in [tools.md](tools.md).
 
+## Language baseline
+
+Write for **MySQL 8.4 LTS or later**. Enforced `CHECK` constraints, the
+`utf8mb4_0900_ai_ci` collation, invisible indexes and the row alias in `ON
+DUPLICATE KEY UPDATE`, which this guide uses, all arrived in the 8.0 series,
+and 8.4 is the long-term support release that carries them.
+
 ## Layout
 
 ### Indentation and line length

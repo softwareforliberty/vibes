@@ -12,6 +12,12 @@ and other idioms), see [idioms.md](idioms.md).
 
 The tools that check GNU ld Linker Script code are listed in [tools.md](tools.md).
 
+## Language baseline
+
+Write for **GNU ld 2.39 or later**, and keep every script linking with **LLD 17
+or later**. GNU ld 2.39 added the `--warn-rwx-segments` and `--warn-execstack`
+warnings, and LLD 17 added `--print-memory-usage`, which the tools rely on.
+
 ## Files
 
 - Name a linker script after the image it links, with a `.ld` extension:

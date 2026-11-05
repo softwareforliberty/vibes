@@ -13,6 +13,16 @@ conventions, register preservation, interfacing with C and other idioms), see
 
 The tools that check x86 Assembly (MASM) code are listed in [tools.md](tools.md).
 
+## Language baseline
+
+Write MASM-language source that assembles unchanged with both **UASM** and
+**JWasm**, the two assemblers in [tools.md](tools.md). Never rely on an
+extension that only one of them accepts.
+
+Use only instructions that every CPU the program supports is guaranteed to
+have: the same baseline the C code is compiled for. Use a newer extension only
+behind a runtime check that picks a fallback on CPUs without it.
+
 ## Files
 
 - Assembly sources use `.asm`. Shared definitions (constants, macros, struct

@@ -13,6 +13,21 @@ other idioms), see [idioms.md](idioms.md).
 
 The tools that check ARM64 Assembly (GNU as) code are listed in [tools.md](tools.md).
 
+## Language baseline
+
+Assemble with **GNU Binutils 2.39 or later**, or a current Clang. From 2.39,
+the GNU linker warns when an ELF object lacks the `.note.GNU-stack` marker this
+guide requires, so a missing marker can't slip through.
+
+The instruction-set baseline is **Armv8.0-A**. The branch-protection
+instructions (`paciasp`, `bti`) sit in the hint space, so they run as no-ops on
+cores without PAC or BTI. Any other later feature, such as the Armv8.1 LSE
+atomics, needs the target to guarantee it.
+
+Use only instructions that every CPU the program supports is guaranteed to
+have: the same baseline the C code is compiled for. Use a newer extension only
+behind a runtime check that picks a fallback on CPUs without it.
+
 ## Files
 
 - Assembly sources use `.S` (uppercase), so the C preprocessor runs first.

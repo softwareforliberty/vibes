@@ -11,6 +11,13 @@ This guide covers how build scripts look. For how to structure a build
 
 The tools that check CMake code are listed in [tools.md](tools.md).
 
+## Language baseline
+
+Write for **CMake 3.24 or later**, and declare it with a policy range up to the
+newest version you test, such as `cmake_minimum_required(VERSION 3.24...3.31)`.
+CMake 3.24 added `CMAKE_COMPILE_WARNING_AS_ERROR` and FetchContent's
+`FIND_PACKAGE_ARGS`, which this guide relies on.
+
 ## Files
 
 - Every directory that defines targets has a `CMakeLists.txt`.

@@ -13,6 +13,16 @@ guides.
 
 The tools that check HTML code are listed in [tools.md](tools.md).
 
+## Language baseline
+
+Write for browsers that support every feature in **Baseline Widely available**:
+features that have worked in all the major browsers (Chrome, Edge, Firefox and
+Safari, on desktop and mobile) for at least 30 months. That level also covers
+the JavaScript guide's
+[ES2022 baseline](../JavaScript/coding-style.md#language-baseline). Check a
+newer feature's Baseline status on MDN before using it, and give it a fallback
+until it's widely available.
+
 ## Layout
 
 ### Indentation

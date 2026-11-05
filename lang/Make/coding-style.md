@@ -11,6 +11,12 @@ This guide covers how makefiles look. For how to structure a build
 
 The tools that check Make code are listed in [tools.md](tools.md).
 
+## Language baseline
+
+Write for **GNU Make 4.3 or later**. GNU Make 4.3 added grouped targets (`&:`),
+which this guide uses for commands that create several files. The `make` that
+ships with macOS is 3.81, so install a current GNU Make there.
+
 ## Files
 
 - Name the main makefile `Makefile`, with a capital `M`, so it sorts near the

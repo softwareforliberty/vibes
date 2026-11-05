@@ -12,6 +12,16 @@ conventions, register preservation, interfacing with C and other idioms), see
 
 The tools that check x86 Assembly (NASM) code are listed in [tools.md](tools.md).
 
+## Language baseline
+
+Write for **NASM 2.15 or later**. NASM 2.15 added the `[warning push]` and
+`[warning pop]` directives, which this guide uses to turn a warning off for a
+few lines only.
+
+Use only instructions that every CPU the program supports is guaranteed to
+have: the same baseline the C code is compiled for. Use a newer extension only
+behind a runtime check that picks a fallback on CPUs without it.
+
 ## Files
 
 - Assembly sources use `.asm`. Shared definitions (constants, macros, struct
