@@ -216,6 +216,10 @@ an unused one shows up by name.
 npx knip
 ```
 
+Knip finds the test files, and the tools a project uses, from the
+`package.json` scripts that run them. Run the checks on this page from
+scripts, such as `"test": "c8 node --test"`, or Knip reports them as unused.
+
 Knip reads Node.js entry points from `package.json`. For browser code, list
 each page's entry module in `knip.json`:
 

@@ -237,6 +237,11 @@ same problems without blocking a build mid-edit.
 npx knip
 ```
 
+Knip finds the test files, and the tools a project uses, from the
+`package.json` scripts that run them. Run the checks on this page from
+scripts, such as `"test": "c8 node --test 'src/**/*.test.ts'"`, or Knip
+reports them as unused.
+
 For browser code, list each page's entry module in `knip.json`:
 
 ```json
