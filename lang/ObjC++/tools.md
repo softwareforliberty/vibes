@@ -31,7 +31,7 @@ below is the full contents of one of these files.
 | [.clang-tidy](.clang-tidy) | clang-tidy |
 | [.inferconfig](.inferconfig) | Infer |
 | [.jscpd.json](.jscpd.json) | jscpd |
-| [.opengrep/cpp.yaml](.opengrep/cpp.yaml) | Opengrep (pure C++ files) |
+| [.opengrep/objcpp.yaml](.opengrep/objcpp.yaml) | Opengrep (pure C++ files) |
 
 ## Formatting
 

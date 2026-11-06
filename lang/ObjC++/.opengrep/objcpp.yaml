@@ -1,6 +1,6 @@
 ---
 rules:
-  - id: cpp-no-naked-new
+  - id: objcpp-no-naked-new
     message: >-
       Don't call new directly; use std::make_unique, std::make_shared or a
       container, so ownership is never lost.
@@ -10,7 +10,7 @@ rules:
     pattern-either:
       - pattern: new $TYPE(...)
       - pattern: new $TYPE[$SIZE]
-  - id: cpp-no-naked-delete
+  - id: objcpp-no-naked-delete
     message: >-
       Don't call delete directly; let a smart pointer or container own the
       memory and free it.
@@ -20,14 +20,14 @@ rules:
     pattern-either:
       - pattern: delete $PTR;
       - pattern: delete[] $PTR;
-  - id: cpp-no-thread-detach
+  - id: objcpp-no-thread-detach
     message: >-
       Don't detach a thread; use std::jthread, which joins on destruction.
     severity: ERROR
     languages:
       - cpp
     pattern: $THREAD.detach()
-  - id: cpp-no-return-std-move
+  - id: objcpp-no-return-std-move
     message: >-
       Don't write return std::move(local); return the local by name so copy
       elision can apply.
