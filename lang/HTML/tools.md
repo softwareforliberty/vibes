@@ -60,15 +60,17 @@ java -jar vnu.jar --skip-non-html .
 {
   "extends": ["html-validate:recommended"],
   "rules": {
+    "doctype-style": ["error", { "style": "lowercase" }],
     "void-style": ["error", { "style": "selfclose" }]
   }
 }
 ```
 
 - Prettier owns layout. Don't hand-format markup it will rewrite.
-- Prettier writes void elements with a closing slash (`<br />`), and
-  html-validate is set to expect that, so the formatter and the validator
-  agree. In HTML the slash is optional and has no effect.
+- Prettier writes `<!doctype html>` in lowercase and void elements with a
+  closing slash (`<br />`). html-validate is set to expect both, so the
+  formatter and the validator agree. In HTML the slash is optional and has
+  no effect.
 - `vnu` checks against the current standard. html-validate adds rules the
   standard doesn't cover, such as accessibility checks and banned inline
   styles. Run both.
