@@ -61,17 +61,17 @@ rules, so the checks in [Auditing](#auditing) and
   <ruleset-ref path="rulesets/basic.xml"/>
   <ruleset-ref path="rulesets/braces.xml"/>
   <ruleset-ref path="rulesets/formatting.xml">
-    <include name="ConsecutiveBlankLines"/>
-    <include name="FileEndsWithoutNewline"/>
-    <include name="Indentation"/>
-    <include name="LineLength"/>
-    <include name="TrailingWhitespace"/>
     <rule-config name="Indentation">
       <property name="spacesPerIndentLevel" value="4"/>
     </rule-config>
     <rule-config name="LineLength">
       <property name="length" value="120"/>
     </rule-config>
+    <include name="ConsecutiveBlankLines"/>
+    <include name="FileEndsWithoutNewline"/>
+    <include name="Indentation"/>
+    <include name="LineLength"/>
+    <include name="TrailingWhitespace"/>
   </ruleset-ref>
   <ruleset-ref path="rulesets/imports.xml"/>
   <ruleset-ref path="rulesets/security.xml"/>
