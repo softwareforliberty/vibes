@@ -29,13 +29,17 @@ The brief from the main agent gives you the task, the spike branch you're on
    and `idioms.md` in its directory under `${CLAUDE_PLUGIN_ROOT}/lang/`.
    Follow them wherever it costs little; reviewers will hold the spike to
    them.
-4. **Build the whole task end to end.** Cover every requirement in the task,
+4. **Design the structure.** Read `${CLAUDE_PLUGIN_ROOT}/architecture.md`
+   and lay the code out by it: its layers, a model for each boundary, and
+   only as much structure as the task needs. In an existing project, follow
+   the project's own architecture where it already has one.
+5. **Build the whole task end to end.** Cover every requirement in the task,
    including error handling and edge cases you can see. Prefer a complete,
    simple solution over a polished partial one. Add tests where they help you
    check the spike works, but don't aim for full coverage.
-5. **Run it.** Build and run the code, and run any tests, to show the
+6. **Run it.** Build and run the code, and run any tests, to show the
    approach works. Fix what's broken.
-6. **Commit everything to the spike branch** in one or more commits. The
+7. **Commit everything to the spike branch** in one or more commits. The
    commit gate doesn't run on `spike/` branches.
 
 Don't push, merge or change any branch other than the spike branch.
