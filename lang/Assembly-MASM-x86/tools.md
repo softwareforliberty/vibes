@@ -21,7 +21,11 @@ The Sybase Open Watcom Public License is OSI-approved. The FSF and Debian
 don't consider it free, because it requires publishing changes even when the
 changed program is only used privately. Projects that accept only FSF-free
 tools can use llvm-ml, after checking that it supports every feature their
-code uses.
+code uses. Today it can't assemble code that follows this guide: llvm-ml
+rejects `PROC` parameter lists, and the `OPTION CASEMAP:NONE` and
+`OPTION PROC:PRIVATE` lines that the
+[coding style](coding-style.md#directives-and-sections) puts at the top of
+every file.
 
 ## Config files
 

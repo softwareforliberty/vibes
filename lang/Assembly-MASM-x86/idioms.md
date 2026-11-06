@@ -278,8 +278,8 @@ and not writable before running it.
 - **Test every word size you ship.** A routine that works in 64-bit code says
   nothing about its 32-bit counterpart.
 - **Assemble with a second assembler** in continuous integration. Building
-  with both UASM and JWasm (or llvm-ml) catches code that depends on one
-  assembler's behaviour.
+  with both UASM and JWasm catches code that depends on one assembler's
+  behaviour.
 
 ## Sources
 
