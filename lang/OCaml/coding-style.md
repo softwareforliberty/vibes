@@ -129,6 +129,7 @@ commit what it produces.
     users
     |> List.filter (fun u -> u.active)
     |> List.map (fun u -> u.email)
+    |> List.sort_uniq String.compare
   ```
 
 - Use `function` for a function that only matches on its last argument.

@@ -1,3 +1,7 @@
 version = 0.27.0
 profile = default
 margin = 80
+break-cases = fit-or-vertical
+break-infix = fit-or-vertical
+doc-comments = before
+type-decl = sparse

@@ -92,8 +92,7 @@ style guide.
   built on it, so they're released even when an exception is raised:
 
   ```ocaml
-  let read_lines path =
-    In_channel.with_open_text path In_channel.input_lines
+  let read_lines path = In_channel.with_open_text path In_channel.input_lines
   ```
 
 - Never leave a channel or file descriptor for the garbage collector to

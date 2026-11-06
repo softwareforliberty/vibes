@@ -44,7 +44,16 @@ everyone formats the same way:
 version = 0.27.0
 profile = default
 margin = 80
+break-cases = fit-or-vertical
+break-infix = fit-or-vertical
+doc-comments = before
+type-decl = sparse
 ```
+
+The last four settings give the layout in [coding-style.md](coding-style.md):
+every match case on its own line, every step of a `|>` chain on its own line
+once the chain doesn't fit on one, doc comments before the item, and one
+field or constructor per line in every type.
 
 ## Compiler warnings
 
