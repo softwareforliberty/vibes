@@ -44,12 +44,17 @@ sbt scalafmtCheckAll "scalafixAll --check" compile
 ```
 
 Configure scalafmt in [`.scalafmt.conf`](.scalafmt.conf). Pin the version,
-so every machine formats the same way:
+so every machine formats the same way. The settings indent parameter lists
+once, never line code up in columns, and keep a `@param` description on its
+tag's line, as [coding-style.md](coding-style.md) asks:
 
 ```hocon
 version = "3.11.5"
 runner.dialect = scala3
 maxColumn = 100
+indent.defnSite = 2
+align.preset = none
+docstrings.wrap = fold
 rewrite.scala3.convertToNewSyntax = true
 rewrite.scala3.removeOptionalBraces = true
 rewrite.scala3.insertEndMarkerMinLines = 15

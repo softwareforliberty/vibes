@@ -107,6 +107,9 @@ free of unused imports and values.
 - One space after `:` in type annotations, and none before it:
   `count: Int`.
 - One space on each side of `=`, `=>`, `<-` and infix operators.
+- Don't line up code in columns with extra spaces, such as the `=>` of
+  `case` clauses. Alignment breaks every time a line changes, so the diff
+  touches lines that didn't change.
 - No space between a method name and its argument list: `total(items)`.
 - One space inside the braces of a single-line lambda block or import
   selector: `{ x => x + 1 }`, `import a.{ B, C }`.
