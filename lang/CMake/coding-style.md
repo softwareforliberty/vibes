@@ -44,17 +44,22 @@ CMake 3.24 added `CMAKE_COMPILE_WARNING_AS_ERROR` and FetchContent's
 - No space between a command name and its opening parenthesis:
   `if(BUF_BUILD_TESTS)`, not `if (BUF_BUILD_TESTS)`.
 - When a command's arguments fit on one line, keep them on one line. When they
-  don't, put each keyword section on its own line, with its values indented
-  one level below it:
+  don't, put each keyword section on its own line. Keep a section's values on
+  the keyword's line while they fit, and otherwise put each value on its own
+  line, indented one level below the keyword:
 
   ```cmake
   target_link_libraries(
       buf
+      PUBLIC buf_core
+      PRIVATE ZLIB::ZLIB $<BUILD_INTERFACE:buf_warnings>
+  )
+
+  target_include_directories(
+      buf
       PUBLIC
-          buf_core
-      PRIVATE
-          ZLIB::ZLIB
-          $<BUILD_INTERFACE:buf_warnings>
+          "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>"
+          "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>"
   )
   ```
 
