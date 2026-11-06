@@ -67,7 +67,8 @@ The baseline language is **Groovy 4**.
 ### Whitespace
 
 - No trailing whitespace.
-- One blank line between consecutive members of a class.
+- One blank line between consecutive members of a class, and one after a
+  class's opening brace and before its closing brace.
 - Never more than one blank line in a row.
 - End every file with a newline.
 
