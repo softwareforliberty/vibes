@@ -1,11 +1,11 @@
 ---
 name: vibe
 description: >-
-  Runs the clean vibe-coding workflow for a task: a complete spec and a design
-  are written and reviewed first, a subagent spikes the solution to them, a
-  panel of reviewer subagents critiques it until all approve and the spec is
-  verified, then the task is rebuilt test-first in atomic, gated commits and
-  reviewed again.
+  Runs the clean vibe-coding workflow for a task, scaled to its size: a
+  complete spec, and for larger tasks a design, are written and reviewed
+  first; large tasks are spiked and critiqued by a panel of reviewer
+  subagents; then the task is built test-first in atomic, gated commits,
+  reviewed and verified against the spec.
 argument-hint: "[task]"
 disable-model-invocation: true
 ---
@@ -21,6 +21,11 @@ and a panel of reviewers critiques it until every reviewer is satisfied and
 the spike is verified to meet the whole spec. Then the spike is set aside and
 the task is **rebuilt test-first**, one atomic, gated commit at a time, and
 reviewed and verified again.
+
+That's the full workflow, for large tasks. Smaller tasks skip the parts they
+don't need, as [Size the task](#size-the-task) describes, but every task gets
+a spec first, a test-first build through the gate, and a review that
+verifies it against the spec.
 
 You are the main agent. You coordinate, resolve open questions with the
 user, fix review findings and do the rebuild. Subagents write the spec and
@@ -73,6 +78,34 @@ code.
 - **The spike is accepted only when the spec reviewer verifies it meets
   every requirement,** and so is the rebuild.
 
+## Size the task
+
+| Size | For | Phases |
+| --- | --- | --- |
+| Small | A fix or one behaviour in existing code, with no new module, interface or dependency | Spec, build, review |
+| Medium | A feature across a few modules, whose design is clear | Spec, design, build, review |
+| Large | A new application, subsystem or interface, or a task whose design is uncertain | Spec, design, spike, rebuild, review |
+
+- **Pick the size** from the task and the code it touches, and tell the
+  user which size and why. If the user names a size, use it. When it's
+  between two sizes, pick the larger.
+- **Move up a size when the work shows the task is bigger,** and tell the
+  user. A small task that needs a new module, interface or dependency gets a
+  design. A medium task whose design proves uncertain gets a spike.
+- **A small task has no designer and no design document.** You write the
+  spec yourself, in the format of the designer's spec mode in
+  `${CLAUDE_PLUGIN_ROOT}/agents/designer.md`, with only the sections that
+  apply. Its constraints section names the code the change touches.
+- **The review panel depends on the size.** Medium and large tasks get every
+  reviewer. A small task gets `vibes:spec-reviewer`, `vibes:bug-reviewer`,
+  `vibes:cleanliness-reviewer` and `vibes:test-reviewer`, and also:
+  - `vibes:security-reviewer` when the change handles outside input,
+    authentication, secrets, files or commands;
+  - `vibes:performance-reviewer` when it's on a hot path or handles large
+    data;
+  - `vibes:resource-leak-reviewer` when it acquires memory, files,
+    connections, locks or threads.
+
 ## Phase 0: Set up
 
 1. **Understand the task.** If the task is unclear or missing, ask the user
@@ -84,17 +117,19 @@ code.
    base branch.
 3. **Find the languages** the task will touch, and read `coding-style.md`,
    `idioms.md` and `tools.md` for each from `${CLAUDE_PLUGIN_ROOT}/lang/`.
-4. **Make sure the commit gate is set up.** If the project has no executable
+4. **Size the task,** as [Size the task](#size-the-task) describes, and tell
+   the user the size.
+5. **Make sure the commit gate is set up.** If the project has no executable
    `scripts/check`, follow the [commit gate](../commit-gate/SKILL.md) skill
    first. Then run `scripts/check` on the base branch and confirm it passes.
    Commit the gate setup on the base branch as one commit of its own, so the
    spike and rebuild branches both start with it, and list it in the final
    report.
-5. **Choose the spec directory,** where the task's `spec.md` and
+6. **Choose the spec directory,** where the task's `spec.md` and
    `design.md` will live in the repository. If the project already keeps
    specs or design documents somewhere, use a directory for the task there.
    Otherwise use `docs/specs/<name>/`.
-6. **Create the state directory** `.vibes/` for the workflow's own working
+7. **Create the state directory** `.vibes/` for the workflow's own working
    files: review rounds, the spike report and the rebuild plan. A
    `.gitignore` inside it keeps the whole directory out of git, without
    touching the project's own `.gitignore` or anything in `.git/`:
@@ -167,7 +202,8 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
    `git switch -c vibe/<name>`. The spec and design are committed here, so
    the spike and the rebuild both start from them.
 2. Spawn `vibes:designer` in `spec` mode, with the task, the absolute path
-   of the spec directory and the languages.
+   of the spec directory and the languages. For a small task, write the spec
+   yourself instead.
 3. **Resolve every open question.** Ask the user each one in the spec's
    open questions section, then write their answers into the spec as
    requirements, and empty the section.
@@ -176,6 +212,8 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
 5. **Commit the approved spec** on its own, through the gate.
 
 ## Phase 2: Design
+
+Medium and large tasks only.
 
 1. Spawn `vibes:designer` in `design` mode, with the same brief.
 2. **Review the design** in rounds with `vibes:architecture-reviewer`,
@@ -187,6 +225,9 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
    design review made.
 
 ## Phase 3: Spike
+
+Large tasks only. Small and medium tasks go straight to
+[Phase 6](#phase-6-rebuild-test-first).
 
 1. Create the spike branch from the rebuild branch, so it starts with the
    spec and design: `git switch -c spike/<name>`.
@@ -200,6 +241,8 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
 
 ## Phase 4: Review the spike
 
+Large tasks only.
+
 Run review rounds in the `spike` phase with every reviewer except
 `vibes:test-reviewer`, fixing findings on the spike branch, until every
 reviewer approves. The spec reviewer's final verdict must be `APPROVED`,
@@ -207,6 +250,8 @@ with every requirement met: that's the verification that the spike
 satisfies the spec.
 
 ## Phase 5: Set the spike aside
+
+Large tasks only.
 
 The approved spike is a reference implementation, never production code. It
 stays on `spike/<name>` and is never merged.
@@ -230,8 +275,15 @@ Follow the [test-driven development](../test-driven-development/SKILL.md)
 skill, using the test list from `.vibes/rebuild-plan.md`, and the
 [atomic commits](../atomic-commits/SKILL.md) skill for every commit.
 
-- **Build to the spec and design** as the spike phase left them, on
-  `spike/<name>`. They're the source of truth, not the spike's code.
+For a small or medium task, this is the first build, on the rebuild branch
+from Phase 1. Write `.vibes/rebuild-plan.md` first, with the test list from
+the spec as Phase 5 describes; there are no lessons or spec changes from a
+spike to list. Where there was no spike, the steps below that mention one
+don't apply.
+
+- **Build to the spec and design,** which are the source of truth. For a
+  large task, that's the spec and design as the spike phase left them, on
+  `spike/<name>`, not the spike's code.
 - **Rewrite, don't copy.** Write each piece fresh, driven by its test. You may
   read the spike for reference (`git show spike/<name>:<path>`), but never
   paste spike code into the rebuild.
@@ -250,8 +302,9 @@ skill, using the test list from `.vibes/rebuild-plan.md`, and the
 
 ## Phase 7: Review the rebuild
 
-Run review rounds in the `rebuild` phase on the rebuild branch, with all
-reviewers, including `vibes:test-reviewer`. Fix findings the same way as the
+Run review rounds in the `rebuild` phase on the rebuild branch, with the
+panel for the task's size from [Size the task](#size-the-task), including
+`vibes:test-reviewer`. Fix findings the same way as the
 rebuild: the spec first for any change in behaviour, then a failing test,
 then the fix, committed together as atomic commits through the gate. The
 spec reviewer's final verdict must be `APPROVED`, with every requirement met
@@ -263,9 +316,11 @@ and tested.
    way.
 2. Check `git status` is clean and `scripts/check` passes.
 3. Report to the user:
+   - the task's size, and any move to a larger size, with why
    - the rebuild branch and its commits (`git log --oneline <base>..HEAD`)
    - the spec and design in the spec directory, every change made to the
      spec after it was approved, and the spec reviewer's final coverage
    - every reviewer's final verdict, and any deferred MINOR findings
-   - the spike branch, kept for reference: ask whether to delete it
+   - for a large task, the spike branch, kept for reference: ask whether to
+     delete it
 4. Don't push, merge or open a pull request unless the user asks.

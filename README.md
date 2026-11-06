@@ -19,7 +19,15 @@ while holding it to the standards of careful, experienced developers.
 
 ## The workflow
 
-Run it in a project with `/vibes:vibe <task>`:
+Run it in a project with `/vibes:vibe <task>`. The workflow below is for a
+large task. The main agent sizes each task and tells you the size, and you
+can name one yourself, such as `/vibes:vibe small: fix the date parsing`:
+
+- **Small,** such as a fix in existing code: a spec, a test-first build
+  and a focused review, with no design or spike.
+- **Medium,** a feature whose design is clear: adds the design, and the full
+  review panel.
+- **Large,** new or uncertain work: everything below.
 
 1. **Spec.** A designer subagent writes a complete spec: every requirement,
    error and edge case, each testable. You answer any open questions, and a
