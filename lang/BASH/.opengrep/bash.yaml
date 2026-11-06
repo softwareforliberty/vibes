@@ -2,7 +2,7 @@
 rules:
   - id: bash-no-eval
     message: >-
-      Don't use eval; it runs data as code. Use the positional parameters,
+      Don't use eval, which runs data as code; use the positional parameters,
       case or parameter expansion instead.
     severity: ERROR
     languages:

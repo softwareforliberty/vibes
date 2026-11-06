@@ -13,8 +13,8 @@ rules:
       - pattern: $STMT.execute("..." + $X)
   - id: java-no-object-input-stream
     message: >-
-      Don't deserialise with ObjectInputStream; it can run code chosen by
-      whoever wrote the bytes. Read a data format such as JSON instead.
+      Don't deserialise with ObjectInputStream, which can run code chosen by
+      whoever wrote the bytes; read a data format such as JSON instead.
     severity: ERROR
     languages:
       - java

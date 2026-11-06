@@ -2,8 +2,8 @@
 rules:
   - id: scala-no-as-instance-of
     message: >-
-      Don't cast with asInstanceOf; a failed cast crashes at run time. Match
-      on the structure, or decode the value at the boundary.
+      Don't cast with asInstanceOf, which crashes at run time when the cast
+      fails; match on the structure, or decode the value at the boundary.
     severity: ERROR
     languages:
       - scala
@@ -18,8 +18,8 @@ rules:
     pattern: Await.result(...)
   - id: scala-no-object-input-stream
     message: >-
-      Don't deserialise with ObjectInputStream; it can run code chosen by
-      whoever wrote the bytes. Read a data format such as JSON instead.
+      Don't deserialise with ObjectInputStream, which can run code chosen by
+      whoever wrote the bytes; read a data format such as JSON instead.
     severity: ERROR
     languages:
       - scala

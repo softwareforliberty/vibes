@@ -13,8 +13,8 @@ rules:
       - pattern: "Process.runSync(..., runInShell: true, ...)"
   - id: dart-no-mirrors
     message: >-
-      Don't import dart:mirrors; it's unavailable on most platforms and
-      defeats tree shaking. Generate code or pass the types explicitly.
+      Don't import dart:mirrors, which is unavailable on most platforms and
+      defeats tree shaking; generate code or pass the types explicitly.
     severity: WARNING
     languages:
       - dart

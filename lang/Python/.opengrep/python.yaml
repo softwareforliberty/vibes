@@ -20,8 +20,8 @@ rules:
     pattern: subprocess.$FUNC(..., shell=True, ...)
   - id: python-no-unsafe-deserialisation
     message: >-
-      Don't load untrusted data with pickle or marshal; they can run code while
-      loading. Use json for data from outside the program.
+      Don't load untrusted data with pickle or marshal, which can run code
+      while loading; use json for data from outside the program.
     severity: ERROR
     languages:
       - python
@@ -32,7 +32,7 @@ rules:
       - pattern: marshal.loads(...)
   - id: python-no-yaml-load
     message: >-
-      Don't call yaml.load(); it can build arbitrary objects. Use
+      Don't call yaml.load(), which can build arbitrary objects; use
       yaml.safe_load() instead.
     severity: ERROR
     languages:

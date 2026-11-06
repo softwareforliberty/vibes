@@ -2,8 +2,8 @@
 rules:
   - id: clojure-no-core-read-string
     message: >-
-      Don't read input with clojure.core/read-string; the core reader can run
-      code. Use clojure.edn/read-string instead.
+      Don't read input with clojure.core/read-string, whose reader can run
+      code; use clojure.edn/read-string instead.
     severity: ERROR
     languages:
       - clojure
@@ -12,16 +12,16 @@ rules:
       - pattern: (clojure.core/read-string ...)
   - id: clojure-no-eval
     message: >-
-      Don't eval data that comes from outside the program; it runs whatever
-      code that data contains. Interpret the data instead.
+      Don't eval data that comes from outside the program, which runs whatever
+      code that data contains; interpret the data instead.
     severity: ERROR
     languages:
       - clojure
     pattern: (eval ...)
   - id: clojure-no-catch-throwable
     message: >-
-      Don't catch Throwable or Error; they include problems the program can't
-      recover from. Catch the specific exceptions this code can handle.
+      Don't catch Throwable or Error, which include problems the program can't
+      recover from; catch the specific exceptions this code can handle.
     severity: WARNING
     languages:
       - clojure

@@ -2,7 +2,7 @@
 rules:
   - id: php-no-unserialize
     message: >-
-      Don't call unserialize(); it can create arbitrary objects. Use
+      Don't call unserialize(), which can create arbitrary objects; use
       json_decode() for data from outside the program.
     severity: ERROR
     languages:

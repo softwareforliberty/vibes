@@ -20,7 +20,7 @@ rules:
       - pattern: GlobalScope.async(...)
   - id: kotlin-no-thread-sleep
     message: >-
-      Don't call Thread.sleep(); it blocks the thread. Use delay() inside a
+      Don't call Thread.sleep(), which blocks the thread; use delay() inside a
       coroutine.
     severity: WARNING
     languages:
@@ -28,8 +28,8 @@ rules:
     pattern: Thread.sleep(...)
   - id: kotlin-no-object-input-stream
     message: >-
-      Don't deserialise with ObjectInputStream; it can run code chosen by
-      whoever wrote the bytes. Read a data format such as JSON instead.
+      Don't deserialise with ObjectInputStream, which can run code chosen by
+      whoever wrote the bytes; read a data format such as JSON instead.
     severity: ERROR
     languages:
       - kotlin

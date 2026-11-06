@@ -10,8 +10,8 @@ rules:
     pattern-regex: "!!(python|ruby|perl|php|js)/"
   - id: yaml-no-java-class-tags
     message: >-
-      Don't name a Java class in a tag; a loader that honours it can run that
-      class's code. Use plain mappings and a safe loader.
+      Don't name a Java class in a tag, since a loader that honours it can run
+      that class's code; use plain mappings and a safe loader.
     severity: ERROR
     languages:
       - yaml
