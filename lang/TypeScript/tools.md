@@ -56,6 +56,7 @@ JavaScript are formatted identically.
   "compilerOptions": {
     "target": "es2022",
     "module": "nodenext",
+    "types": ["node"],
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "exactOptionalPropertyTypes": true,
@@ -76,6 +77,8 @@ JavaScript are formatted identically.
 - `strict` turns on every strict check, including `noImplicitAny` and
   `strictNullChecks`. The options after it add checks `strict` leaves out,
   such as treating `items[i]` as possibly `undefined`.
+- `types` loads the Node.js types from `@types/node`, which the tests need.
+  TypeScript 6 and later load no `@types` package unless it's listed here.
 - `verbatimModuleSyntax` makes [`import type`](coding-style.md#imports-and-exports)
   required for type-only imports.
 - `erasableSyntaxOnly` rejects `enum`, `namespace` and parameter properties,
