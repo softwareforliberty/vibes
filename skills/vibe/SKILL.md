@@ -57,9 +57,14 @@ code.
   design is approved before any code is written.
 - **Every change goes into the spec first.** A review finding that changes
   behaviour, an edge case found while building, a change the user asks for:
-  each is written into the spec, with a change log entry, and committed on
-  its own before any code changes. If it changes the structure, the design
-  is updated next, the same way. Only then does the code change.
+  each is written into the spec, with a change log entry, before any code
+  changes. If it changes the structure, the design is updated next, the
+  same way. Only then does the code change.
+- **A spec change is committed with its implementation.** The spec and
+  design changes go in the same commit as the code and tests that implement
+  them, so each commit shows what changed, why, and how it was built. Only
+  the first approved spec and design, which nothing implements yet, are
+  committed on their own.
 - **No code does anything the spec doesn't describe.**
 - **If a change would alter what the user asked for,** ask the user before
   writing it into the spec.
@@ -143,8 +148,8 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
 5. **Record a response to every finding** in the round's `responses.md`:
    `fixed`, `rejected: <reason>` or `deferred: <reason>` (MINOR only).
 6. **Check the fixes.** In the spike and rebuild phases, run the code and
-   tests, then commit the fixes: any spec and design changes first, each in a
-   commit of its own, then the code.
+   tests, then commit the fixes, each with the spec and design changes it
+   implements.
 7. **Start the next round** with only the reviewers that requested changes.
 8. **Repeat** until every reviewer's latest verdict is `APPROVED`. Then, if
    anything changed after a reviewer approved it, run that reviewer once
@@ -178,7 +183,8 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
    shows the spec is wrong or incomplete goes back into the spec first, and
    the spec reviewer approves the changed spec in a `spec` round before the
    design rounds go on.
-3. **Commit the approved design** on its own, after any spec changes.
+3. **Commit the approved design,** together with any spec changes the
+   design review made.
 
 ## Phase 3: Spike
 
@@ -206,21 +212,17 @@ The approved spike is a reference implementation, never production code. It
 stays on `spike/<name>` and is never merged.
 
 1. Write `.vibes/rebuild-plan.md`:
-   - **Test list:** every requirement and quality id in the spec, broken
-     into behaviours to test, ordered from simplest to hardest. Each entry
-     names the ids it covers, and every id appears at least once.
+   - **Test list:** every requirement and quality id in the spec as the
+     spike phase left it, broken into behaviours to test, ordered from
+     simplest to hardest. Each entry names the ids it covers, and every id
+     appears at least once.
    - **Lessons:** what the review rounds changed, so the rebuild gets it right
      first time.
-2. Switch to the rebuild branch, and bring over the spec and design as the
-   spike review left them, in one commit of their own:
-
-   ```sh
-   git switch vibe/<name>
-   git checkout spike/<name> -- <spec directory>
-   ```
-
-   Their change logs say what changed and why. Commit nothing else from the
-   spike.
+   - **Spec changes:** each change log entry the spike phase added to the
+     spec or design, with the test list entry whose commit will bring it
+     over. List them from
+     `git diff vibe/<name> spike/<name> -- <spec directory>`.
+2. Switch to the rebuild branch: `git switch vibe/<name>`.
 
 ## Phase 6: Rebuild test-first
 
@@ -228,8 +230,8 @@ Follow the [test-driven development](../test-driven-development/SKILL.md)
 skill, using the test list from `.vibes/rebuild-plan.md`, and the
 [atomic commits](../atomic-commits/SKILL.md) skill for every commit.
 
-- **Build to the spec and design.** They're the source of truth, not the
-  spike.
+- **Build to the spec and design** as the spike phase left them, on
+  `spike/<name>`. They're the source of truth, not the spike's code.
 - **Rewrite, don't copy.** Write each piece fresh, driven by its test. You may
   read the spike for reference (`git show spike/<name>:<path>`), but never
   paste spike code into the rebuild.
@@ -237,17 +239,23 @@ skill, using the test list from `.vibes/rebuild-plan.md`, and the
 - **The gate runs on every commit.** It runs `scripts/check`, and refuses
   unstaged and untracked changes. When it blocks a commit, fix the cause and
   commit again. Never bypass it.
+- **Bring the spike's spec changes over with their code.** Each spec and
+  design change from the spike phase goes into the commit that implements
+  it, as the rebuild plan lists. By the end of the rebuild, the spec and
+  design hold every change from the spike phase.
 - **Keep the plan current.** Tick off each behaviour in the test list as it's
   committed. A new behaviour goes into the spec first, then the test list,
-  then a test.
+  then a test, and the spec change is committed with that test and its
+  code.
 
 ## Phase 7: Review the rebuild
 
 Run review rounds in the `rebuild` phase on the rebuild branch, with all
 reviewers, including `vibes:test-reviewer`. Fix findings the same way as the
 rebuild: the spec first for any change in behaviour, then a failing test,
-then the fix, as atomic commits through the gate. The spec reviewer's final
-verdict must be `APPROVED`, with every requirement met and tested.
+then the fix, committed together as atomic commits through the gate. The
+spec reviewer's final verdict must be `APPROVED`, with every requirement met
+and tested.
 
 ## Phase 8: Finish
 

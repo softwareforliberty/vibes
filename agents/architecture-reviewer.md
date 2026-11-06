@@ -88,7 +88,7 @@ directory per language (list it to find the right name, for example
   patterns, unless it has a stated reason to depart from them.
 - **The design:** the code is structured as `design.md` describes. A
   departure is a finding unless the design was updated first, with a change
-  log entry.
+  log entry, and committed together with the code.
 - **API design:** public interfaces are small, consistent, hard to misuse and
   documented, and errors are reported the same way throughout.
 - **Data flow and state:** state has one owner, and data moves through the

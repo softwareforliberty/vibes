@@ -37,7 +37,8 @@ Run it in a project with `/vibes:vibe <task>`:
 5. **Fix.** The main agent fixes the findings, and the reviewers that asked
    for changes review again, until every reviewer approves (at most five
    rounds before it asks you). A fix that changes behaviour goes into the
-   spec first, and so does every other change, all the way through.
+   spec first, and so does every other change, all the way through. Each
+   spec change is committed together with the code that implements it.
 6. **Rebuild.** The spike is set aside, never merged. The task is rebuilt on a
    `vibe/<task>` branch, test-first, one atomic commit at a time.
 7. **Gate.** Every commit runs the project's linters and full test suite, and

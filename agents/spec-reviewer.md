@@ -75,8 +75,8 @@ Also check:
   Undescribed behaviour is a finding, because either the spec is missing a
   requirement or the code has gone beyond the task.
 - **Spec first:** every change to the spec since the last round has a
-  change log entry, and the change is complete and consistent with the
-  rest.
+  change log entry, is complete and consistent with the rest, and was
+  committed together with the code that implements it.
 - **Design:** the code is structured as `design.md` describes, or the design
   was updated first. The architecture reviewer judges the design itself.
 
