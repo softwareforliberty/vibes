@@ -47,7 +47,7 @@ Configure scalafmt in [`.scalafmt.conf`](.scalafmt.conf). Pin the version,
 so every machine formats the same way:
 
 ```hocon
-version = "3.8.3"
+version = "3.11.5"
 runner.dialect = scala3
 maxColumn = 100
 rewrite.scala3.convertToNewSyntax = true
@@ -81,11 +81,11 @@ Add the plugins in [`project/plugins.sbt`](project/plugins.sbt):
 // Template: merge these plugins into the project's project/plugins.sbt.
 // Pin every plugin to its latest release when you copy it.
 
-addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.5.6")
-addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.14.3")
-addSbtPlugin("org.wartremover" % "sbt-wartremover" % "3.5.1")
-addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.4.1")
-addSbtPlugin("net.nmoncho" % "sbt-dependency-check" % "1.9.2")
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.6.2")
+addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.14.9")
+addSbtPlugin("org.wartremover" % "sbt-wartremover" % "3.6.3")
+addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.4.4")
+addSbtPlugin("net.nmoncho" % "sbt-dependency-check" % "2.0.0")
 ```
 
 Turn on the compiler warnings, WartRemover, the coverage minimum and the
@@ -94,7 +94,7 @@ dependency audit in [`build.sbt`](build.sbt):
 ```scala
 // Template: merge these tool settings into the project's build.sbt.
 
-ThisBuild / scalaVersion := "3.3.6"
+ThisBuild / scalaVersion := "3.3.9"
 
 // scalafix's semantic rules (OrganizeImports, RemoveUnused) need SemanticDB.
 ThisBuild / semanticdbEnabled := true

@@ -1,6 +1,6 @@
 // Template: merge these tool settings into the project's build.sbt.
 
-ThisBuild / scalaVersion := "3.3.6"
+ThisBuild / scalaVersion := "3.3.9"
 
 // scalafix's semantic rules (OrganizeImports, RemoveUnused) need SemanticDB.
 ThisBuild / semanticdbEnabled := true
