@@ -30,6 +30,7 @@ kotlin {
     }
 }
 
+// detekt 1.23's plugin fails when Gradle runs on JDK 25: run Gradle on JDK 21.
 detekt {
     buildUponDefaultConfig = true
     config.setFrom("detekt.yml")

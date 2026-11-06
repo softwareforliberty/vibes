@@ -104,6 +104,9 @@ ij_yaml_spaces_within_brackets = false
 - In libraries, turn on **explicit API mode** (`kotlin { explicitApi() }`).
   The compiler then requires a visibility modifier and return type on every
   public declaration (see [Visibility and types](coding-style.md#visibility-and-types)).
+- detekt 1.23's Gradle plugin fails when Gradle itself runs on JDK 25. Run
+  Gradle on JDK 21 until detekt 2 is released. The detekt command line runs
+  on either.
 - Because the formatter owns layout, never hand-format code it will rewrite.
   Run it before every commit.
 
