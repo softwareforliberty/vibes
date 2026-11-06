@@ -12,8 +12,11 @@ repositories {
     mavenCentral()
 }
 
+// Use the CodeNarc build for Groovy 4. Declaring any codenarc dependency
+// replaces Gradle's default, so CodeNarc itself is listed too. Its
+// CyclomaticComplexity rule needs GMetrics on the same classpath.
 dependencies {
-    // CodeNarc's CyclomaticComplexity rule needs GMetrics on its classpath.
+    codenarc("org.codenarc:CodeNarc:3.7.0-groovy-4.0")
     codenarc("org.gmetrics:GMetrics-Groovy4:2.1.0")
 }
 
@@ -22,9 +25,8 @@ dependencyLocking {
     lockAllConfigurations()
 }
 
-// Use the CodeNarc build for Groovy 4, and fail the build on any finding.
+// Fail the build on any finding.
 codenarc {
-    toolVersion = "3.5.0-groovy-4.0"
     configFile = file("codenarc.xml")
     maxPriority1Violations = 0
     maxPriority2Violations = 0
