@@ -46,7 +46,7 @@ Add the formatter and coverage aliases in [`deps.edn`](deps.edn):
 ```clojure
 ;; Template: merge these aliases into the project's deps.edn.
 {:aliases
- {:cljfmt {:deps {dev.weavejester/cljfmt {:mvn/version "0.13.0"}}
+ {:cljfmt {:deps {dev.weavejester/cljfmt {:mvn/version "0.16.6"}}
            :main-opts ["-m" "cljfmt.main"]}
   :coverage {:extra-paths ["test"]
              :extra-deps {cloverage/cloverage {:mvn/version "1.2.4"}}
