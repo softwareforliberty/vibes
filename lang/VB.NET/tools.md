@@ -147,7 +147,10 @@ dotnet_style_null_propagation = true:warning
 dotnet_diagnostic.IDE0031.severity = warning
 
 # Naming: PascalCase constants, I-prefixed interfaces, s_camelCase Shared
-# fields, _camelCase instance fields
+# fields, _camelCase instance fields. The build reports a naming rule's
+# severity only when IDE1006 has one too.
+dotnet_diagnostic.IDE1006.severity = warning
+
 dotnet_naming_rule.constants.symbols = constants
 dotnet_naming_rule.constants.style = pascal_case
 dotnet_naming_rule.constants.severity = warning
