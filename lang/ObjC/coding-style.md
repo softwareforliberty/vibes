@@ -83,9 +83,11 @@ reviewers and editors agree with it.
 
 ```objc
 if (!data) {
-  return nil;
+  [self reportError:@"no data"];
 } else if (data.length > kMaxImageBytes) {
-  return nil;
+  [self reportError:@"image too large"];
+} else {
+  [self storeData:data];
 }
 ```
 
@@ -226,7 +228,7 @@ if (!data) {
 
   // ABCImageCache.m
   NSString *const ABCImageCacheDidEvictNotification = @"ABCImageCacheDidEvictNotification";
-  static const NSUInteger kMaxImageBytes = 1024 * 1024;
+  static const NSUInteger kMaxImageBytes = 1024UL * 1024;
   ```
 
 - Don't use magic numbers. Give each constant a name, and add a comment
