@@ -22,7 +22,7 @@ These files are drop-in templates: copy them into the project root.
 | File | Read by |
 | --- | --- |
 | [.editorconfig](.editorconfig) | Every editor and IDE, through EditorConfig |
-| [rebar.config](rebar.config) | rebar3: plugins, compiler warnings, erlfmt, Dialyzer and xref (merge into the project's `rebar.config`) |
+| [rebar.config](rebar.config) | rebar3: plugins, compiler warnings, erlfmt, Dialyzer, xref and cover (merge into the project's `rebar.config`) |
 | [elvis.config](elvis.config) | Elvis, through `rebar3 lint` |
 | [.jscpd.json](.jscpd.json) | jscpd |
 
@@ -197,7 +197,15 @@ Measure line coverage on every test run, and fail the build when it falls
 below 80%. Raise the minimum as coverage grows; never lower it to make a
 build pass.
 
+Turn coverage on for every test run, and set the minimum, in
+`rebar.config`:
+
+```erlang
+{cover_enabled, true}.
+{cover_opts, [verbose, {min_coverage, 80}]}.
+```
+
 ```sh
-rebar3 do eunit --cover, ct --cover
-rebar3 cover --verbose --min_coverage 80
+rebar3 do eunit, ct
+rebar3 cover
 ```
