@@ -93,6 +93,9 @@ Prettier uses the same `.prettierrc.json` as the
   (`&__item`), as the [nesting rules](coding-style.md#nesting) require.
 - Prettier owns layout, and Stylelint checks only for errors and
   conventions, so the two never conflict.
+- stylelint-config-standard-scss supports each new major version of
+  Stylelint some time after it ships. Install the Stylelint version its peer
+  dependency allows, or `npm install` fails.
 
 ## Auditing
 

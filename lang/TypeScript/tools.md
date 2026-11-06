@@ -166,6 +166,9 @@ export default [
   project's `package.json` sets `"type": "module"`.
 - Prettier owns layout, and ESLint checks only for bugs and unsafe patterns,
   so the two never conflict.
+- typescript-eslint supports each new TypeScript release some time after
+  it ships. Pin `typescript` to a version in the range typescript-eslint's
+  peer dependency allows, or `npm install` fails.
 
 ## Auditing
 
