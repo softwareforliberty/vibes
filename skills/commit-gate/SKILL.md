@@ -62,6 +62,10 @@ Rules for the script:
   development dependencies.
 - Copy each tool's config file from the language's directory in `lang/` into
   the project, and adjust paths to the project's layout.
+- It passes on a project with no tests yet. Some test runners fail when they
+  find no tests, such as pytest, which exits with status 5. Treat only that
+  status as a pass, with a comment saying why, so the check enforces itself
+  from the first test on. Never add a placeholder test that checks nothing.
 
 A skeleton to start from:
 
