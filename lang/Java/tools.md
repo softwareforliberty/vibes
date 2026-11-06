@@ -46,11 +46,13 @@ Format, then check. Code must build with **no warnings** and no findings.
 # Format every Java file in place
 java -jar google-java-format-<version>-all-deps.jar --replace $(git ls-files '*.java')
 
-# Style checks, using the Google configuration that ships with Checkstyle
-java -jar checkstyle-<version>-all.jar -c /google_checks.xml src/
+# Style checks, using the Google configuration that ships with Checkstyle.
+# It reports warnings by default; the property makes each one an error.
+java -Dorg.checkstyle.google.severity=error \
+  -jar checkstyle-<version>-all.jar -c /google_checks.xml src/
 
 # Static analysis with the project rule set, which builds on PMD's quickstart rules
-pmd check -d src -R pmd-ruleset.xml -f text
+pmd check --no-progress --no-cache -d src -R pmd-ruleset.xml -f text
 ```
 
 - Compile with `-Xlint:all -Werror`, so every compiler warning fails the
