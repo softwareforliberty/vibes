@@ -103,21 +103,24 @@ it. The closest check is Elvis's `no_call` rule, which bans the calls the
 idioms forbid on untrusted input. Add it to `elvis.config`:
 
 ```erlang
-[{elvis, [
+[
     {config, [
-        #{dirs => ["src"],
-          filter => "*.erl",
-          ruleset => erl_files,
-          rules => [
-              {elvis_style, no_call, #{no_call_functions => [
-                  {erlang, list_to_atom, 1},
-                  {erlang, binary_to_atom, 2},
-                  {erlang, binary_to_term, 1},
-                  {os, cmd, 1}
-              ]}}
-          ]}
+        #{
+            files => ["src/*.erl"],
+            ruleset => erl_files,
+            rules => [
+                {elvis_style, no_call, #{
+                    no_call_functions => [
+                        {erlang, list_to_atom, 1},
+                        {erlang, binary_to_atom, 2},
+                        {erlang, binary_to_term, 1},
+                        {os, cmd, 1}
+                    ]
+                }}
+            ]
+        }
     ]}
-]}].
+].
 ```
 
 ### Dependency vulnerabilities
