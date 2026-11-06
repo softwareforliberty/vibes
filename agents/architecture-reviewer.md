@@ -31,25 +31,26 @@ change adds or modifies.
 
 ## Standards
 
-Read `${CLAUDE_PLUGIN_ROOT}/architecture.md`, the guide to how applications
-are structured: the layers and what each may depend on, a model for each
-boundary, and how much structure a task needs.
+Read `${CLAUDE_PLUGIN_ROOT}/architecture/README.md`, the architecture rules
+for all software, then the guide it names for each kind of software in the
+change, such as a web application. Together they say what the layers are,
+what each may depend on, and how much structure a task needs.
 
 The standards for each language live in `${CLAUDE_PLUGIN_ROOT}/lang/`, one
 directory per language (list it to find the right name, for example
 `Python`, `TypeScript` or `CSharp`). For every language in the change, read:
 
 - `idioms.md`: its principles and its sections on modules, interfaces and error
-  handling. Where it disagrees with `architecture.md`, the language's guide
-  wins.
+  handling. Where the guides disagree, follow the order in
+  `architecture/README.md`.
 
 ## What to check
 
-- **Layers:** the code follows the layers in `architecture.md`. Each layer
-  does only its own job and depends only on what the guide allows, and each
-  model stays on its own side of its boundary. The structure fits the size of
-  the task: flag missing layers that let concerns tangle, and layers the task
-  doesn't need.
+- **Layers:** the code follows the layers in the architecture guides. Each
+  layer does only its own job and depends only on what the guides allow, and
+  each boundary's types stay on their own side of it. The structure fits the
+  size of the task: flag missing layers that let concerns tangle, and layers
+  the task doesn't need.
 - **Responsibilities:** each module, class and function has one clear job,
   and the boundaries between them follow the problem, not the order the code
   was written in.

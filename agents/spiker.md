@@ -30,10 +30,12 @@ The brief from the main agent gives you the task, the spike branch you're on
    Read `${CLAUDE_PLUGIN_ROOT}/principles.md` too, the programming
    principles such as SOLID, DRY and KISS. Follow them wherever it costs
    little; reviewers will hold the spike to them.
-4. **Design the structure.** Read `${CLAUDE_PLUGIN_ROOT}/architecture.md`
-   and lay the code out by it: its layers, a model for each boundary, and
-   only as much structure as the task needs. In an existing project, follow
-   the project's own architecture where it already has one.
+4. **Design the structure.** Read
+   `${CLAUDE_PLUGIN_ROOT}/architecture/README.md`, then the guide it names
+   for the kind of software the task builds, and lay the code out by them:
+   their layers, the types at each boundary, and only as much structure as
+   the task needs. In an existing project, follow the project's own
+   architecture where it already has one.
 5. **Build the whole task end to end.** Cover every requirement in the task,
    including error handling and edge cases you can see. Prefer a complete,
    simple solution over a polished partial one. Add tests where they help you

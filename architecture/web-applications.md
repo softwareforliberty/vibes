@@ -1,27 +1,17 @@
-# Application Architecture
+# Web Application Architecture
 
-How to structure an application so each part has one job, and a change stays
-in one place. It's written for MVC web applications and HTTP APIs, the most
-common case, but the same layers fit workers, command-line tools and
-services: only the entry points differ.
+How to structure a web application, an HTTP API or a service behind one.
+Read the [rules for all software](README.md) first: a core of logic with thin
+edges, dependencies pointing inward, and one owner for each piece of state.
+This guide builds on them.
 
-The [spiker](agents/spiker.md) designs to this guide, and the
-[architecture reviewer](agents/architecture-reviewer.md) holds each change to
-it. It applies the [programming principles](principles.md) at the scale of a
-whole application: separation of concerns, single responsibility and
-dependency inversion above all.
-
-Each language's `idioms.md` in [lang/](lang/) says how to organise code in
-that language, and wins where it disagrees with this guide. An existing
-codebase's architecture wins too, unless the change has a stated reason to
-depart from it.
+The layers here are the MVC pattern grown for real applications. The same
+layers suit a worker that consumes a queue: only the entry points differ.
 
 ## Scale the structure to the task
 
 Add structure only where it removes a real cost.
 
-- **A script or small tool:** a few functions, with input and output at the
-  edges and the logic in pure functions between them. No layers.
 - **A small application:** controllers, services and repositories. Until
   they differ, a request model may serve as the command, and the domain model
   as the view.
@@ -158,10 +148,9 @@ records what was sent.
 
 ### Supporting code
 
-- **Configuration lives in one place.** Settings bind to typed configuration
-  objects that are validated at startup, so a bad setting fails at once.
-  Keep each concern's configuration small and separate, not in one large
-  file.
+- **Configuration** follows the [shared rules](README.md#configuration),
+  with each concern's settings in a small typed object of its own, not one
+  large one.
 - **Errors:** one error type per failure mode, mapped to a transport status
   in one place at the edge. HTTP APIs return a consistent, machine-readable
   error body, such as [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457)
@@ -286,14 +275,11 @@ A single-page client has the same separation:
 - **Group by layer in a small application, and by feature then layer in a
   larger one,** unless the language's `idioms.md` says otherwise. Go, for
   example, groups by feature.
-- **Tests mirror the source layout.** When a file moves, its test moves with
-  it.
 
 ## Enforce it with tests
 
-Write the boundary rules as architecture tests, and run them in
-`scripts/check` so a change that breaks a boundary fails the gate. Typical
-rules:
+Write the boundary rules as architecture tests, as the
+[shared rules](README.md#enforce-it) describe. Typical rules:
 
 - persistence records and the persistence library are used only in
   repositories;
@@ -309,10 +295,6 @@ JavaScript and TypeScript, and [Deptrac](https://github.com/deptrac/deptrac)
 for PHP. Where a language has none, a check in `scripts/check` that searches
 imports can enforce the simple rules.
 
-When existing code breaks a rule, keep the rule and disable it for that one
-case, with a comment naming the violation and how to fix it. Never weaken
-the rule to make the code pass.
-
 ## Test each layer at its boundary
 
 | Layer | Test with | Replace |
@@ -322,8 +304,6 @@ the rule to make the code pass.
 | Controllers | The real HTTP stack and security | The services |
 | The whole application | User journeys over HTTP | Only outside systems, with recording fakes |
 
-- **Replace only your own interfaces,** never third-party code. To control a
-  library in a test, put it behind an interface you own.
 - **Repository tests round-trip** a domain model through the repository, and
   check each custom query against real rows.
 - **Controller tests check every rejected request,** such as invalid input,

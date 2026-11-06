@@ -11,8 +11,8 @@ while holding it to the standards of careful, experienced developers.
   atomic commits and setting up the commit gate.
 - **`principles.md`:** the programming principles every change is held
   to, such as SOLID, DRY and KISS.
-- **`architecture.md`:** how to structure an application: its layers, the
-  model each boundary uses, and tests that enforce them.
+- **`architecture/`:** how to structure software: rules for every kind,
+  and a guide for web applications.
 - **`agents/`:** the spike agent and nine reviewer agents.
 - **`hooks/`:** the commit gate, for Claude Code and for git.
 
