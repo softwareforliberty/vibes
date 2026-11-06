@@ -68,6 +68,7 @@ JavaScript are formatted identically.
     "rewriteRelativeImportExtensions": true,
     "isolatedModules": true,
     "skipLibCheck": true,
+    "rootDir": "src",
     "outDir": "dist"
   },
   "include": ["src"]
@@ -86,6 +87,9 @@ JavaScript are formatted identically.
   Node.js can run the source by stripping the types.
 - `rewriteRelativeImportExtensions` turns the `.ts` extension in relative
   imports into `.js` in the compiled output.
+- `rootDir` and `outDir` compile `src/` into `dist/` with the same layout.
+  TypeScript 6 and later stop with an error if `rootDir` is missing when the
+  sources aren't next to `tsconfig.json`.
 - For browser code, add `"lib": ["es2022", "dom", "dom.iterable"]` and set
   `"module": "es2022"` with `"moduleResolution": "bundler"` if a bundler
   resolves imports.
