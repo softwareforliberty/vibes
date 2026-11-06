@@ -44,8 +44,8 @@ Put the settings in `fourmolu.yaml` at the project root:
 indentation: 4
 column-limit: 80
 comma-style: leading
-import-export-style: diff-friendly
-haddock-style: multi-line
+import-export-style: leading
+haddock-style: single-line
 unicode: never
 ```
 
