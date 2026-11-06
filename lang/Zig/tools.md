@@ -9,17 +9,19 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [Zig](https://ziglang.org/) | MIT | Formatting, Linting, Auditing, Code quality | Formatting (`zig fmt`), compile checks, safety-checked tests and fuzzing |
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [kcov](https://github.com/SimonKagstrom/kcov) | GPL-2.0 | Code quality | Measuring test coverage of the compiled test binary |
+| [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
 ## Config files
 
-Copy this file into the project root. It matches the layout `zig fmt`
-produces.
+Copy these files into the project root. The `.editorconfig` matches the
+layout `zig fmt` produces.
 
 | File | Read by |
 | --- | --- |
 | [`.editorconfig`](.editorconfig) | Editors and IDEs |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
 
-The Zig tools need no other config files: `zig fmt` has no settings, and the
+The other Zig tools need no config files: `zig fmt` has no settings, and the
 compiler's checks are on by default.
 
 ## Formatting
@@ -97,9 +99,13 @@ one screen or nests more than three levels deep.
 
 ### Duplication
 
-No FOSS duplication detector documents support for Zig, including jscpd. The
-closest check is review: when the same logic appears twice, move it into one
+Flag any block of 50 or more tokens that appears twice. Duplicated code gets
+fixed in one place and not the other. Move logic that appears twice into one
 function or a `comptime` generic.
+
+```sh
+jscpd --format zig --min-tokens 50 --exit-code 1 src
+```
 
 ### Dead code
 

@@ -9,6 +9,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [GnuCOBOL](https://gnucobol.sourceforge.io/) | GPL-3.0-or-later (compiler), LGPL-3.0-or-later (runtime) | Linting, Auditing, Code quality | Compiling, linting through its warnings, runtime checks and coverage |
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [gcovr](https://gcovr.com/) | BSD-3-Clause | Code quality | Summarising gcov test coverage |
+| [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 
 COBOL has few FOSS tools beyond the compiler. Where no maintained tool
 exists, the section below says so and gives the closest check.
@@ -22,6 +23,7 @@ settings on this page.
 | --- | --- |
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
 | [`gcovr.cfg`](gcovr.cfg) | gcovr |
+| [`.jscpd.json`](.jscpd.json) | jscpd |
 
 ## Compiler warnings
 
@@ -90,9 +92,15 @@ than 60 lines or with deeply nested conditions.
 
 ### Duplication
 
-jscpd doesn't list COBOL among its formats, and no other maintained FOSS tool
-finds duplicated COBOL. Move repeated data layouts into copybooks, and
-repeated logic into a called program.
+Flag any block of 50 or more tokens that appears twice. Duplicated code gets
+fixed in one place and not the other. Move repeated data layouts into
+copybooks, and repeated logic into a called program.
+
+```sh
+jscpd --format cobol --min-tokens 50 --exit-code 1 .
+```
+
+jscpd reads `.cob` programs and `.cpy` copybooks as its `cobol` format.
 
 ### Dead code
 
