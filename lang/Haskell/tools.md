@@ -215,11 +215,18 @@ Measure expression coverage on every test run, and fail the build when it
 falls below 80%. Raise the minimum as coverage grows; never lower it to make
 a build pass.
 
-hpc reports the share of expressions the tests evaluated. It has no
-minimum of its own, so check its summary line:
+hpc reports the share of expressions the tests evaluated. Cabal writes
+only an HTML report, so run `hpc report` on the test suite's `.tix` file,
+then check its summary line. The check also fails when there's no summary:
 
 ```sh
-cabal test all --enable-coverage | tee test.log
-awk '/expressions used/ { sub(/%/, "", $1); if ($1 < 80) bad = 1 }
-     END { exit bad }' test.log
+cabal test all --enable-coverage
+tix=$(find dist-newstyle -path '*/vanilla/tix/*' -name '*.tix')
+mix=$(find dist-newstyle -type d -path '*/vanilla/mix' | sed 's/^/--hpcdir=/')
+hpc report "$tix" $mix | tee coverage.txt
+awk '/expressions used/ { seen = 1; sub(/%/, "", $1); if ($1 < 80) bad = 1 }
+     END { exit bad || !seen }' coverage.txt
 ```
+
+This reads one test suite. With more than one, merge their `.tix` files
+with `hpc sum` first.
