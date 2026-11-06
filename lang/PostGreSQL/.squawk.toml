@@ -1,0 +1,8 @@
+# The oldest PostgreSQL version this guide supports.
+pg_version = "15.0"
+# The migration tool runs each migration in a transaction. Start a file that
+# can't run in one with /* squawk-disable-assume-in-transaction */.
+assume_in_transaction = true
+# Migrations set lock_timeout, not statement_timeout, which would cancel
+# long steps that don't block writes, such as VALIDATE CONSTRAINT.
+excluded_rules = ["require-statement-timeout"]

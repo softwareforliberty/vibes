@@ -22,6 +22,7 @@ These files are in this directory, ready to copy to the root of a project:
 | --- | --- |
 | [.editorconfig](.editorconfig) | Editors and IDEs |
 | [.sqlfluff](.sqlfluff) | SQLFluff |
+| [.squawk.toml](.squawk.toml) | Squawk |
 | [postgresql.conf](postgresql.conf) | The PostgreSQL test server, for plpgsql_check |
 | [.jscpd.json](.jscpd.json) | jscpd |
 
@@ -109,6 +110,24 @@ each warning before the migration ships:
 
 ```sh
 squawk migrations/*.sql
+```
+
+Squawk reads [.squawk.toml](.squawk.toml) from the project root. It matches
+the [migration rules](idioms.md#migrations): each migration runs in a
+transaction, and sets `lock_timeout` rather than `statement_timeout`. Start a
+migration that runs `CREATE INDEX CONCURRENTLY` with a
+`/* squawk-disable-assume-in-transaction */` comment, because it runs outside
+a transaction:
+
+```toml
+# The oldest PostgreSQL version this guide supports.
+pg_version = "15.0"
+# The migration tool runs each migration in a transaction. Start a file that
+# can't run in one with /* squawk-disable-assume-in-transaction */.
+assume_in_transaction = true
+# Migrations set lock_timeout, not statement_timeout, which would cancel
+# long steps that don't block writes, such as VALIDATE CONSTRAINT.
+excluded_rules = ["require-statement-timeout"]
 ```
 
 ## Function checks
