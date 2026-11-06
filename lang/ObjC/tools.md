@@ -78,8 +78,8 @@ WarningsAsErrors: "*"
   `// NOLINT(check-name)` and a reason. A bare `NOLINT` hides every check,
   including ones nobody meant to silence.
 - Run the static analyzer over the whole build with `scan-build`, for example
-  `scan-build --status-bugs make`. It follows paths across functions, and finds bugs that
-  per-file checks miss.
+  `scan-build --status-bugs make`. It follows paths across functions, and
+  finds bugs that per-file checks miss.
 
 ## Compiler warnings
 
