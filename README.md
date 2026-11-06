@@ -9,6 +9,8 @@ while holding it to the standards of careful, experienced developers.
   files for those tools.
 - **`skills/`:** agent skills for the workflow, test-driven development,
   atomic commits and setting up the commit gate.
+- **`principles.md`:** the programming principles every change is held
+  to, such as SOLID, DRY and KISS.
 - **`agents/`:** the spike agent and nine reviewer agents.
 - **`hooks/`:** the commit gate, for Claude Code and for git.
 
