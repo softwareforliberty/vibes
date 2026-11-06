@@ -161,9 +161,11 @@ PRAGMA trusted_schema = OFF;
   compared with a value:
 
   ```sql
+  SELECT order_id
+  FROM orders
   WHERE
-      o.placed_at >= '2026-01-01 00:00:00'
-      AND o.placed_at < '2026-02-01 00:00:00'
+      placed_at >= '2026-01-01 00:00:00'
+      AND placed_at < '2026-02-01 00:00:00';
   ```
 
 - **Use half-open ranges for time** (`>=` the start and `<` the end). They
