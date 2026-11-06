@@ -209,6 +209,14 @@ also keeps the block, neither is ever freed.
 - Choose the right algorithm and collection first.
 - Don't bypass ARC or message sending for speed unless a profile shows it
   matters.
+- **Stream large input** with `NSInputStream` or `NSFileHandle`, rather than
+  reading the whole file into memory.
+- **Memory-map a large file that's read at random positions or many times**
+  with `[NSData dataWithContentsOfFile:options:error:]` and
+  `NSDataReadingMappedIfSafe`, which maps the file only where that's safe and
+  reads it otherwise. Don't map a file you read once from start to end, where
+  buffered reads are as fast and simpler, or one that another process may
+  shrink while it's mapped, which can crash the program.
 
 ## Sources
 

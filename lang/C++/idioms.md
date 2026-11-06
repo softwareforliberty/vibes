@@ -244,6 +244,15 @@ Code must never rely on undefined behaviour. The most common traps:
   elements, and move values you no longer need.
 - Construct elements in place with `emplace_back` when it avoids a temporary.
 - Leave inlining and micro-optimisation to the compiler.
+- **Stream large input** with `std::getline` or `read` into a reused buffer,
+  rather than reading the whole file into memory.
+- **Memory-map a large file that's read at random positions or many times.**
+  The standard library can't, so wrap `mmap` (`MapViewOfFile` on Windows) in a
+  class that unmaps in its destructor, or use Boost.Interprocess's
+  `file_mapping` and `mapped_region`, and view the bytes through `std::span`.
+  Don't map for one pass from start to end, where buffered reads are as fast,
+  or a file another process may shrink, which crashes the program with `SIGBUS`
+  when it's read.
 
 ## Sources
 

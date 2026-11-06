@@ -152,6 +152,12 @@ style guide.
 - **Precompile regexes used in loops** with `qr//`, and avoid capturing
   groups you don't use.
 - **Use a hash for lookups**, not `grep` over an array.
+- **Stream large input** with `while (my $line = <$fh>)`. Reading `<$fh>` in
+  list context reads the whole file into memory.
+- **Memory-map a large file that's read at random positions or many times**
+  with `File::Map`'s `map_file`. Don't map a file you read once from start to
+  end, where buffered reads are as fast and simpler, or one that another
+  process may shrink while it's mapped, which can crash the program.
 
 ## Sources
 

@@ -230,6 +230,16 @@ code correct, safe and maintainable. Every example follows the style guide.
   `pprof` to find where the time actually goes.
 - Reduce allocations in hot paths: reuse buffers, preallocate slices, and
   avoid converting between `string` and `[]byte` in loops.
+- **Stream large input** with `bufio.Scanner` or `bufio.Reader`, rather than
+  reading the whole file into memory. A `Scanner` rejects lines over 64 KiB
+  unless you raise its limit with `Buffer`.
+- **Memory-map a large file that's read at random positions or many times**
+  with `golang.org/x/exp/mmap`, which maps it read-only and falls back to plain
+  reads where it can't. Don't map a file you read once from start to end, where
+  buffered reads are as fast and simpler, or one that another process may
+  shrink while it's mapped, which can crash the program.
+- `io.Copy` from an `*os.File` to a file or a network connection uses the
+  kernel's copy calls on Linux, so prefer it to a copy loop of your own.
 
 ## Sources
 

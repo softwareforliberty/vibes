@@ -149,6 +149,9 @@ style guide.
 - Add a timeout to every network call: `await request.timeout(timeout)`.
 - Move long CPU-bound work off the main isolate with `Isolate.run()`, so it
   doesn't block everything else.
+- Stream large files with `file.openRead()`, decoding with `utf8.decoder` and
+  splitting with `LineSplitter`. `readAsString` and `readAsLines` read the
+  whole file into memory.
 
 ## Collections and iteration
 

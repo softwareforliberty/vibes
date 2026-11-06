@@ -144,6 +144,10 @@ guide.
   the profiler points at.
 - Vectorise first. Most slow R code is a loop that a vectorised function
   would replace.
+- **Read large files in chunks,** with `readLines(con, n = 10000)` in a loop
+  over an open connection, rather than reading them whole. For large tables,
+  use a format and package built for data bigger than memory, such as Arrow
+  with the arrow package.
 
 ## Sources
 

@@ -164,6 +164,16 @@ guide.
   debug builds are much slower and mislead.
 - Avoid needless allocation in hot paths: borrow instead of cloning, reuse
   buffers, and preallocate with `with_capacity`.
+- **Stream large input** through a `BufReader`, and reuse one `String` with
+  `read_line` in hot loops, rather than reading the whole file into memory.
+- **Memory-map a large file that's read at random positions or many times**
+  with the `memmap2` crate. Mapping is `unsafe`, because another process can
+  change or shrink the file under you, so state why that can't happen in a
+  `// SAFETY:` comment. Don't map a file you read once from start to end, where
+  buffered reads are as fast and simpler, or one that another process may
+  shrink while it's mapped, which can crash the program.
+- `std::io::copy` between files and sockets already uses the kernel's copy
+  calls on Linux, so prefer it to a copy loop of your own.
 
 ## Sources
 

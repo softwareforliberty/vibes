@@ -164,6 +164,9 @@ follows the style guide.
   or use a `[System.Collections.Generic.List[object]]`.
 - **Filter as early as possible.** Use a command's own `-Filter` parameter
   rather than piping everything to `Where-Object`.
+- **Read large files with `switch -File` or `[System.IO.File]::ReadLines()`,**
+  which stream lines far faster than `Get-Content`. `Get-Content -Raw` reads
+  the whole file into memory.
 
 ## Sources
 

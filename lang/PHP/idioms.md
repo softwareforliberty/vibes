@@ -207,6 +207,9 @@ style guide.
 - Choose the right data structure first. Looking up an array key takes the
   same time however large the array grows, while `in_array()` gets slower
   as the array grows.
+- **Stream large input** with `fgets` in a loop, an `SplFileObject` or a
+  generator, rather than `file()` or `file_get_contents()`, which read the
+  whole file into memory. Copy streams with `stream_copy_to_stream`.
 
 ## Sources
 

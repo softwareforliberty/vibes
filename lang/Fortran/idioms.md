@@ -151,6 +151,9 @@ style guide.
 - Watch for hidden array temporaries, which gfortran's
   `-Warray-temporaries` reports. Passing a non-contiguous section to an
   explicit-shape argument copies it on every call.
+- **Read and write large data unformatted,** with `access='stream'` and
+  `form='unformatted'`, a whole array per statement. Formatted I/O converts
+  every value to and from text, which is far slower.
 
 ## Sources
 

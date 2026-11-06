@@ -115,6 +115,11 @@ style guide.
 - Start and stop long-lived components (connection pools, servers) through
   one lifecycle library or a single start/stop function, never as a side
   effect of loading a namespace.
+- Stream large files with `line-seq` over an `io/reader`, and consume the
+  sequence inside its `with-open`: a lazy sequence that escapes is read after
+  the file is closed. Memory-map a large file that's read at random positions
+  or many times with Java's `FileChannel.map`, as the [Java
+  guide](../Java/idioms.md#performance) describes.
 
 ## Java interop
 

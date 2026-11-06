@@ -205,6 +205,10 @@ style guide.
   same time however large it grows, while `Array#include?` gets slower as
   the array grows.
 - Load related records in one query instead of one query per record.
+- **Stream large input** with `File.foreach` or `IO#each_line`, rather than
+  `File.read` or `File.readlines`, which read the whole file into memory.
+- Copy between files and sockets with `IO.copy_stream`, which uses the kernel's
+  copy calls where it can.
 
 ## Sources
 

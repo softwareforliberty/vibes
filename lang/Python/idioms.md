@@ -222,6 +222,17 @@ style guide.
 - Pass arguments to logging calls instead of formatting them yourself:
   `logger.debug("loaded %d rows", count)`. The message is only built if it's
   actually logged.
+- **Stream large input** by iterating over the file object, line by line,
+  rather than calling `read()` or `readlines()`, which read the whole file into
+  memory.
+- **Memory-map a large file that's read at random positions or many times**
+  with `mmap.mmap(f.fileno(), 0, access=mmap.ACCESS_READ)`. Searching it with
+  `re` doesn't copy the file into memory first. For arrays of numbers, use
+  `numpy.memmap`. Don't map a file you read once from start to end, where
+  buffered reads are as fast and simpler, or one that another process may
+  shrink while it's mapped, which can crash the program.
+- Copy files with `shutil.copyfile`, which uses the operating system's fast
+  copy calls where it can.
 
 ## Sources
 

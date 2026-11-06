@@ -225,6 +225,14 @@ guide.
 - Choose the right algorithm and data structure first.
 - In hot code, avoid needless boxing (`IntArray` over `Array<Int>`) and needless
   intermediate collections (use a `Sequence`).
+- **Stream large input** with `useLines` or `bufferedReader`, rather than
+  `readText` or `readLines`, which read the whole file into memory.
+- **Memory-map a large file that's read at random positions or many times**
+  with Java's `FileChannel.map(mode, offset, size, arena)`, as the [Java
+  guide](../Java/idioms.md#performance) describes. Don't map a file you read
+  once from start to end, where buffered reads are as fast and simpler, or one
+  that another process may shrink while it's mapped, which can crash the
+  program.
 
 ## Sources
 

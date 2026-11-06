@@ -236,6 +236,18 @@ guide.
 - Choose the right algorithm and data structure first.
 - Avoid unnecessary boxing in hot code: prefer `int` to `Integer`, and
   `IntStream` to `Stream<Integer>`.
+- **Stream large input** with `Files.lines` or `Files.newBufferedReader` in a
+  `try`-with-resources block, rather than `Files.readAllLines` or
+  `Files.readString`, which read the whole file into memory.
+- **Memory-map a large file that's read at random positions or many times**
+  with `FileChannel.map(mode, offset, size, arena)`, which returns a
+  `MemorySegment` on Java 22 and later. Closing the arena unmaps the file, and
+  a segment has no size limit. The older `MappedByteBuffer` holds at most 2 GiB
+  and is only unmapped by the garbage collector. Don't map a file you read once
+  from start to end, where buffered reads are as fast and simpler, or one that
+  another process may shrink while it's mapped, which can crash the program.
+- Copy between channels with `FileChannel.transferTo`, which uses the kernel's
+  copy calls where it can.
 
 ## Sources
 

@@ -169,6 +169,14 @@ F# code correct, safe and maintainable. Every example follows the style guide.
 - In hot code, prefer arrays to lists, avoid `seq` pipelines in tight loops,
   and consider struct tuples (`struct (a, b)`) and `[<Struct>]` unions to
   avoid allocations.
+- **Stream large input** with `File.ReadLines`, which returns a lazy `seq`,
+  rather than `File.ReadAllText` or `File.ReadAllLines`, which read the whole
+  file into memory.
+- **Memory-map a large file that's read at random positions or many times**
+  with `MemoryMappedFile.CreateFromFile` and a view from `CreateViewAccessor`,
+  each bound with `use`. Don't map a file you read once from start to end,
+  where buffered reads are as fast and simpler, or one that another process may
+  shrink while it's mapped, which can crash the program.
 
 ## Sources
 

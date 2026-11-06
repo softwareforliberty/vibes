@@ -70,6 +70,9 @@ style guide.
   [Processes and OTP](#processes-and-otp) for why).
 - Use `Enum` for finite collections and `Stream` for large or infinite
   ones, so a long pipeline doesn't build every intermediate list.
+- Stream large files with `File.stream!/1`, and process them with `Stream`
+  before the final `Enum` call. `File.read!/1` reads the whole file into
+  memory.
 
 ## Processes and OTP
 

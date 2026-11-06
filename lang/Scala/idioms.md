@@ -102,6 +102,11 @@ style guide.
   cancellation unpredictable.
 - Never block a thread inside a `Future` or an effect's compute pool. Run
   blocking calls on a dedicated blocking executor.
+- Stream large input with `scala.io.Source.getLines()` inside `Using`, or
+  `java.nio.file.Files.lines`, rather than reading the whole file into memory.
+  Memory-map a large file that's read at random positions or many times with
+  Java's `FileChannel.map`, as the [Java guide](../Java/idioms.md#performance)
+  describes.
 
 ## Collections
 

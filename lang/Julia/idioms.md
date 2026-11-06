@@ -161,6 +161,14 @@ style guide.
 - Use broadcasting (`y .= a .* x .+ b`) to fuse operations into one loop with
   no temporaries.
 - Use views (`@views`) instead of slices when you only read part of an array.
+- **Stream large input** with `eachline`, rather than `read` or `readlines`,
+  which read the whole file into memory.
+- **Memory-map a large file that's read at random positions or many times**
+  with the `Mmap` standard library, such as
+  `Mmap.mmap(io, Matrix{Float64}, (rows, cols))` for an array stored on disk.
+  Don't map a file you read once from start to end, where buffered reads are as
+  fast and simpler, or one that another process may shrink while it's mapped,
+  which can crash the program.
 
 ## Sources
 

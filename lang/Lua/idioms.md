@@ -157,6 +157,8 @@ style guide.
   profiler shows where it isn't.
 - **Avoid creating tables and closures in hot loops.** Each one is garbage
   the collector must clean up later.
+- **Stream large input** with `io.lines`, or `file:read(n)` in blocks, rather
+  than `file:read("a")`, which reads the whole file into memory.
 
 ## Sources
 

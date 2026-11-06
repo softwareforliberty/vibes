@@ -206,6 +206,9 @@ style guide.
   and pass it down. Don't read `process.env` throughout the code.
 - Exit with a non-zero status on failure, so scripts and supervisors can
   tell something went wrong.
+- Stream large input with `fs.createReadStream`, reading lines with
+  `node:readline` and `for await`, and connect streams with `pipeline` from
+  `node:stream/promises`. `readFile` reads the whole file into memory.
 
 ## Testable design
 

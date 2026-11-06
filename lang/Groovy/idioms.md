@@ -235,6 +235,14 @@ guide.
 - Use `@CompileStatic` on hot code. Dynamic dispatch is far slower than static
   calls.
 - Choose the right algorithm and data structure first.
+- **Stream large input** with `eachLine` or `withReader`, rather than
+  `File.text` or `readLines`, which read the whole file into memory.
+- **Memory-map a large file that's read at random positions or many times**
+  with Java's `FileChannel.map`, as the [Java
+  guide](../Java/idioms.md#performance) describes. Don't map a file you read
+  once from start to end, where buffered reads are as fast and simpler, or one
+  that another process may shrink while it's mapped, which can crash the
+  program.
 
 ## Sources
 

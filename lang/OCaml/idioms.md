@@ -128,6 +128,13 @@ style guide.
   whole string every time.
 - Keep recursion over large inputs tail-recursive. A non-tail-recursive
   function over a long list overflows the stack.
+- **Stream large input** with `In_channel.input_line` in a loop, rather than
+  `In_channel.input_all`, which reads the whole file into memory.
+- **Memory-map a large file that's read at random positions or many times**
+  with `Unix.map_file`, which returns a Bigarray backed by the file. Don't map
+  a file you read once from start to end, where buffered reads are as fast and
+  simpler, or one that another process may shrink while it's mapped, which can
+  crash the program.
 
 ## Testing
 

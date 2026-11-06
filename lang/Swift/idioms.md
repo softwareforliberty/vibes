@@ -230,6 +230,13 @@ all new concurrent code.
   part of the result.
 - Mark classes `final` and members `private` where you can. Both let the
   compiler dispatch statically and optimise across calls.
+- **Stream large input** with `FileHandle`'s `read(upToCount:)` in a loop,
+  rather than reading the whole file into memory.
+- **Memory-map a large file that's read at random positions or many times**
+  with `Data(contentsOf: url, options: .mappedIfSafe)`, which maps the file
+  only where that's safe and reads it otherwise. Don't map a file you read once
+  from start to end, where buffered reads are as fast and simpler, or one that
+  another process may shrink while it's mapped, which can crash the program.
 
 ## Sources
 

@@ -191,6 +191,14 @@ C# code correct, safe and maintainable. Every example follows the style guide.
 - Choose the right algorithm and data structure first.
 - In hot code, use `Span<T>` and `stackalloc` to avoid allocations, avoid
   boxing value types, and build strings with `StringBuilder` in loops.
+- **Stream large input** with `File.ReadLines` or a `StreamReader`, rather than
+  `File.ReadAllText` or `File.ReadAllLines`, which read the whole file into
+  memory.
+- **Memory-map a large file that's read at random positions or many times**
+  with `MemoryMappedFile.CreateFromFile` and a view from `CreateViewAccessor`,
+  and dispose of both. Don't map a file you read once from start to end, where
+  buffered reads are as fast and simpler, or one that another process may
+  shrink while it's mapped, which can crash the program.
 
 ## Sources
 

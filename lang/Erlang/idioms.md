@@ -52,6 +52,9 @@ style guide.
   explicitly (see [Processes and OTP](#processes-and-otp) for why).
 - Never call `binary_to_term/1` on untrusted data. Use
   `binary_to_term(Bin, [safe])`, which refuses to create new atoms.
+- Read large files line by line with `file:read_line/1`, on a file opened with
+  `[read, raw, binary, read_ahead]`. Send files to sockets with
+  `file:sendfile/2`, which uses the kernel's copy call where it can.
 
 ## Processes and OTP
 

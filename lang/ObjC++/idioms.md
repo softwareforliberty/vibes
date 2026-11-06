@@ -205,6 +205,10 @@ _checker->SetCallback([weakSelf](const std::string &word) {
 - Converting strings and collections at the boundary copies them. Cross the
   boundary with whole batches instead of one element at a time, when
   profiling shows the cost matters.
+- **Stream large input, and map large files read at random,** as the
+  [Objective-C](../ObjC/idioms.md#performance) and
+  [C++](../C++/idioms.md#performance) guides describe. In C++ code, unmap in a
+  destructor.
 
 ## Sources
 

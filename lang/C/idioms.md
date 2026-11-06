@@ -286,6 +286,17 @@ Code must never rely on undefined behaviour. The most common traps:
   beat linked structures, because they keep the cache warm.
 - Leave inlining and micro-optimisation to the compiler (see
   [inline functions](coding-style.md#inline-functions)).
+- **Stream large input** through a fixed buffer with `fread` or `getline`,
+  rather than reading the whole file into memory. Input that can grow without
+  limit is never read whole.
+- **Memory-map a large file that's read at random positions or many times,**
+  with `mmap` (`MapViewOfFile` on Windows), and pass access hints with
+  `madvise`. Don't map a file for one pass from start to end, where buffered
+  reads are as fast; a file another process may shrink, since touching a page
+  past its new end raises `SIGBUS`; or a file on a network file system.
+- **Copy between files and sockets in the kernel** where the platform allows,
+  with `copy_file_range` or `sendfile` on Linux, instead of through a buffer of
+  your own.
 
 ## Sources
 
