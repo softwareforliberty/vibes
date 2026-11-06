@@ -1,4 +1,11 @@
 ---
+Language: Cpp
+BasedOnStyle: Google
+ColumnLimit: 100
+DerivePointerAlignment: false
+IncludeBlocks: Preserve
+PointerAlignment: Right
+---
 Language: ObjC
 BasedOnStyle: Google
 ColumnLimit: 100

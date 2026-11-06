@@ -37,12 +37,25 @@ keeps diffs free of whitespace noise.
 
 ```yaml
 ---
+Language: Cpp
+BasedOnStyle: Google
+ColumnLimit: 100
+DerivePointerAlignment: false
+IncludeBlocks: Preserve
+PointerAlignment: Right
+---
 Language: ObjC
 BasedOnStyle: Google
 ColumnLimit: 100
 DerivePointerAlignment: false
 PointerAlignment: Right
 ```
+
+clang-format formats `.m` files and Objective-C headers with the `ObjC`
+section, and plain C headers with the `Cpp` section. Without a `Cpp`
+section, it refuses to format a header that holds only C.
+`IncludeBlocks: Preserve` keeps the import groups as written, as Google's
+Objective-C style already does.
 
 ## Linting
 
