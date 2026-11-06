@@ -30,6 +30,10 @@ every rule in this guide that SQLFluff can check:
 [sqlfluff]
 dialect = mysql
 max_line_length = 80
+templater = placeholder
+
+[sqlfluff:templater:placeholder]
+param_style = question_mark
 
 [sqlfluff:indentation]
 indent_unit = space
@@ -89,6 +93,10 @@ sqlfluff fix .    # fix what can be fixed automatically
 
 Code must pass `sqlfluff lint` with **no violations**. A rule with no
 SQLFluff equivalent is checked in review.
+
+The configuration reads `?` as a query parameter, the placeholder MySQL
+uses, so files of [parameterised queries](idioms.md#security) parse.
+SQLFluff lints each `?` as a number.
 
 SQLFluff can't tell built-in functions from your own, so the configuration
 skips function names written in lowercase with an underscore, which is how

@@ -241,10 +241,10 @@ fast and changes safe. Every example follows the style guide.
   building is how SQL injection happens:
 
   ```sql
-  /* Built by the application, with :email bound as a parameter. */
+  /* Built by the application, with the email bound to ? as a parameter. */
   SELECT customer_id
   FROM customers
-  WHERE email = :email;
+  WHERE email = ?;
   ```
 
 - Identifiers (table and column names) can't be parameters. If one must come
