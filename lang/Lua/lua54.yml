@@ -1,0 +1,16 @@
+---
+# Lua 5.4 syntax and globals for selene, which ships libraries only up to
+# Lua 5.3. selene.toml loads it after lua53, so its lua_versions entry
+# turns on the 5.4 syntax.
+lua_versions:
+  - lua54
+globals:
+  coroutine.close:
+    args:
+      - type:
+          display: coroutine
+  warn:
+    args:
+      - type: string
+      - required: false
+        type: ...

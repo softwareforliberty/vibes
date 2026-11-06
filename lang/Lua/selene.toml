@@ -1,1 +1,1 @@
-std = "lua54"
+std = "lua53+lua54+busted"

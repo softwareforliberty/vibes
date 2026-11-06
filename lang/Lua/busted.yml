@@ -1,0 +1,51 @@
+---
+# The globals busted gives spec files, for selene. selene.toml loads it
+# so the tests are linted with the rest of the code.
+globals:
+  after_each:
+    any: true
+  # Keep Lua's assert() and allow busted's assert.* fields.
+  assert.*:
+    any: true
+  before_each:
+    any: true
+  context:
+    any: true
+  describe:
+    any: true
+  expose:
+    any: true
+  finally:
+    any: true
+  insulate:
+    any: true
+  it:
+    any: true
+  lazy_setup:
+    any: true
+  lazy_teardown:
+    any: true
+  match:
+    any: true
+  mock:
+    any: true
+  pending:
+    any: true
+  randomize:
+    any: true
+  setup:
+    any: true
+  spec:
+    any: true
+  spy:
+    any: true
+  strict_setup:
+    any: true
+  strict_teardown:
+    any: true
+  stub:
+    any: true
+  teardown:
+    any: true
+  test:
+    any: true

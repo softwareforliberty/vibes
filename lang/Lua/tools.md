@@ -25,6 +25,8 @@ settings on this page.
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
 | [`.stylua.toml`](.stylua.toml) | StyLua |
 | [`selene.toml`](selene.toml) | selene |
+| [`lua54.yml`](lua54.yml) | selene, as the Lua 5.4 standard library |
+| [`busted.yml`](busted.yml) | selene, as busted's standard library |
 | [`.luacov`](.luacov) | LuaCov |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 | [`.opengrep/lua.yaml`](.opengrep/lua.yaml) | Opengrep |
@@ -64,11 +66,94 @@ targets (see [coding-style.md](coding-style.md#language-baseline)), so
 selene rejects library functions that version doesn't have:
 
 ```toml
-std = "lua54"
+std = "lua53+lua54+busted"
 ```
 
-Use `std = "lua51+luajit"` for code that targets LuaJIT. Any global the
-host provides goes in a project standard-library file, never in an inline
+selene ships standard libraries only up to Lua 5.3, so `lua54` and `busted`
+are project standard-library files next to `selene.toml`. Each library in
+`std` extends the one before it. `lua54.yml` adds the Lua 5.4 syntax
+(`<const>` and `<close>`) and the 5.4 globals:
+
+```yaml
+---
+# Lua 5.4 syntax and globals for selene, which ships libraries only up to
+# Lua 5.3. selene.toml loads it after lua53, so its lua_versions entry
+# turns on the 5.4 syntax.
+lua_versions:
+  - lua54
+globals:
+  coroutine.close:
+    args:
+      - type:
+          display: coroutine
+  warn:
+    args:
+      - type: string
+      - required: false
+        type: ...
+```
+
+`busted.yml` adds the globals busted gives spec files, so the tests are
+linted too:
+
+```yaml
+---
+# The globals busted gives spec files, for selene. selene.toml loads it
+# so the tests are linted with the rest of the code.
+globals:
+  after_each:
+    any: true
+  # Keep Lua's assert() and allow busted's assert.* fields.
+  assert.*:
+    any: true
+  before_each:
+    any: true
+  context:
+    any: true
+  describe:
+    any: true
+  expose:
+    any: true
+  finally:
+    any: true
+  insulate:
+    any: true
+  it:
+    any: true
+  lazy_setup:
+    any: true
+  lazy_teardown:
+    any: true
+  match:
+    any: true
+  mock:
+    any: true
+  pending:
+    any: true
+  randomize:
+    any: true
+  setup:
+    any: true
+  spec:
+    any: true
+  spy:
+    any: true
+  strict_setup:
+    any: true
+  strict_teardown:
+    any: true
+  stub:
+    any: true
+  teardown:
+    any: true
+  test:
+    any: true
+```
+
+For code that targets LuaJIT, use `std = "lua51+busted"`. selene has no
+LuaJIT library, so declare the LuaJIT globals the code uses, such as `bit`
+and `jit`, in a project standard-library file. Any global the host provides
+goes in a project standard-library file too, never in an inline
 `-- selene: allow` comment, so the full list lives in one place.
 
 ## Auditing
