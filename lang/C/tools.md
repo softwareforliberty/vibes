@@ -133,8 +133,11 @@ Flag any block of 50 or more tokens that appears twice. Duplicated code gets
 fixed in one place and not the other.
 
 ```sh
-jscpd --format c --min-tokens 50 --exit-code 1 src
+jscpd --format c --formats-exts "c:h" --min-tokens 50 --exit-code 1 src
 ```
+
+jscpd's `c` format reads only `.c` files. `--formats-exts` adds `.h`
+headers to it, so they're checked against each other and the `.c` files.
 
 ### Dead code
 

@@ -226,8 +226,13 @@ Flag any block of 50 or more tokens that appears twice. Duplicated code gets
 fixed in one place and not the other.
 
 ```sh
-jscpd --format cpp --min-tokens 50 --exit-code 1 src
+jscpd --format cpp --formats-exts "cpp:h,hh,hpp" --min-tokens 50 \
+    --exit-code 1 src
 ```
+
+jscpd's `cpp` format reads `.cc`, `.cpp` and `.cxx` files, but no headers.
+`--formats-exts` adds `.h`, `.hh` and `.hpp`, so headers are checked
+against each other and the source files.
 
 ### Dead code
 

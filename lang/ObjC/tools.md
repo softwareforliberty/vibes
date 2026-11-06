@@ -185,8 +185,13 @@ Flag any block of 50 or more tokens that appears twice. Duplicated code gets
 fixed in one place and not the other.
 
 ```sh
-jscpd --format objectivec --min-tokens 50 --exit-code 1 src
+jscpd --format objectivec --formats-exts "objectivec:h" --min-tokens 50 \
+    --exit-code 1 src
 ```
+
+jscpd's `objectivec` format reads only `.m` and `.mm` files.
+`--formats-exts` adds `.h` headers to it, so they're checked against each
+other and the `.m` files.
 
 ### Dead code
 

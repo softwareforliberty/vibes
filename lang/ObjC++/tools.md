@@ -227,8 +227,15 @@ Flag any block of 50 or more tokens that appears twice. Duplicated code gets
 fixed in one place and not the other.
 
 ```sh
-jscpd --format cpp,objectivec --min-tokens 50 --exit-code 1 src
+jscpd --format cpp,objectivec --formats-exts "cpp:h,hh,hpp" \
+    --min-tokens 50 --exit-code 1 src
 ```
+
+jscpd reads `.mm` and `.m` files as `objectivec`, and `.cc` files as `cpp`,
+but no headers. `--formats-exts` reads `.h`, `.hh` and `.hpp` headers as
+`cpp`, so they're checked against each other and the C++ files. jscpd
+compares files only within one format, so a header isn't compared with `.mm`
+files.
 
 ### Dead code
 
