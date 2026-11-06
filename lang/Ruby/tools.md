@@ -169,8 +169,11 @@ deleting it, and list methods that are called indirectly in a whitelist
 file.
 
 ```sh
-debride --whitelist debride_whitelist.txt lib
+debride --whitelist debride_whitelist.txt --focus lib lib test
 ```
+
+debride reads the tests too, so methods the tests call aren't reported,
+and `--focus lib` limits the report to the application code.
 
 `debride_whitelist.txt` lists one method name per line. It starts empty;
 add a name only after confirming the method is called indirectly.
