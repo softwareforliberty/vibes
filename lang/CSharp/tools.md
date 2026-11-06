@@ -221,6 +221,11 @@ dotnet_analyzer_diagnostic.category-Security.severity = warning
 # JetBrains Rider reads the standard, dotnet_* and csharp_* properties above,
 # so it needs no resharper_* keys.
 
+# Test method names may use underscores between scenario parts, so CA1707 is
+# off in test classes, which are named *Tests.
+[*Tests.cs]
+dotnet_diagnostic.CA1707.severity = none
+
 [*.json]
 indent_style = space
 indent_size = 2
@@ -251,6 +256,8 @@ ij_yaml_spaces_within_brackets = false
 - The build doesn't run every rule: `this.` qualification (`IDE0003`), BCL
   type names (`IDE0049`) and whitespace are reported only by
   `dotnet format --verify-no-changes`, so run both commands.
+- The `[*Tests.cs]` section turns off `CA1707`, so test method names can use
+  underscores, as [coding-style.md](coding-style.md#naming) allows.
 - Never hand-format code the formatter will rewrite. Run
   `dotnet format` before every commit.
 
