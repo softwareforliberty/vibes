@@ -39,14 +39,18 @@ so it's the oldest version most users and CI systems still run.
 
 ### Wrapping
 
-When a call or signature doesn't fit, put each argument on its own line,
-indented one level, with the closing parenthesis on its own line:
+When a call or signature doesn't fit, JuliaFormatter moves the arguments to
+one line of their own, indented one level, with the closing parenthesis on
+its own line. When they still don't fit, it puts each argument on its own
+line:
 
 ```julia
 by_region = summarise_responses(
-    responses;
-    group = :region,
-    weights = :weight,
+    survey_responses;
+    group=:region,
+    weights=:response_weight,
+    min_responses=10,
+    missing_values=:skip,
 )
 ```
 
