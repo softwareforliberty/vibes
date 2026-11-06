@@ -62,6 +62,13 @@ enable=quote-safe-variables
 enable=require-variable-braces
 ```
 
+Run it on every script that shfmt finds, including the ones with no
+extension:
+
+```sh
+shfmt -f . | xargs shellcheck
+```
+
 ShellCheck reads the dialect from the `#!/bin/sh` shebang, and warns about
 every feature POSIX doesn't define.
 

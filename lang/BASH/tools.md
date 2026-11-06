@@ -62,6 +62,13 @@ enable=require-double-brackets
 enable=require-variable-braces
 ```
 
+Run it on every script that shfmt finds, including the ones with no
+extension:
+
+```sh
+shfmt -f . | xargs shellcheck
+```
+
 When a warning is a false positive, disable that one check on the line above
 the code, and add a comment saying why:
 
