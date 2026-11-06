@@ -74,6 +74,7 @@ The baseline language is **Kotlin 2.0**.
       order: Order,
       recipient: EmailAddress,
       copyTo: List<EmailAddress> = emptyList(),
+      attachments: List<Attachment> = emptyList(),
   ): Receipt {
   ```
 
