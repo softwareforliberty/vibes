@@ -112,7 +112,7 @@ if (!data) {
 ### Interfaces and properties
 
 ```objc
-@interface ABCImageCache : NSObject<NSCopying>
+@interface ABCImageCache : NSObject <NSCopying>
 
 @property(nonatomic, readonly) NSUInteger count;
 
@@ -124,8 +124,8 @@ if (!data) {
 - No space between `@property` and its attributes. List the attributes in
   this order: atomicity, ownership (`strong`, `weak`, `copy`), access
   (`readonly`), then a custom `getter=`.
-- No space between a superclass and its protocol list:
-  `NSObject<NSCopying>`.
+- Put one space between a superclass and its protocol list:
+  `NSObject <NSCopying>`.
 - Separate groups of methods in an `@implementation` with
   `#pragma mark - <Group name>`, so editors can show an outline.
 
