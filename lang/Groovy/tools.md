@@ -82,6 +82,8 @@ rules, so the checks in [Auditing](#auditing) and
     <rule-config name="MethodSize">
       <property name="maxLines" value="60"/>
     </rule-config>
+    <!-- CrapMetric reads a Cobertura report; this build uses JaCoCo. -->
+    <exclude name="CrapMetric"/>
   </ruleset-ref>
   <ruleset-ref path="rulesets/unused.xml"/>
 </ruleset>
