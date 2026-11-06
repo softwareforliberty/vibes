@@ -45,6 +45,10 @@ shell_variant = bats
 binary_next_line = true
 switch_case_indent = true
 
+# kcov's report holds its own helper scripts. shfmt skips this directory.
+[coverage/**]
+ignore = true
+
 [*.json]
 indent_style = space
 indent_size = 2

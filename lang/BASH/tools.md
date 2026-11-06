@@ -45,6 +45,8 @@ shfmt -w .   # rewrite the files
   shebang. The `[[bash]]` section gives them the same settings, because they
   have no extension for an editor section to match.
 - `*.bats` test files are parsed with `shell_variant = bats`.
+- kcov's report in `coverage/` holds its own helper scripts. The
+  `[coverage/**]` section sets `ignore = true`, so shfmt skips them.
 
 ## Linting
 
