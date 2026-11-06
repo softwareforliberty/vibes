@@ -24,6 +24,7 @@ settings on this page.
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
 | [`.prettierrc.json`](.prettierrc.json) | Prettier |
 | [`.stylelintrc.json`](.stylelintrc.json) | Stylelint |
+| [`purgecss.config.js`](purgecss.config.js) | PurgeCSS |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 
 ## Configuration
@@ -149,8 +150,23 @@ as a review list rather than a gate: a class that JavaScript adds at run time
 is only found when its full name appears in the scanned files.
 
 ```sh
-npx purgecss --css "dist/**/*.css" --content "**/*.html" "**/*.js" --rejected
+npx purgecss --config purgecss.config.js
 ```
+
+`purgecss.config.js` lists the compiled stylesheets to check and the pages
+and scripts that use them, and `rejected` adds each file's unused selectors
+to the report:
+
+```js
+export default {
+  content: ['**/*.html', '**/*.js'],
+  css: ['dist/**/*.css'],
+  rejected: true,
+};
+```
+
+The file is an ES module, so the project's `package.json` sets
+`"type": "module"`, as for the [JavaScript tools](../JavaScript/tools.md).
 
 No maintained FOSS tool finds public mixins or functions that no other file
 uses.

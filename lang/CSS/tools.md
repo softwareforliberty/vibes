@@ -22,6 +22,7 @@ settings on this page.
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
 | [`.prettierrc.json`](.prettierrc.json) | Prettier |
 | [`.stylelintrc.json`](.stylelintrc.json) | Stylelint |
+| [`purgecss.config.js`](purgecss.config.js) | PurgeCSS |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 
 ## Configuration
@@ -134,8 +135,23 @@ list rather than a gate: a class that JavaScript adds at run time is only
 found when its full name appears in the scanned files.
 
 ```sh
-npx purgecss --css "**/*.css" --content "**/*.html" "**/*.js" --rejected
+npx purgecss --config purgecss.config.js
 ```
+
+`purgecss.config.js` lists the stylesheets to check and the pages and
+scripts that use them, and `rejected` adds each file's unused selectors to
+the report:
+
+```js
+export default {
+  content: ['**/*.html', '**/*.js'],
+  css: ['**/*.css'],
+  rejected: true,
+};
+```
+
+The file is an ES module, so the project's `package.json` sets
+`"type": "module"`, as for the [JavaScript tools](../JavaScript/tools.md).
 
 ### Coverage
 
