@@ -27,8 +27,9 @@ The brief from the main agent gives you the task, the spike branch you're on
    it builds and runs, so the spike fits the existing architecture.
 3. **Read the standards.** For each language involved, read `coding-style.md`
    and `idioms.md` in its directory under `${CLAUDE_PLUGIN_ROOT}/lang/`.
-   Follow them wherever it costs little; reviewers will hold the spike to
-   them.
+   Read `${CLAUDE_PLUGIN_ROOT}/principles.md` too, the programming
+   principles such as SOLID, DRY and KISS. Follow them wherever it costs
+   little; reviewers will hold the spike to them.
 4. **Design the structure.** Read `${CLAUDE_PLUGIN_ROOT}/architecture.md`
    and lay the code out by it: its layers, a model for each boundary, and
    only as much structure as the task needs. In an existing project, follow
