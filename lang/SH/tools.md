@@ -146,14 +146,23 @@ commands that can never run (SC2317). Both are on by default, so the
 
 ### Coverage
 
-Write tests with bats-core, and measure their coverage with kcov. bats-core
-itself runs on Bash, but each test can run the script under test with `sh`.
-kcov can only trace Bash, so `--bash-handle-sh-invocation` makes it run
-`/bin/sh` scripts under Bash while it measures them:
+Write tests with bats-core, and measure their coverage with kcov. kcov can
+only trace Bash, and its `--bash-handle-sh-invocation` option doesn't help:
+it doesn't trace a script run as `sh script`, and it passes the wrong
+arguments to a `#!/bin/sh` script run by its path. So each test runs the
+script under test with the shell named in `TEST_SHELL`, which defaults to
+`sh`, and the coverage run sets it to Bash:
+
+```bash
+@test "greet says hello" {
+  run "${TEST_SHELL:-sh}" bin/greet Ada
+  [[ "${output}" == "Hello, Ada" ]]
+}
+```
 
 ```sh
 bats test/
-kcov --bash-handle-sh-invocation --include-path=. coverage/ bats test/
+TEST_SHELL=bash kcov --include-path=. coverage/ bats test/
 ```
 
 Coverage measured under Bash doesn't prove a script works under dash, so
