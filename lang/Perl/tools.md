@@ -153,8 +153,9 @@ jscpd --format perl --min-tokens 50 --exitCode 1 lib
 
 Perl::Critic's `Subroutines::ProhibitUnusedPrivateSubroutines` and
 `Variables::ProhibitUnusedVariables` policies report unused private
-subroutines and variables. No tool finds unused public subroutines, because
-Perl can call them by name at run time.
+subroutines, and variables declared without a value (`my $x;`) that are
+never used. No tool finds unused public subroutines, because Perl can call
+them by name at run time.
 
 ### Coverage
 
