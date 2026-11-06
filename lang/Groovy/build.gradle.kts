@@ -5,7 +5,7 @@ plugins {
     groovy
     codenarc
     jacoco
-    id("org.owasp.dependencycheck") version "12.2.2"
+    id("org.owasp.dependencycheck") version "13.0.0"
 }
 
 repositories {
