@@ -1,3 +1,5 @@
 ---
 line_length: 80
 indent: 4
+definitions:
+  - cmake

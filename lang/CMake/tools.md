@@ -63,7 +63,15 @@ the same settings:
 ---
 line_length: 80
 indent: 4
+definitions:
+  - cmake
 ```
+
+`definitions` points gersemi at the [helper modules](coding-style.md#files)
+in `cmake/`, so it learns the keywords of the project's own functions and
+formats calls to them like built-in commands. Without it, gersemi warns about
+every call to an unknown command. Remove the line in a project that has no
+`cmake/` directory, because gersemi stops when the directory is missing.
 
 Formatting is the formatter's job. Where this guide and gersemi's output could
 disagree on layout, gersemi wins, so reviews never argue about whitespace.
