@@ -96,9 +96,11 @@ opengrep scan --config .opengrep/ --error
 
 Psalm's taint analysis follows user input (`$_GET`, `$_POST`, request
 bodies) through the code and reports any path that reaches a dangerous sink
-unescaped: SQL, shell commands, HTML output, `unserialize()`. Run Psalm only
-for taint analysis; PHPStan stays the type checker, so the two never report
-the same problem twice.
+unescaped: SQL, shell commands, HTML output, `unserialize()`. Use Psalm for
+taint analysis only; PHPStan stays the type checker and dead-code finder.
+Psalm 7 runs its type checks in the same pass, so `psalm.xml` sets the most
+lenient error level (8) and turns off its unused-code checks, and the two
+tools don't report the same problems.
 
 ```sh
 vendor/bin/psalm --taint-analysis
@@ -108,7 +110,7 @@ vendor/bin/psalm --taint-analysis
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
-<psalm errorLevel="1">
+<psalm errorLevel="8" findUnusedCode="false">
   <projectFiles>
     <directory name="src"/>
   </projectFiles>
