@@ -184,21 +184,24 @@ Measure branch coverage on every test run, and fail the build when it falls
 below 80%. Raise the minimum as coverage grows; never lower it to make a
 build pass.
 
-SimpleCov reads its settings from `.simplecov` when it's required, so
-require it at the top of the test helper, before any application code loads:
+SimpleCov reads its settings from `.simplecov` when it's required. Require
+and start it at the top of the test helper, before any application code
+loads:
 
 ```ruby
 # frozen_string_literal: true
 
 require 'simplecov'
+SimpleCov.start
 ```
 
-`.simplecov`:
+`.simplecov` holds only the settings, because SimpleCov 1.x warns when that
+file calls `SimpleCov.start` itself:
 
 ```ruby
 # frozen_string_literal: true
 
-SimpleCov.start do
+SimpleCov.configure do
   enable_coverage :branch
   minimum_coverage line: 80, branch: 80
 end
