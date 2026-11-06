@@ -237,8 +237,16 @@ below 80%. Raise the minimum as coverage grows; never lower it to make a
 build pass.
 
 c8 reads the coverage V8 collects natively, so the code runs unmodified.
-[`.c8rc.json`](.c8rc.json) sets the same minimums as the flags below:
+It reads the minimums from [`.c8rc.json`](.c8rc.json):
 
 ```sh
-npx c8 --check-coverage --branches 80 --lines 80 node --test
+npx c8 node --test
+```
+
+```json
+{
+  "check-coverage": true,
+  "branches": 80,
+  "lines": 80
+}
 ```

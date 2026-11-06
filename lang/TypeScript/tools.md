@@ -259,9 +259,17 @@ build pass.
 
 Node.js 22.18 and later run the `.ts` tests directly by stripping the types,
 which keeps line and column positions intact. c8 reads the coverage V8
-collects, so it maps straight back to the source.
-[`.c8rc.json`](.c8rc.json) sets the same minimums as the flags below:
+collects, so it maps straight back to the source. It reads the minimums
+from [`.c8rc.json`](.c8rc.json):
 
 ```sh
-npx c8 --check-coverage --branches 80 --lines 80 node --test 'src/**/*.test.ts'
+npx c8 node --test 'src/**/*.test.ts'
+```
+
+```json
+{
+  "check-coverage": true,
+  "branches": 80,
+  "lines": 80
+}
 ```
