@@ -29,6 +29,7 @@ below is the full contents of one of these files.
 | [.editorconfig](.editorconfig) | Every editor with EditorConfig support, including Xcode; CLion; Visual Studio and VS Code (C/C++ extension) |
 | [.clang-format](.clang-format) | clang-format, and CLion and Visual Studio when set to use it |
 | [.clang-tidy](.clang-tidy) | clang-tidy |
+| [.inferconfig](.inferconfig) | Infer |
 | [.jscpd.json](.jscpd.json) | jscpd |
 | [.opengrep/cpp.yaml](.opengrep/cpp.yaml) | Opengrep (pure C++ files) |
 
@@ -119,10 +120,17 @@ scan-build --status-bugs make
 
 Infer adds deeper inter-procedural analysis for null dereferences, resource
 leaks and retain cycles. Run it in CI on large code bases, where bugs cross
-many functions and methods.
+many functions and methods. It reads this `.inferconfig` from the repository
+root, which makes it fail on any issue it finds:
+
+```json
+{
+  "fail-on-issue": true
+}
+```
 
 ```sh
-infer run --fail-on-issue -- make
+infer run -- make
 ```
 
 Opengrep, Cppcheck and Flawfinder don't read Objective-C++, so run them on

@@ -26,6 +26,7 @@ below is the full contents of one of these files.
 | [.editorconfig](.editorconfig) | Every editor with EditorConfig support, including Xcode; CLion |
 | [.clang-format](.clang-format) | clang-format, and CLion when set to use it |
 | [.clang-tidy](.clang-tidy) | clang-tidy |
+| [.inferconfig](.inferconfig) | Infer |
 | [.jscpd.json](.jscpd.json) | jscpd |
 
 ## Formatting
@@ -98,10 +99,17 @@ scan-build --status-bugs make
 
 Infer adds deeper inter-procedural analysis for nil dereferences, resource
 leaks and retain cycles. Run it in CI on large code bases, where bugs cross
-many methods.
+many methods. It reads this `.inferconfig` from the repository root, which
+makes it fail on any issue it finds:
+
+```json
+{
+  "fail-on-issue": true
+}
+```
 
 ```sh
-infer run --fail-on-issue -- make
+infer run -- make
 ```
 
 Opengrep doesn't support Objective-C, so the Clang Static Analyzer and Infer

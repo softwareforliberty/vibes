@@ -29,6 +29,7 @@ below is the full contents of one of these files.
 | [.editorconfig](.editorconfig) | Every editor with EditorConfig support; CLion; Visual Studio and VS Code (C/C++ extension) |
 | [.clang-format](.clang-format) | clang-format, and CLion and Visual Studio when set to use it |
 | [.clang-tidy](.clang-tidy) | clang-tidy |
+| [.inferconfig](.inferconfig) | Infer |
 | [.jscpd.json](.jscpd.json) | jscpd |
 | [.opengrep/cpp.yaml](.opengrep/cpp.yaml) | Opengrep |
 
@@ -138,10 +139,17 @@ flawfinder --minlevel=3 --error-level=3 src
 
 Infer adds deeper inter-procedural analysis for null dereferences, resource
 leaks and data races. Run it in CI on large code bases, where bugs cross many
-functions.
+functions. It reads this `.inferconfig` from the repository root, which makes
+it fail on any issue it finds:
+
+```json
+{
+  "fail-on-issue": true
+}
+```
 
 ```sh
-infer run --fail-on-issue -- make
+infer run -- make
 ```
 
 Opengrep is the open-source fork of Semgrep. Run it with rules you write, or
