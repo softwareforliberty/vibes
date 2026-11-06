@@ -15,6 +15,7 @@ dependency inversion above all.
 | Building | Read |
 | --- | --- |
 | Web applications, HTTP APIs and the services behind them | [Web applications](web-applications.md) |
+| Desktop and other GUI applications | [Desktop applications](desktop-applications.md) |
 | Anything else, such as a library, a command-line tool or a script | This page alone |
 
 A task that spans kinds uses the guide for each part.
