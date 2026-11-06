@@ -141,10 +141,13 @@ complexity over 10 or more than 60 lines of code. A function past either
 limit is hard to test and should be split.
 
 The limits are in the `dart_code_linter` block of `analysis_options.yaml`
-(see [Configuration](#configuration)):
+(see [Configuration](#configuration)). The command only reports a function
+past a limit, so `--set-exit-on-violation-level=warning` makes it fail the
+build:
 
 ```sh
-dart run dart_code_linter:metrics analyze lib --fatal-warnings
+dart run dart_code_linter:metrics analyze lib \
+    --set-exit-on-violation-level=warning
 ```
 
 ### Duplication
