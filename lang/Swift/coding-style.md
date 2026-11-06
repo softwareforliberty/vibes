@@ -70,14 +70,18 @@ let request = URLRequest(
 ```
 
 - Don't mix: either everything fits on one line, or every item gets its own
-  line. Partly wrapped lists hide items.
+  line. Partly wrapped lists hide items. swift-format wraps calls and
+  declarations this way, but it keeps a collection's line breaks as written,
+  so put each element on its own line yourself.
 - Multi-line collection literals end every element with a trailing comma, so
   adding an element changes one line in a diff.
 
 ## Braces
 
 - Opening braces go **last on the line**, for every kind of block: types,
-  functions, closures and control flow.
+  functions, closures and control flow. The one exception is a type or
+  function whose header swift-format has to wrap, such as a long list of
+  conformances: it puts the `{` on a line of its own.
 - `else`, `catch` and the closing brace of a `repeat` sit on the same line as
   the preceding closing brace: `} else {`, `} catch {`, `} while condition`.
 - Swift requires braces around every body, so there are no brace-free bodies

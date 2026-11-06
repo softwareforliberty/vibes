@@ -50,6 +50,8 @@ Configure swift-format with `.swift-format` at the repository root:
   "version": 1,
   "lineLength": 100,
   "indentation": { "spaces": 2 },
+  "lineBreakBeforeEachArgument": true,
+  "prioritizeKeepingFunctionOutputTogether": true,
   "respectsExistingLineBreaks": true,
   "rules": {
     "AllPublicDeclarationsHaveDocumentation": true,
@@ -59,6 +61,11 @@ Configure swift-format with `.swift-format` at the repository root:
   }
 }
 ```
+
+`lineBreakBeforeEachArgument` and `prioritizeKeepingFunctionOutputTogether`
+give the [wrapping](coding-style.md#wrapping) the style guide asks for: one
+argument or parameter per line, with the return type kept next to the
+closing parenthesis.
 
 Configure SwiftLint with `.swiftlint.yml`. swift-format owns layout, so the
 SwiftLint rules that would disagree with it are turned off:
