@@ -17,4 +17,16 @@
     <ThresholdType>branch</ThresholdType>
     <ThresholdStat>total</ThresholdStat>
   </PropertyGroup>
+
+  <!-- F# analyzers, which Directory.Build.targets runs after each build -->
+  <ItemGroup>
+    <PackageReference Include="FSharp.Analyzers.Build" Version="0.5.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>build</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="G-Research.FSharp.Analyzers" Version="0.26.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>

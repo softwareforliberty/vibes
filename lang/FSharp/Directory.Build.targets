@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Project>
+  <!-- G-Research analyzers: run after each build, every finding an error -->
+  <PropertyGroup>
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <FSharpAnalyzersContinueOnError>false</FSharpAnalyzersContinueOnError>
+    <FSharpAnalyzersOtherFlags>--analyzers-path &quot;$(PkgG-Research_FSharp_Analyzers)/analyzers/dotnet/fs&quot;</FSharpAnalyzersOtherFlags>
+    <FSharpAnalyzersOtherFlags>$(FSharpAnalyzersOtherFlags) --treat-as-error &quot;*&quot;</FSharpAnalyzersOtherFlags>
+  </PropertyGroup>
+</Project>

@@ -9,7 +9,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [.NET SDK](https://github.com/dotnet/sdk) (F# compiler) | MIT | Linting, Code quality | Compiling, and linting through its warnings |
 | [Fantomas](https://fsprojects.github.io/fantomas/) | Apache-2.0 | Formatting | Formatting: applies the whole [Layout](coding-style.md#layout) section automatically |
 | [FSharpLint](https://fsprojects.github.io/FSharpLint/) | MIT | Linting, Code quality | Lint rules, including complexity and function length limits |
-| [fsharp-analyzers](https://github.com/ionide/FSharp.Analyzers.SDK) | MIT | Linting | Running F# analyzers from the command line |
+| [fsharp-analyzers](https://github.com/ionide/FSharp.Analyzers.SDK) | MIT | Linting | Running F# analyzers after each build, through its `FSharp.Analyzers.Build` package |
 | [G-Research.FSharp.Analyzers](https://github.com/G-Research/fsharp-analyzers) | Apache-2.0 | Linting | Analyzers for common F# bugs and pitfalls |
 | [NuGet Audit](https://learn.microsoft.com/nuget/concepts/auditing-packages) (in the .NET SDK) | Apache-2.0 | Auditing | Checking restored packages against known vulnerabilities |
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
@@ -26,14 +26,15 @@ settings on this page.
 | --- | --- |
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, and Fantomas |
 | [`Directory.Build.props`](Directory.Build.props) | MSBuild, for every project in the repository |
+| [`Directory.Build.targets`](Directory.Build.targets) | MSBuild, which runs the F# analyzers after each build |
 | [`.config/dotnet-tools.json`](.config/dotnet-tools.json) | `dotnet tool restore`, which installs Fantomas, FSharpLint and fsharp-analyzers |
 | [`fsharplint.json`](fsharplint.json) | FSharpLint |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 
 ## Configuration
 
-Code must build with **no warnings**, Fantomas must have nothing to change,
-and FSharpLint must report nothing:
+Code must build with **no warnings or analyzer findings**, Fantomas must
+have nothing to change, and FSharpLint must report nothing:
 
 ```sh
 dotnet fantomas --check .
@@ -92,6 +93,18 @@ root, so every project gets them:
     <ThresholdType>branch</ThresholdType>
     <ThresholdStat>total</ThresholdStat>
   </PropertyGroup>
+
+  <!-- F# analyzers, which Directory.Build.targets runs after each build -->
+  <ItemGroup>
+    <PackageReference Include="FSharp.Analyzers.Build" Version="0.5.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>build</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="G-Research.FSharp.Analyzers" Version="0.26.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
 </Project>
 ```
 
@@ -103,6 +116,34 @@ root, so every project gets them:
   reviewers check that rule.
 - The second group sets coverlet's coverage minimum for every test project
   (see [Coverage](#coverage)).
+- The `ItemGroup` adds the G-Research analyzers, and the
+  `FSharp.Analyzers.Build` targets that run them, to every project.
+
+The analyzers run in `Directory.Build.targets`, not `Directory.Build.props`,
+because the package path property `$(PkgG-Research_FSharp_Analyzers)` is only
+set after NuGet's generated props load:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Project>
+  <!-- G-Research analyzers: run after each build, every finding an error -->
+  <PropertyGroup>
+    <RunAnalyzersDuringBuild>true</RunAnalyzersDuringBuild>
+    <FSharpAnalyzersContinueOnError>false</FSharpAnalyzersContinueOnError>
+    <FSharpAnalyzersOtherFlags>--analyzers-path &quot;$(PkgG-Research_FSharp_Analyzers)/analyzers/dotnet/fs&quot;</FSharpAnalyzersOtherFlags>
+    <FSharpAnalyzersOtherFlags>$(FSharpAnalyzersOtherFlags) --treat-as-error &quot;*&quot;</FSharpAnalyzersOtherFlags>
+  </PropertyGroup>
+</Project>
+```
+
+- `RunAnalyzersDuringBuild` runs `fsharp-analyzers` after each project
+  compiles, so `dotnet build` runs the analyzers too. Run
+  `dotnet tool restore` first, or the build can't find the tool.
+- `--treat-as-error "*"` makes every finding an error, and
+  `FSharpAnalyzersContinueOnError` set to `false` lets that error fail the
+  build.
+- An incremental build that doesn't recompile a project doesn't re-run its
+  analyzers either; CI builds from a clean checkout, so it always runs them.
 
 Fantomas reads its settings from `.editorconfig`. Its defaults implement this
 guide; the `fsharp_*` values pin the ones the guide relies on, so a new
@@ -144,9 +185,6 @@ max_line_length = 80
 
 - Leave layout to Fantomas: don't turn on FSharpLint's formatting rules,
   which would fight it.
-- Add the `G-Research.FSharp.Analyzers` package and run it with the
-  `fsharp-analyzers` tool, as its documentation describes, failing the build
-  on any finding.
 
 ## Auditing
 
