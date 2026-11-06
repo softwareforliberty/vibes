@@ -151,7 +151,7 @@ Flag any block of 50 or more tokens that appears twice. Duplicated code gets
 fixed in one place and not the other.
 
 ```sh
-jscpd --format ruby --min-tokens 50 --exitCode 1 lib
+jscpd --format ruby --min-tokens 50 --exit-code 1 lib
 ```
 
 Flay compares the shape of the code rather than its text, so it also catches

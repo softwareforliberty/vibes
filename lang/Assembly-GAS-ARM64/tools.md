@@ -126,7 +126,7 @@ fixed in one place and not the other.
 
 ```sh
 jscpd --format armasm --formats-exts "armasm:S" --min-tokens 50 \
-    --exitCode 1 src
+    --exit-code 1 src
 ```
 
 jscpd has no format for GNU as, so `--formats-exts` reads `.S` files with its

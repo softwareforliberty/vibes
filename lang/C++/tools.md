@@ -226,7 +226,7 @@ Flag any block of 50 or more tokens that appears twice. Duplicated code gets
 fixed in one place and not the other.
 
 ```sh
-jscpd --format cpp --min-tokens 50 --exitCode 1 src
+jscpd --format cpp --min-tokens 50 --exit-code 1 src
 ```
 
 ### Dead code
