@@ -8,6 +8,7 @@ and [idioms.md](idioms.md).
 | --- | --- | --- | --- |
 | [clang-format](https://clang.llvm.org/docs/ClangFormat.html) | Apache-2.0 with LLVM exception | Formatting | Formatting, applied automatically |
 | [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) | Apache-2.0 with LLVM exception | Linting | Linting naming and bug-prone patterns |
+| [Bear](https://github.com/rizsotto/Bear) | GPL-3.0-or-later | Linting | Recording a Make build's compile commands for clang-tidy |
 | [Clang Static Analyzer](https://clang-analyzer.llvm.org/) | Apache-2.0 with LLVM exception | Linting, Auditing, Code quality | Finding leaks, nil misuse and API misuse along every code path |
 | [Clang](https://clang.llvm.org/) | Apache-2.0 with LLVM exception | Linting, Auditing, Code quality | Compiling, and linting through its warning flags; sanitizers, and coverage with llvm-cov |
 | [Infer](https://fbinfer.com/) | MIT | Auditing | Inter-procedural analysis for nil dereferences, leaks and retain cycles |
@@ -57,6 +58,19 @@ section, it refuses to format a header that holds only C.
 `IncludeBlocks: Preserve` keeps the import groups as written, as Google's
 Objective-C style already does.
 
+Check every file in CI. `--dry-run --Werror` prints each change clang-format
+would make, and exits non-zero if there is one:
+
+```sh
+clang-format --dry-run --Werror $(git ls-files '*.h' '*.m')
+```
+
+To format the files in place, run it with `-i`:
+
+```sh
+clang-format -i $(git ls-files '*.h' '*.m')
+```
+
 ## Linting
 
 Commit this `.clang-tidy` at the repository root. Code must pass it with no
@@ -80,6 +94,24 @@ WarningsAsErrors: "*"
 - Run the static analyzer over the whole build with `scan-build`, for example
   `scan-build --status-bugs make`. It follows paths across functions, and
   finds bugs that per-file checks miss.
+
+clang-tidy reads each file's compile flags from a compilation database,
+`compile_commands.json`. CMake writes one into the build directory when
+`CMAKE_EXPORT_COMPILE_COMMANDS` is on. Then run clang-tidy on every source
+file. `WarningsAsErrors` makes it exit non-zero on any warning:
+
+```sh
+cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+clang-tidy -p build $(git ls-files '*.m')
+```
+
+For a Make build, [Bear](https://github.com/rizsotto/Bear) writes the
+database while it runs the build:
+
+```sh
+mkdir -p build
+bear --output build/compile_commands.json -- make
+```
 
 ## Compiler warnings
 

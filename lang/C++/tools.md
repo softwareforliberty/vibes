@@ -8,6 +8,7 @@ them. They enforce the rules in [coding-style.md](coding-style.md) and
 | --- | --- | --- | --- |
 | [clang-format](https://clang.llvm.org/docs/ClangFormat.html) | Apache-2.0 with LLVM exception | Formatting | Formatting, applied automatically |
 | [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) | Apache-2.0 with LLVM exception | Linting | Linting naming, modernisation and bug-prone patterns |
+| [Bear](https://github.com/rizsotto/Bear) | GPL-3.0-or-later | Linting | Recording a Make build's compile commands for clang-tidy |
 | [Clang](https://clang.llvm.org/) | Apache-2.0 with LLVM exception | Linting, Auditing, Code quality | Compiling, and linting through its warning flags; sanitizers, and coverage with llvm-cov |
 | [Clang Static Analyzer](https://clang-analyzer.llvm.org/) | Apache-2.0 with LLVM exception | Auditing | Finding leaks, null dereferences and API misuse along every code path |
 | [Cppcheck](https://cppcheck.sourceforge.io/) | GPL-3.0-or-later | Auditing, Code quality | Finding undefined behaviour, leaks and unused functions |
@@ -52,6 +53,19 @@ PointerAlignment: Right
 groups as written. clang-format can't tell other libraries' headers from this
 project's, so it would merge those two
 [include groups](coding-style.md#include-order).
+
+Check every file in CI. `--dry-run --Werror` prints each change clang-format
+would make, and exits non-zero if there is one:
+
+```sh
+clang-format --dry-run --Werror $(git ls-files '*.cc' '*.h')
+```
+
+To format the files in place, run it with `-i`:
+
+```sh
+clang-format -i $(git ls-files '*.cc' '*.h')
+```
 
 ## Linting
 
@@ -106,6 +120,24 @@ CheckOptions:
 - Suppress a warning only on the line that needs it, with
   `// NOLINT(check-name)` and a reason. A bare `NOLINT` hides every check,
   including ones nobody meant to silence.
+
+clang-tidy reads each file's compile flags from a compilation database,
+`compile_commands.json`. CMake writes one into the build directory when
+`CMAKE_EXPORT_COMPILE_COMMANDS` is on. Then run clang-tidy on every source
+file. `WarningsAsErrors` makes it exit non-zero on any warning:
+
+```sh
+cmake -S . -B build -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+clang-tidy -p build $(git ls-files '*.cc')
+```
+
+For a Make build, [Bear](https://github.com/rizsotto/Bear) writes the
+database while it runs the build:
+
+```sh
+mkdir -p build
+bear --output build/compile_commands.json -- make
+```
 
 ## Compiler warnings
 
