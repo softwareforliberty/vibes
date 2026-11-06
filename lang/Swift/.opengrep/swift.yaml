@@ -32,8 +32,10 @@ rules:
   - id: swift-unchecked-sendable
     message: >-
       Don't use @unchecked Sendable to silence a warning; make the type
-      Sendable, or say in a comment how it's made thread-safe.
+      Sendable, or say how it's made thread-safe in a comment on the line
+      above.
     severity: WARNING
     languages:
       - swift
-    pattern-regex: "@unchecked\\s+Sendable"
+    # Match unless the line above is a comment (or the use is on line 1).
+    pattern-regex: (?m)(?:\A|^(?![ \t]*//).*\n).*?\K@unchecked\s+Sendable
