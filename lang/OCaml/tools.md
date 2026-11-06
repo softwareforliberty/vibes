@@ -99,8 +99,11 @@ it from the project root:
 
 ```sh
 dune build @check
-zanuda -dir .
+zanuda -no-top_file_license -dir .
 ```
+
+`-no-top_file_license` turns off the one lint that expects a copyright
+comment at the top of every file, which this guide doesn't ask for.
 
 ## Auditing
 
