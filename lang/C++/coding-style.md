@@ -142,11 +142,12 @@ class UrlParser {
 };
 ```
 
-- A constructor initialiser list starts on its own line, indented 4 spaces:
+- A constructor initialiser list stays on the signature's line when it all
+  fits. Otherwise it starts on its own line, indented 4 spaces:
 
   ```cpp
   UrlParser::UrlParser(std::string_view text)
-      : text_(text) {}
+      : text_(text), count_(CountSegments(text)) {}
   ```
 
 ### Namespaces
