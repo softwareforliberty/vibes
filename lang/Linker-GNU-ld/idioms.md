@@ -70,7 +70,7 @@ from RAM:
  * Code and read-only data run from flash. Initialised data is stored in
  * flash and copied to RAM by the startup code; .bss is zeroed in RAM.
  *
- *   rom  0x08000000  256K  .text, .rodata, load image of .data
+ *   rom  0x08000000  256K  .text, .rodata, .ARM.exidx, load image of .data
  *   ram  0x20000000   64K  .data, .bss, stack
  */
 
@@ -91,15 +91,25 @@ SECTIONS
 		/* Read by the hardware; nothing references it. */
 		KEEP(*(.vectors))
 		*(.text .text.*)
+		/* Veneers and stubs that GNU ld generates. */
+		*(.glue_7 .glue_7t .vfp11_veneer .v4_bx .iplt)
 	} > rom
 
 	.rodata : {
 		*(.rodata .rodata.*)
+		*(.ARM.extab .ARM.extab.*)
+		*(.rel.iplt)
+	} > rom
+
+	/* Unwind tables, from libgcc and any code that unwinds the stack. */
+	.ARM.exidx : {
+		*(.ARM.exidx .ARM.exidx.*)
 	} > rom
 
 	.data : ALIGN(4) {
 		data_start = .;
 		*(.data .data.*)
+		*(.igot.plt)
 		. = ALIGN(4);
 		data_end = .;
 	} > ram AT> rom
@@ -117,8 +127,38 @@ SECTIONS
 		stack_top = .;
 	} > ram
 
+	/*
+	 * Sections that aren't loaded: toolchain notes, debug information and
+	 * the symbol table. Each starts at 0, as in the default script.
+	 */
+	.comment 0 : { *(.comment) }
+	.ARM.attributes 0 : { *(.ARM.attributes) }
+	.debug_aranges 0 : { *(.debug_aranges) }
+	.debug_pubnames 0 : { *(.debug_pubnames) }
+	.debug_info 0 : { *(.debug_info) }
+	.debug_abbrev 0 : { *(.debug_abbrev) }
+	.debug_line 0 : { *(.debug_line) }
+	.debug_frame 0 : { *(.debug_frame) }
+	.debug_str 0 : { *(.debug_str) }
+	.debug_loc 0 : { *(.debug_loc) }
+	.debug_macinfo 0 : { *(.debug_macinfo) }
+	.debug_pubtypes 0 : { *(.debug_pubtypes) }
+	.debug_ranges 0 : { *(.debug_ranges) }
+	.debug_addr 0 : { *(.debug_addr) }
+	.debug_line_str 0 : { *(.debug_line_str) }
+	.debug_loclists 0 : { *(.debug_loclists) }
+	.debug_macro 0 : { *(.debug_macro) }
+	.debug_names 0 : { *(.debug_names) }
+	.debug_rnglists 0 : { *(.debug_rnglists) }
+	.debug_str_offsets 0 : { *(.debug_str_offsets) }
+	/* LLD reports these as orphans unless the script places them. */
+	.symtab 0 : { *(.symtab) }
+	.strtab 0 : { *(.strtab) }
+	.shstrtab 0 : { *(.shstrtab) }
+
+	/* Only the linker reads it; nothing in the image uses it. */
 	/DISCARD/ : {
-		*(.comment)
+		*(.note.GNU-stack)
 	}
 }
 
@@ -139,6 +179,14 @@ ASSERT(stack_size >= 0x400, "stack_size is smaller than 1K")
 - Mark sections that occupy memory but have no contents in the file
   `(NOLOAD)`, such as a stack or a DMA buffer, so the image doesn't carry
   zeros for them.
+- **Place the sections the toolchain adds, not just your code and data.**
+  With `--orphan-handling=error` (see [GNU ld and LLD](#gnu-ld-and-lld)),
+  the link fails on any section without a rule: the veneers and stubs GNU ld
+  generates, libgcc's unwind tables, debug information and, with LLD, the
+  symbol table. Place them as the linker's default script does: generated
+  code in `.text`, and sections that aren't loaded at address 0. If a
+  compiler flag adds a section the script doesn't place, the error names it;
+  add a rule for it.
 
 ## Load and run addresses
 
@@ -209,10 +257,13 @@ place and **run** from another:
 ## Discarding sections
 
 - Discard a section with `/DISCARD/` only when you know nothing in the image
-  needs it, such as `.comment`.
-- Never discard `.init_array`, `.fini_array` or `.eh_frame` from an image
-  that runs constructors or unwinds the stack. The link succeeds, and the
-  failure appears at run time.
+  needs it, such as `.note.GNU-stack`, which only the linker reads.
+- Don't discard debug information or `.comment` to silence an orphan error.
+  They aren't loaded, so they cost nothing on the target, and debuggers read
+  them from the ELF file. Place them at address 0 instead.
+- Never discard `.init_array`, `.fini_array`, `.eh_frame` or `.ARM.exidx`
+  from an image that runs constructors or unwinds the stack. The link
+  succeeds, and the failure appears at run time.
 
 ## Layout checks
 
@@ -234,6 +285,9 @@ place and **run** from another:
 - LLD implements most of GNU ld's script language, but it places orphan
   sections differently and doesn't support every command. Link with
   `--orphan-handling=error` so neither linker gets to guess.
+- LLD also reports the symbol table sections (`.symtab`, `.strtab` and
+  `.shstrtab`) as orphans, so a script for both linkers places them at
+  address 0. GNU ld accepts the same rules.
 - If a project supports both linkers, link with both in CI and compare the
   map files or `readelf -S` output.
 - Use only commands documented by both linkers in a script meant for both.

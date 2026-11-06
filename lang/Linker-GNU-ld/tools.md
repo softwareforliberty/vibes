@@ -45,6 +45,8 @@ gcc -nostdlib -T link.ld \
 - `--orphan-handling=error` stops the link when an input section matches no
   rule in the script. Without it, the linker places such *orphan* sections
   wherever its own heuristics choose, and GNU ld and LLD choose differently.
+  Debug information and the sections the linker generates need rules too
+  (see [Sections](idioms.md#sections)).
 - `-Map` writes a map file showing where every section and symbol ended up.
   Keep it as a build artifact, so a layout change can be reviewed.
 - For scripts that declare memory regions, add `-Wl,--print-memory-usage` to

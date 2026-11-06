@@ -68,6 +68,15 @@ warnings, and LLD 17 added `--print-memory-usage`, which the tools rely on.
   ```
 
 - Separate output section descriptions with one blank line.
+- Write the sections that aren't loaded (debug information, notes, the
+  symbol table) one per line, as a block with no blank lines, the way the
+  linker's default script does. Each holds one input pattern and starts at
+  address 0:
+
+  ```ld
+  	.debug_info 0 : { *(.debug_info) }
+  	.debug_abbrev 0 : { *(.debug_abbrev) }
+  ```
 
 ### Statements and spacing
 
@@ -122,7 +131,7 @@ warnings, and LLD 17 added `--print-memory-usage`, which the tools rely on.
   /*
    * Linker script for the buf firmware image.
    *
-   *   rom  0x08000000  256K  .text, .rodata, load image of .data
+   *   rom  0x08000000  256K  .text, .rodata, .ARM.exidx, load image of .data
    *   ram  0x20000000   64K  .data, .bss, stack
    */
   ```
