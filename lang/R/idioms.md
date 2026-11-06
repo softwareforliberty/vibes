@@ -89,15 +89,18 @@ guide.
 
 ## Cleanup and global state
 
-- **Restore anything you change with `on.exit(..., add = TRUE)`**, so it's
-  restored even when the function fails:
+- **Restore anything you change, even when the function fails.** For
+  options, environment variables and the working directory, use withr's
+  `local_*()` functions, which put the old value back when the function
+  exits. lintr's `undesirable_function_linter()` flags bare `options()`,
+  `Sys.setenv()` and `setwd()` calls:
 
   ```r
-  old <- options(digits = 3)
-  on.exit(options(old), add = TRUE)
+  withr::local_options(digits = 3)
   ```
 
-- Close every connection you open in the same function, with `on.exit()`.
+- Close every connection you open in the same function, with
+  `on.exit(close(con), add = TRUE)`.
 
 ## Reproducibility
 
