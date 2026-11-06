@@ -194,10 +194,11 @@ jscpd --format haskell --min-tokens 50 --exitCode 1 src
 GHC's `-Wunused-top-binds` (part of `-Wall`) finds unused definitions inside
 a module. Weeder finds definitions that are exported but never used
 anywhere in the program. It reads the `.hie` files GHC writes, so build with
-`-fwrite-ide-info` first:
+`-fwrite-ide-info` first. Build the tests too, so code they use isn't
+reported:
 
 ```sh
-cabal build all --ghc-options=-fwrite-ide-info
+cabal build all --enable-tests --ghc-options=-fwrite-ide-info
 weeder
 ```
 
