@@ -79,7 +79,8 @@ enums.
   `int`, `string`, `array`.
 - Use the short type names: `bool`, not `boolean`; `int`, not `integer`.
 - Always use parentheses when creating an object, even with no arguments:
-  `new Invoice()`.
+  `new Invoice()`. The one exception is an anonymous class with no
+  arguments, which leaves them out: `new class implements Clock {`.
 
 ## Braces
 
@@ -129,8 +130,8 @@ enums.
   `function total(): int`. A nullable type has no space after the `?`:
   `?string`.
 - Closures have a space after `function` and around `use`:
-  `function ($item) use ($rate) {`. Arrow functions have a space after
-  `fn`: `fn ($item) => $item * $rate`.
+  `function ($item) use ($rate) {`. Arrow functions have no space after
+  `fn`: `fn($item) => $item * $rate`.
 
 ## Naming
 
