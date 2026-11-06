@@ -21,6 +21,7 @@ settings on this page.
 | File | Read by |
 | --- | --- |
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
+| [`gcovr.cfg`](gcovr.cfg) | gcovr |
 
 ## Compiler warnings
 
@@ -111,5 +112,12 @@ for gcov and maps it back to the COBOL source lines:
 ```sh
 cobc -x -std=cobol2014 --coverage -o test-custrpt CUSTRPT.cob
 ./test-custrpt
-gcovr --root . --fail-under-line 80
+gcovr --root .
+```
+
+gcovr reads the minimum from `gcovr.cfg` in the root directory:
+
+```ini
+# gcovr reads this file from the --root directory.
+fail-under-line = 80
 ```

@@ -23,6 +23,7 @@ settings on this page.
 | --- | --- |
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
 | [`fortitude.toml`](fortitude.toml) | Fortitude |
+| [`gcovr.cfg`](gcovr.cfg) | gcovr |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 
 ## Compiler warnings
@@ -153,5 +154,12 @@ build pass.
 ```sh
 gfortran -std=f2018 --coverage -o tests tests.f90
 ./tests
-gcovr --root . --fail-under-branch 80
+gcovr --root .
+```
+
+gcovr reads the minimum from `gcovr.cfg` in the root directory:
+
+```ini
+# gcovr reads this file from the --root directory.
+fail-under-branch = 80
 ```
