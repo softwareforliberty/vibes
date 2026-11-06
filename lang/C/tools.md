@@ -26,6 +26,7 @@ below is the full contents of one of these files.
 | [.editorconfig](.editorconfig) | Every editor with EditorConfig support; CLion; Visual Studio and VS Code (C/C++ extension) |
 | [.jscpd.json](.jscpd.json) | jscpd |
 | [.opengrep/c.yaml](.opengrep/c.yaml) | Opengrep |
+| [gcovr.cfg](gcovr.cfg) | gcovr |
 
 ## Compiler warnings
 
@@ -152,10 +153,11 @@ cppcheck --std=c99 --enable=unusedFunction --error-exitcode=1 -I include src
 
 Build the tests with `--coverage`, run them, then summarise the result with
 gcovr. Coverage shows which lines the tests never run. Use it to find
-untested error paths, and question any change that lowers it.
+untested error paths, and question any change that lowers it. Run gcovr from
+the repository root, where it reads [gcovr.cfg](gcovr.cfg).
 
 ```sh
 gcc -std=c99 --coverage -o tests tests.c
 ./tests
-gcovr --root . --print-summary
+gcovr
 ```
