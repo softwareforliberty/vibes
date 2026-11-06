@@ -43,6 +43,10 @@ swift-format lint --strict --recursive Sources Tests
 swiftlint lint --strict
 ```
 
+Swift 6 toolchains include swift-format but don't always put
+`swift-format` on the `PATH`; run it as `swift format` there, with the same
+arguments.
+
 Configure swift-format with `.swift-format` at the repository root:
 
 ```json
