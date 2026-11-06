@@ -28,9 +28,10 @@ settings on this page.
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
 | [`.prettierrc.json`](.prettierrc.json) | Prettier |
 | [`eslint.config.js`](eslint.config.js) | ESLint |
+| [`tsconfig.json`](tsconfig.json) | `tsc`, for the optional type check |
+| [`.npmrc`](.npmrc) | npm (`npm audit`) |
 | [`knip.json`](knip.json) | Knip |
 | [`.c8rc.json`](.c8rc.json) | c8 |
-| [`tsconfig.json`](tsconfig.json) | `tsc`, for the optional type check |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 | [`.opengrep/javascript.yaml`](.opengrep/javascript.yaml) | Opengrep |
 
@@ -161,10 +162,15 @@ osv-scanner scan source -r .
 ```
 
 `npm audit` checks the same lockfile against the npm advisory database, and
-comes with npm:
+comes with npm. [`.npmrc`](.npmrc) sets `audit-level=low`, so it fails on any
+vulnerability rated low or above:
 
 ```sh
-npm audit --audit-level=low
+npm audit
+```
+
+```ini
+audit-level=low
 ```
 
 ### Secrets
