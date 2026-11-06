@@ -94,9 +94,11 @@ reviewers and editors agree with it.
 
 ```cpp
 if (!parser) {
-  return std::nullopt;
+  ReportError("no parser");
 } else if (parser->Count() > kMaxSegments) {
-  return std::nullopt;
+  ReportError("too many segments");
+} else {
+  Process(*parser);
 }
 ```
 
