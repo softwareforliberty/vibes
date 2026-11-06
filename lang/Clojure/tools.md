@@ -52,7 +52,7 @@ Add the formatter and coverage aliases in [`deps.edn`](deps.edn):
              :extra-deps {cloverage/cloverage {:mvn/version "1.2.4"}}
              :main-opts ["-m" "cloverage.coverage"
                          "-p" "src" "-s" "test"
-                         "--line-fail-threshold" "80"]}}}
+                         "--fail-threshold" "80"]}}}
 ```
 
 Configure cljfmt in [`.cljfmt.edn`](.cljfmt.edn). It turns on every
@@ -174,8 +174,9 @@ Measure line coverage on every test run, and fail the build when it falls
 below 80%. Raise the minimum as coverage grows; never lower it to make a
 build pass.
 
-The `coverage` alias in [`deps.edn`](deps.edn) runs cloverage with an 80%
-line-coverage minimum:
+The `coverage` alias in [`deps.edn`](deps.edn) runs cloverage with
+`--fail-threshold 80`, which fails the build when line or form coverage falls
+below 80%:
 
 ```sh
 clojure -M:coverage
