@@ -27,7 +27,7 @@ every rule in this guide that SQLFluff can check:
 
 ```ini
 [sqlfluff]
-dialect = ansi
+dialect = postgres
 max_line_length = 80
 
 [sqlfluff:indentation]
@@ -79,9 +79,12 @@ case_sensitive = False
 forbid_subquery_in = both
 ```
 
-SQLFluff's `ansi` dialect doesn't parse every ISO feature (identity
-columns, for example). When your SQL only ever runs on one engine, set
-`dialect` to that engine instead.
+SQLFluff's `ansi` dialect can't parse some ISO features this guide uses,
+such as identity columns and named `CHECK` constraints. So the configuration
+uses the `postgres` dialect: PostgreSQL follows ISO SQL closely, and SQLFluff
+parses it fully. It doesn't flag syntax that only PostgreSQL accepts, so
+review checks that the code is portable. When your SQL only ever runs on one
+engine, set `dialect` to that engine instead.
 
 ## Running it
 
