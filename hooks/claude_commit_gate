@@ -9,8 +9,8 @@ set -euo pipefail
 source "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/lib/commit_gate.sh"
 
 readonly COMMIT_RE='(^|[;&|[:space:]])git[[:space:]]+commit([[:space:]]|$)'
-readonly NO_VERIFY_RE='(^|[[:space:]])(--no-verify|-n)([[:space:]]|$)'
-readonly ALL_RE='(^|[[:space:]])(-a|--all)([[:space:]]|$)'
+# git commit's short options that take a value, which may be joined to them.
+readonly VALUE_OPTIONS='CcFmStu'
 
 # Prints one field of the hook's JSON input, or nothing if no parser exists.
 json_field() {
@@ -29,6 +29,79 @@ print(value if value is not None else "")
   fi
 }
 
+# Prints a shell command on one line without its quoted strings and
+# here-document bodies, so text in a commit message can't look like an option.
+strip_text() {
+  local line out="" quote="" delim="" i char
+  local heredoc_re="<<-?[[:space:]]*[\"']?([A-Za-z_][A-Za-z0-9_]*)"
+  while IFS= read -r line || [[ -n "${line}" ]]; do
+    if [[ -n "${delim}" ]]; then
+      # A body ends at its delimiter, which <<- allows to be indented.
+      [[ "${line#"${line%%[![:space:]]*}"}" == "${delim}" ]] && delim=""
+      continue
+    fi
+    if [[ -z "${quote}" && "${line}" =~ ${heredoc_re} ]]; then
+      delim="${BASH_REMATCH[1]}"
+    fi
+    for ((i = 0; i < ${#line}; i++)); do
+      char="${line:i:1}"
+      if [[ -z "${quote}" ]]; then
+        case "${char}" in
+          \' | \") quote="${char}" ;;
+          \\) ((i += 1)) ;;
+          *) out+="${char}" ;;
+        esac
+      elif [[ "${char}" == "${quote}" ]]; then
+        quote=""
+      elif [[ "${quote}" == '"' && "${char}" == \\ ]]; then
+        ((i += 1))
+      fi
+    done
+    out+=" "
+  done
+  printf '%s\n' "${out}"
+}
+
+# Prints the arguments of each git commit in a command, one commit per line:
+# the words after "git commit", up to the next ;, & or |.
+commit_args() {
+  local rest="$1"
+  while [[ "${rest}" =~ ${COMMIT_RE} ]]; do
+    rest="${rest#*"${BASH_REMATCH[0]}"}"
+    printf '%s\n' "${rest%%[;&|]*}"
+  done
+}
+
+# Prints "no-verify" or "all" for each such option in one commit's
+# arguments, including inside a cluster of short options such as -am.
+bypass_options() {
+  local word i char
+  local -a words
+  read -r -a words <<<"$1"
+  # Bash 3.2 treats an empty array as unset, which set -u rejects.
+  ((${#words[@]} > 0)) || return 0
+  for word in "${words[@]}"; do
+    case "${word}" in
+      --no-verify) echo no-verify ;;
+      --all) echo all ;;
+      --*) ;;
+      -?*)
+        for ((i = 1; i < ${#word}; i++)); do
+          char="${word:i:1}"
+          case "${char}" in
+            n) echo no-verify ;;
+            a) echo all ;;
+            *) ;;
+          esac
+          # The rest of the word is this option's value, such as -Fnotes.
+          [[ "${VALUE_OPTIONS}" == *"${char}"* ]] && break
+        done
+        ;;
+      *) ;;
+    esac
+  done
+}
+
 # Returns 0 when the project's own git hook is the vibes gate.
 git_hook_is_gate() {
   local hook
@@ -37,11 +110,9 @@ git_hook_is_gate() {
 }
 
 main() {
-  local input command cwd
+  local input command cwd options
   input="$(cat)"
-  # Drop quoted strings, so a commit message mentioning -a or -n can't match.
-  command="$(json_field "${input}" '.tool_input.command' \
-    | sed -E "s/'[^']*'//g; s/\"[^\"]*\"//g")"
+  command="$(json_field "${input}" '.tool_input.command' | strip_text)"
   cwd="$(json_field "${input}" '.cwd')"
 
   if [[ -n "${cwd}" ]]; then
@@ -56,11 +127,14 @@ main() {
     exit 0
   fi
 
-  if [[ "${command}" =~ ${NO_VERIFY_RE} ]]; then
+  options="$(commit_args "${command}" | while IFS= read -r args; do
+    bypass_options "${args}"
+  done)"
+  if [[ "${options}" == *no-verify* ]]; then
     gate::err "don't bypass the commit gate with --no-verify or -n."
     exit 2
   fi
-  if [[ "${command}" =~ ${ALL_RE} ]]; then
+  if [[ "${options}" == *all* ]]; then
     gate::err "don't commit with -a or --all. Stage each change explicitly."
     exit 2
   fi
