@@ -208,6 +208,9 @@ max_line_length = 80
   two always agree.
 - The constants rule comes first, so `Const` fields get `PascalCase` rather
   than a field prefix.
+- The build doesn't run every rule: `Me.` qualification (`IDE0003`), .NET
+  type names (`IDE0049`) and whitespace are reported only by
+  `dotnet format --verify-no-changes`, so run both commands.
 - Never hand-format code the formatter will rewrite. Run `dotnet format`
   before every commit.
 

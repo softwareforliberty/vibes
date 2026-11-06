@@ -248,6 +248,9 @@ ij_yaml_spaces_within_brackets = false
   two always agree.
 - The constants rule comes first, so `const` fields get `PascalCase` rather
   than a field prefix.
+- The build doesn't run every rule: `this.` qualification (`IDE0003`), BCL
+  type names (`IDE0049`) and whitespace are reported only by
+  `dotnet format --verify-no-changes`, so run both commands.
 - Never hand-format code the formatter will rewrite. Run
   `dotnet format` before every commit.
 
