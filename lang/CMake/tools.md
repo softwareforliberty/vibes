@@ -137,5 +137,6 @@ CMake's trace, which records every command a configure run executes. Compare
 the traces of your presets to find `if()` branches that no preset reaches:
 
 ```sh
+mkdir -p build
 cmake --preset dev --trace-expand --trace-redirect=build/cmake-trace.txt
 ```
