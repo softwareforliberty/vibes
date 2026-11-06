@@ -32,6 +32,9 @@ perltidy owns layout. Put the settings in `.perltidyrc`, starting from the
 
 ```text
 --perl-best-practices
+# The preset puts a space inside parentheses that hold more than one
+# token. Keep them tight, as coding-style.md shows: f($x, $y).
+--paren-tightness=2
 --nostandard-output
 --nostandard-error-output
 --warning-output

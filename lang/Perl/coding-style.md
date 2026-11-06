@@ -93,6 +93,7 @@ turns off indirect method syntax. It replaces the separate `use strict;` and
   `$total = $price * $count`.
 - No space between a function name and its opening parenthesis:
   `find_user($id)`.
+- No spaces just inside parentheses: `open(my $fh, '<', $path)`.
 - One space between a keyword and its parenthesis: `if ($x)`,
   `foreach my $item (@items)`.
 - One space after a comma, none before it.
