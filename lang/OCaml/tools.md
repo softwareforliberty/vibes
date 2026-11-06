@@ -184,11 +184,12 @@ library's `dune` stanza:
   (backend bisect_ppx)))
 ```
 
-It has no minimum of its own, so check its summary line:
+It has no minimum of its own, so check its summary line. The check also
+fails when there's no summary, such as when the tests didn't run:
 
 ```sh
 dune runtest --instrument-with bisect_ppx --force
 bisect-ppx-report summary | tee coverage.txt
-awk -F'[(%]' '/Coverage:/ { if ($2 < 80) bad = 1 } END { exit bad }' \
-    coverage.txt
+awk -F'[(%]' '/Coverage:/ { seen = 1; if ($2 < 80) bad = 1 }
+    END { exit bad || !seen }' coverage.txt
 ```
