@@ -25,6 +25,7 @@ settings on this page.
 | --- | --- |
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
 | [`.lintr`](.lintr) | lintr |
+| [`.Rbuildignore`](.Rbuildignore) | `R CMD build` |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 | [`.opengrep/r.yaml`](.opengrep/r.yaml) | Opengrep |
 
@@ -60,6 +61,18 @@ encoding: "UTF-8"
   `undesirable_function_linter()` skips that one file.
 - `R CMD check` catches undeclared dependencies, undocumented arguments and
   code that uses undefined variables.
+
+`R CMD check` reports any hidden file in the package as a note, so
+`.Rbuildignore` keeps the tool config files out of the built package.
+Each line is a regular expression matched against paths from the package
+root:
+
+```text
+^\.editorconfig$
+^\.jscpd\.json$
+^\.lintr$
+^\.opengrep$
+```
 
 ## Auditing
 

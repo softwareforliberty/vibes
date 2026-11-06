@@ -1,0 +1,4 @@
+^\.editorconfig$
+^\.jscpd\.json$
+^\.lintr$
+^\.opengrep$
