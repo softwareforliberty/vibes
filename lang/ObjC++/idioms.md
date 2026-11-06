@@ -145,8 +145,7 @@ _checker->SetCallback([weakSelf](const std::string &word) {
   report errors the immediate caller can't reasonably handle.
 
 ```objc
-- (nullable NSArray<NSString *> *)suggestionsForWord:(NSString *)word
-                                              error:(NSError **)error {
+- (nullable NSArray<NSString *> *)suggestionsForWord:(NSString *)word error:(NSError **)error {
   try {
     std::vector<std::string> results = _checker->Suggest(ToStdString(word));
     NSMutableArray<NSString *> *suggestions = [NSMutableArray array];
