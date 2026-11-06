@@ -43,12 +43,16 @@ make --warn-undefined-variables --dry-run all
 
 ## checkmake
 
-checkmake lints every makefile, and exits with an error when it finds a
+checkmake lints the main makefile, and exits with an error when it finds a
 violation:
 
 ```sh
-checkmake Makefile src/*.mk
+checkmake Makefile
 ```
+
+checkmake reads each file on its own and doesn't follow `include`, so on an
+included `.mk` fragment it reports the standard targets as missing. Run it on
+the main makefile only, and review fragments against the same rules.
 
 Commit a `checkmake.ini` at the repository root, so it requires the standard
 targets from the [naming rules](coding-style.md#naming) instead of its own
