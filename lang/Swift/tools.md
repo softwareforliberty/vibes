@@ -27,6 +27,7 @@ below is the full contents of one of these files.
 | [.swift-format](.swift-format) | swift-format |
 | [.swiftlint.yml](.swiftlint.yml) | SwiftLint |
 | [Tests/.swiftlint.yml](Tests/.swiftlint.yml) | SwiftLint, for the test target |
+| [.periphery.yml](.periphery.yml) | Periphery |
 | [.jscpd.json](.jscpd.json) | jscpd |
 | [.opengrep/swift.yaml](.opengrep/swift.yaml) | Opengrep |
 
@@ -174,11 +175,21 @@ jscpd --format swift --min-tokens 50 --exitCode 1 Sources
 
 Run Periphery to find unused classes, functions, properties and parameters
 across the whole project. Unused code still has to be read, compiled and
-maintained.
+maintained. Periphery reads its settings from `.periphery.yml`, which makes
+any finding fail the scan:
+
+```yaml
+---
+# Periphery settings: fail the scan when it finds unused code.
+strict: true
+```
 
 ```sh
-periphery scan --strict
+periphery scan
 ```
+
+In a library, also set `retain_public: true` in `.periphery.yml`, so
+Periphery doesn't report the public API as unused.
 
 SwiftLint's analyzer rules, `unused_declaration` and `unused_import` (in the
 `.swiftlint.yml` above), need the compiler's log from a clean build:

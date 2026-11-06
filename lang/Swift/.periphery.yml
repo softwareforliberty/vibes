@@ -1,0 +1,3 @@
+---
+# Periphery settings: fail the scan when it finds unused code.
+strict: true
