@@ -1,0 +1,5 @@
+# Resolve root-relative links, such as /css/main.css, from the repository
+# root.
+root_dir = "."
+# Don't check the pages that npm packages ship.
+exclude_path = ["node_modules"]

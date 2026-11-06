@@ -28,6 +28,7 @@ settings on this page.
 | [`.htmlvalidate.json`](.htmlvalidate.json) | html-validate |
 | [`.htmlvalidateignore`](.htmlvalidateignore) | html-validate |
 | [`lighthouserc.json`](lighthouserc.json) | Lighthouse CI |
+| [`lychee.toml`](lychee.toml) | lychee |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 | [`.opengrep/html.yaml`](.opengrep/html.yaml) | Opengrep |
 
@@ -175,6 +176,20 @@ code that visitors can see.
 ```sh
 lychee "**/*.html"
 ```
+
+lychee reads [`lychee.toml`](lychee.toml):
+
+```toml
+# Resolve root-relative links, such as /css/main.css, from the repository
+# root.
+root_dir = "."
+# Don't check the pages that npm packages ship.
+exclude_path = ["node_modules"]
+```
+
+A link to a server route that isn't a file, such as a form's `action`, is
+reported as missing. Add a pattern for it to an `exclude` list in
+`lychee.toml`, such as `exclude = ["/search$"]`.
 
 ### Coverage
 

@@ -23,6 +23,13 @@ indent_style = space
 indent_size = 2
 max_line_length = 80
 
+[*.toml]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+# JetBrains IDEs
+ij_toml_keep_indents_on_empty_lines = false
+
 [*.{yaml,yml}]
 indent_style = space
 indent_size = 2
