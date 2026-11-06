@@ -145,6 +145,9 @@ npx @lhci/cli autorun
 }
 ```
 
+- The `lighthouse:recommended` preset warns about the render-blocking
+  stylesheet that every page loads in `<head>`. That warning is expected,
+  and doesn't fail the build.
 - Automated tools find only part of all accessibility problems. Keep testing
   with a keyboard and a screen reader, as the
   [accessibility rules](idioms.md#accessibility) describe.
