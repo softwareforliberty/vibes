@@ -98,15 +98,16 @@ _checker->SetCallback([weakSelf](const std::string &word) {
 
 - **Convert `NSString` to `std::string` by copying the UTF-8 bytes
   immediately.** The pointer `UTF8String` returns is only valid while the
-  string lives, and it's `nil` for a `nil` string. Constructing a
+  string lives, and it's null for a `nil` string. Constructing a
   `std::string` from a null pointer is undefined behaviour:
 
   ```objc
   std::string ToStdString(NSString *string) {
-    if (!string) {
-      return std::string();
+    const char *utf8 = string.UTF8String;
+    if (!utf8) {
+      return {};
     }
-    return std::string(string.UTF8String);
+    return {utf8};
   }
   ```
 
