@@ -28,6 +28,18 @@ export default [
       'prefer-template': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/explicit-module-boundary-types': 'error',
+      '@typescript-eslint/no-floating-promises': [
+        'error',
+        {
+          allowForKnownSafeCalls: [
+            {
+              from: 'package',
+              name: ['describe', 'it', 'suite', 'test'],
+              package: 'node:test',
+            },
+          ],
+        },
+      ],
       '@typescript-eslint/no-shadow': 'error',
       '@typescript-eslint/switch-exhaustiveness-check': 'error',
     },

@@ -127,6 +127,18 @@ export default [
       'prefer-template': 'error',
       '@typescript-eslint/consistent-type-imports': 'error',
       '@typescript-eslint/explicit-module-boundary-types': 'error',
+      '@typescript-eslint/no-floating-promises': [
+        'error',
+        {
+          allowForKnownSafeCalls: [
+            {
+              from: 'package',
+              name: ['describe', 'it', 'suite', 'test'],
+              package: 'node:test',
+            },
+          ],
+        },
+      ],
       '@typescript-eslint/no-shadow': 'error',
       '@typescript-eslint/switch-exhaustiveness-check': 'error',
     },
@@ -146,6 +158,8 @@ export default [
 - `strictTypeChecked` also bans `any`, non-null assertions and floating
   promises, as the [style guide](coding-style.md#forbidden-constructs) and
   [JavaScript idioms](../JavaScript/idioms.md#async-code) require.
+- The `no-floating-promises` option allows the `test()` and `describe()`
+  calls from `node:test`: they return promises the test runner awaits.
 - The last block turns off type-aware rules for JavaScript files, such as
   `eslint.config.js` itself, which `tsconfig.json` doesn't include.
 - `eslint.config.js` is an ES module, like all code in this guide, so the
