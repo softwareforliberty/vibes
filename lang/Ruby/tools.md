@@ -53,6 +53,11 @@ AllCops:
 Layout/LineLength:
   Max: 80
 
+# Indent a chain broken after its receiver by one level, as
+# coding-style.md shows, rather than aligning it with the receiver.
+Layout/MultilineMethodCallIndentation:
+  EnforcedStyle: indented
+
 Style/AndOr:
   EnforcedStyle: always
 ```
