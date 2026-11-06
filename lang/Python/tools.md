@@ -77,8 +77,9 @@ convention = "google"
 strict = true
 
 [tool.vulture]
-paths = ["src", "vulture_whitelist.py"]
-min_confidence = 80
+paths = ["src", "tests", "vulture_whitelist.py"]
+# Vulture rates unused functions, classes and variables at 60%.
+min_confidence = 60
 
 [tool.coverage.run]
 branch = true
@@ -171,7 +172,10 @@ vulture
 ```
 
 The paths and the confidence threshold come from `[tool.vulture]` in
-`pyproject.toml`.
+`pyproject.toml`. It reads `tests` too, so code the tests use isn't
+reported. The threshold is 60% because Vulture rates every unused
+function, class and variable at 60%; a higher one reports only unused
+imports, which Ruff already catches.
 
 ### Coverage
 

@@ -32,8 +32,9 @@ convention = "google"
 strict = true
 
 [tool.vulture]
-paths = ["src", "vulture_whitelist.py"]
-min_confidence = 80
+paths = ["src", "tests", "vulture_whitelist.py"]
+# Vulture rates unused functions, classes and variables at 60%.
+min_confidence = 60
 
 [tool.coverage.run]
 branch = true
