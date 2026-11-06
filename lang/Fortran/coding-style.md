@@ -91,6 +91,7 @@ read.
   `end module linalg`, `end do`, `end if`.
 - Use the symbolic comparison operators (`==`, `/=`, `<`, `<=`, `>`, `>=`)
   instead of `.eq.`, `.ne.` and the rest.
+- Quote character strings with double quotes: `"tests: passed"`.
 - Never use `goto`, arithmetic `if`, `common` blocks, `equivalence`,
   statement functions or fixed-form source. Each has a modern replacement
   that the compiler can check.
