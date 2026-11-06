@@ -52,6 +52,9 @@ directory, without the `vibes:` prefix.
 4. **Make sure the commit gate is set up.** If the project has no executable
    `scripts/check`, follow the [commit gate](../commit-gate/SKILL.md) skill
    first. Then run `scripts/check` on the base branch and confirm it passes.
+   Commit the gate setup on the base branch as one commit of its own, so the
+   spike and rebuild branches both start with it, and list it in the final
+   report.
 5. **Create the state directory** `.vibes/` for review files. A
    `.gitignore` inside it keeps the whole directory out of git, without
    touching the project's own `.gitignore` or anything in `.git/`:
