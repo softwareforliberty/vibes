@@ -22,6 +22,15 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug",
         "CMAKE_COMPILE_WARNING_AS_ERROR": "ON"
+      },
+      "warnings": {
+        "dev": true,
+        "deprecated": true,
+        "uninitialized": true
+      },
+      "errors": {
+        "dev": true,
+        "deprecated": true
       }
     },
     {
@@ -39,6 +48,15 @@
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "RelWithDebInfo",
         "CMAKE_COMPILE_WARNING_AS_ERROR": "ON"
+      },
+      "warnings": {
+        "dev": true,
+        "deprecated": true,
+        "uninitialized": true
+      },
+      "errors": {
+        "dev": true,
+        "deprecated": true
       }
     },
     {

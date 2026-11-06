@@ -30,15 +30,23 @@ CMake's own warnings are the lint gate. A project must configure with **no
 warnings** using:
 
 ```sh
-cmake --preset dev --warn-uninitialized -Werror=dev -Werror=deprecated
+cmake --preset dev
 ```
 
-- `--warn-uninitialized` reports variables that are read before they're
-  set, which is almost always a typo.
-- `-Werror=dev` turns warnings meant for project authors into errors, such as
-  policy warnings and misused commands.
-- `-Werror=deprecated` turns uses of deprecated features into errors, so they
-  get fixed before a CMake release removes them.
+The `dev` and `ci` presets in [`CMakePresets.json`](CMakePresets.json) turn
+the checks on, so every developer and CI run gets the same ones:
+
+- `"uninitialized": true` under `warnings` reports variables that are read
+  before they're set, which is almost always a typo. It only warns, so CI
+  fails the build when the output contains `CMake Warning`.
+- `"dev": true` under `errors` turns warnings meant for project authors into
+  errors, such as policy warnings and misused commands.
+- `"deprecated": true` under `errors` turns uses of deprecated features into
+  errors, so they get fixed before a CMake release removes them.
+- Set these in the presets rather than on the command line. CMake 4.4
+  renamed the command-line options (`--warn-uninitialized` became
+  `-Wuninitialized`, and `-Werror=dev` became `-Werror=author`), but a
+  version 5 presets file works the same in every CMake from 3.24 on.
 
 ## Formatting
 
