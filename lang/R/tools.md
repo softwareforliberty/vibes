@@ -46,6 +46,9 @@ linters: linters_with_defaults(
     cyclocomp_linter(complexity_limit = 10L),
     undesirable_function_linter()
   )
+exclusions: list(
+    "tests/testthat.R" = list(undesirable_function_linter = Inf)
+  )
 encoding: "UTF-8"
 ```
 
@@ -53,6 +56,8 @@ encoding: "UTF-8"
 - lintr's default linters check the naming, assignment, spacing and quote
   rules in the style guide. `cyclocomp_linter()` isn't a default, so the
   config adds it.
+- `tests/testthat.R` calls `library()` to load the package under test, so
+  `undesirable_function_linter()` skips that one file.
 - `R CMD check` catches undeclared dependencies, undocumented arguments and
   code that uses undefined variables.
 

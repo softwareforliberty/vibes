@@ -3,4 +3,7 @@ linters: linters_with_defaults(
     cyclocomp_linter(complexity_limit = 10L),
     undesirable_function_linter()
   )
+exclusions: list(
+    "tests/testthat.R" = list(undesirable_function_linter = Inf)
+  )
 encoding: "UTF-8"
