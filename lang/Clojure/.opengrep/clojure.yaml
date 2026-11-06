@@ -25,6 +25,6 @@ rules:
     severity: WARNING
     languages:
       - clojure
-    pattern-either:
-      - pattern: (catch Throwable $E ...)
-      - pattern: (catch Error $E ...)
+    # Opengrep can't match a catch clause on its own in Clojure, so match the
+    # text.
+    pattern-regex: \(catch\s+(?:java\.lang\.)?(?:Throwable|Error)\s
