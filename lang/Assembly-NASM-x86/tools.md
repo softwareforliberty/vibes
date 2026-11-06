@@ -32,22 +32,27 @@ using at least these flags:
 
 ```sh
 # 64-bit ELF (Linux, BSD)
-nasm -f elf64 -g -F dwarf -w+all -w+error -o buf.o buf.asm
+nasm -f elf64 -g -F dwarf -w+all -w-reloc -w+error -o buf.o buf.asm
 
 # 32-bit ELF
-nasm -f elf32 -g -F dwarf -w+all -w+error -o buf.o buf.asm
+nasm -f elf32 -g -F dwarf -w+all -w-reloc -w+error -o buf.o buf.asm
 
 # 64-bit Windows
-nasm -f win64 -g -F cv8 -w+all -w+error -o buf.obj buf.asm
+nasm -f win64 -g -F cv8 -w+all -w-reloc -w+error -o buf.obj buf.asm
 ```
 
 - `-w+all` turns on every warning class, and `-w+error` turns warnings into
   errors, so a warning can't slip through a build.
+- `-w-reloc` turns off the `reloc-*` classes, which are off by default. They
+  report every relocation left for the linker, so they fire on every call to
+  another file and every RIP-relative reference to data in another section,
+  which is normal, correct code.
 - `-g` with the format's debug format (`dwarf` or `cv8`) lets debuggers and
   profilers map addresses back to source lines.
 - When a warning is a deliberate exception, turn it off for those lines only,
   with `[warning push]`, `[warning -<class>]` and `[warning pop]`, plus a
-  comment explaining why. Never turn a warning off for the whole build.
+  comment explaining why. Apart from `reloc`, never turn a warning off for
+  the whole build.
 - When reviewing instruction encodings, generate a listing with
   `-l buf.lst`.
 
