@@ -36,6 +36,8 @@ it test-first.
 3. **Write a test list.** Break the task into small behaviours, one line each,
    ordered from simplest to hardest. Edge cases and error cases are entries
    too. Add to the list as you discover more; don't try to finish it up front.
+   When the task has a spec, the list covers every requirement in it, and a
+   behaviour you discover goes into the spec before it goes on the list.
 
 ## The cycle
 

@@ -8,7 +8,7 @@
     {
       "name": "vibes",
       "source": "./",
-      "description": "Clean vibe coding: spike, review with a panel of critic agents, then rebuild test-first in atomic, gated commits.",
+      "description": "Clean vibe coding: write a complete spec and design, spike to them, review with a panel of critic agents, then rebuild test-first in atomic, gated commits.",
       "homepage": "https://github.com/softwareforliberty/vibes",
       "repository": "https://github.com/softwareforliberty/vibes"
     }

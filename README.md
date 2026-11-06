@@ -14,27 +14,35 @@ while holding it to the standards of careful, experienced developers.
 - **`architecture/`:** how to structure software: rules for every kind,
   and a guide each for web applications, desktop applications and OS
   components.
-- **`agents/`:** the spike agent and nine reviewer agents.
+- **`agents/`:** the designer, the spike agent and ten reviewer agents.
 - **`hooks/`:** the commit gate, for Claude Code and for git.
 
 ## The workflow
 
 Run it in a project with `/vibes:vibe <task>`:
 
-1. **Spike.** A subagent builds the whole task quickly on a `spike/<task>`
-   branch, to find the design.
-2. **Review.** Reviewer subagents critique the spike in parallel, one each
+1. **Spec.** A designer subagent writes a complete spec: every requirement,
+   error and edge case, each testable. You answer any open questions, and a
+   spec reviewer checks it until it's complete.
+2. **Design.** The designer writes the design to the spec, and the
+   architecture reviewer checks it before any code exists.
+3. **Spike.** A subagent builds the whole task quickly to the spec and
+   design on a `spike/<task>` branch.
+4. **Review.** Reviewer subagents critique the spike in parallel, one each
    for architecture, code cleanliness, coding style, idioms, memory and
-   resource leaks, performance, bugs and security.
-3. **Fix.** The main agent fixes the findings, and the reviewers that asked
+   resource leaks, performance, bugs and security. The spec reviewer
+   verifies it meets every requirement in the spec.
+5. **Fix.** The main agent fixes the findings, and the reviewers that asked
    for changes review again, until every reviewer approves (at most five
-   rounds before it asks you).
-4. **Rebuild.** The spike is set aside, never merged. The task is rebuilt on a
+   rounds before it asks you). A fix that changes behaviour goes into the
+   spec first, and so does every other change, all the way through.
+6. **Rebuild.** The spike is set aside, never merged. The task is rebuilt on a
    `vibe/<task>` branch, test-first, one atomic commit at a time.
-5. **Gate.** Every commit runs the project's linters and full test suite, and
+7. **Gate.** Every commit runs the project's linters and full test suite, and
    is blocked if anything fails.
-6. **Review again.** The same reviewers, plus a test-quality reviewer, check
-   the rebuild, and their findings are fixed test-first.
+8. **Review again.** The same reviewers, plus a test-quality reviewer, check
+   the rebuild, and their findings are fixed test-first. The spec reviewer
+   verifies every requirement is met and tested.
 
 Nothing is pushed or merged unless you ask.
 
