@@ -8,9 +8,9 @@ rules:
     languages:
       - java
     pattern-either:
-      - pattern: $STMT.executeQuery("..." + $X)
-      - pattern: $STMT.executeUpdate("..." + $X)
-      - pattern: $STMT.execute("..." + $X)
+      - pattern: $STMT.executeQuery("..." + ...)
+      - pattern: $STMT.executeUpdate("..." + ...)
+      - pattern: $STMT.execute("..." + ...)
   - id: java-no-object-input-stream
     message: >-
       Don't deserialise with ObjectInputStream, which can run code chosen by
