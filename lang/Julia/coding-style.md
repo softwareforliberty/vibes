@@ -60,12 +60,13 @@ by_region = summarise_responses(
 
 - Put spaces around binary operators and `=`: `total = price * quantity`.
   Leave out the spaces around `^`, `:` in ranges, and `.` in field access.
-- Put spaces around `=` in keyword arguments too, both in signatures and
-  calls. JuliaFormatter's Blue style formats them this way.
+- Leave out the spaces around `=` in keyword arguments and default values,
+  both in signatures and calls: `group=:region`. Blue style writes them this
+  way, and JuliaFormatter enforces it.
 - Put a space after every comma, and none just inside parentheses or
   brackets.
 - Separate keyword arguments from positional ones with `;` in signatures:
-  `function summarise_responses(responses; group = :region)`.
+  `function summarise_responses(responses; group=:region)`.
 
 ## Naming
 
@@ -118,11 +119,11 @@ concatenation: `"read $(n_rows) rows"`.
 
   ```julia
   """
-      summarise_responses(responses; group = :region)
+      summarise_responses(responses; group=:region)
 
   Summarise survey responses, with one row per value of `group`.
   """
-  function summarise_responses(responses; group = :region)
+  function summarise_responses(responses; group=:region)
       ...
   end
   ```

@@ -37,7 +37,7 @@ style = "blue"
 Code must be formatted and pass the quality tests with **no failures**:
 
 ```sh
-julia -e 'using JuliaFormatter; format(".", overwrite = false) || exit(1)'
+julia -e 'using JuliaFormatter; format(".", overwrite=false) || exit(1)'
 julia --project -e 'using Pkg; Pkg.test()'
 ```
 
@@ -131,9 +131,9 @@ below 80%. Raise the minimum as coverage grows; never lower it to make a
 build pass.
 
 ```sh
-julia --project -e 'using Pkg; Pkg.test(coverage = true)'
+julia --project -e 'using Pkg; Pkg.test(coverage=true)'
 julia -e 'using Coverage
     covered, total = get_summary(process_folder("src"))
-    println("coverage: ", round(100 * covered / total; digits = 1), "%")
+    println("coverage: ", round(100 * covered / total; digits=1), "%")
     covered / total >= 0.8 || exit(1)'
 ```
