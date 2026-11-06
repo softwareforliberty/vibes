@@ -11,7 +11,8 @@ trim_trailing_whitespace = true
 indent_style = space
 indent_size = 2
 max_line_length = 80
-# No verified IDE-specific EditorConfig keys exist for R. RStudio, Positron,
+# No verified IDE-specific EditorConfig keys exist for R. RStudio and
+# Positron read only the standard properties above.
 
 [*.json]
 indent_style = space
