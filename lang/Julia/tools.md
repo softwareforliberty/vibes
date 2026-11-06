@@ -52,13 +52,18 @@ using Test
 
 @testset "code quality" begin
     Aqua.test_all(Surveys)
-    JET.test_package(Surveys)
+    JET.test_package(Surveys; target_modules=(Surveys,))
 end
 ```
 
 - JuliaFormatter owns layout. Don't hand-format code it will rewrite.
-- JET reports calls that can't succeed, undefined names and type
-  instability, without running the code.
+- `JET.test_package` reports calls that can't succeed and undefined names,
+  without running the code. It doesn't report type instability: check
+  suspect functions for that with JET's `@report_opt` (see
+  [idioms.md](idioms.md)).
+- `target_modules` keeps only the errors JET finds in the package's own
+  code. Without it, JET also reports problems deep inside Base, such as
+  every `convert` a struct's default constructor might call.
 - Aqua checks for method ambiguities, type piracy, missing `[compat]`
   entries and unused dependencies, which are the package rules in
   [idioms.md](idioms.md).
