@@ -36,6 +36,10 @@ modules:
 lint:
   use:
     - STANDARD
+    - COMMENT_ENUM
+    - COMMENT_MESSAGE
+    - COMMENT_RPC
+    - COMMENT_SERVICE
 breaking:
   use:
     - FILE
@@ -54,6 +58,9 @@ Run `buf format -w` to fix the formatting in place.
 - Buf's `STANDARD` lint rules check the naming, package and file layout
   rules in the [style guide](coding-style.md#names), including the
   `_UNSPECIFIED` zero value and the `Request`/`Response` message names.
+- The four `COMMENT_` rules require the comment the
+  [style guide](coding-style.md#comments) asks for above every message,
+  enum, service and method.
 - Buf doesn't check line length or import order, so protolint runs only
   those two rules. Configure it with `.protolint.yaml`:
 

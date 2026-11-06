@@ -27,6 +27,7 @@ guide.
   reuse them by accident:
 
   ```proto
+  // An order placed by a customer.
   message Order {
     reserved 6, 9;
     reserved "discount_code", "notes";
@@ -61,6 +62,7 @@ guide.
   whether it's set before reading it:
 
   ```proto
+  // Sets an account's daily spending limit, or clears it when unset.
   message UpdateLimitRequest {
     string account_id = 1;
     optional int32 daily_limit = 2;
