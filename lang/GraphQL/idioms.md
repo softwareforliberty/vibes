@@ -110,9 +110,7 @@ evolve. Every example follows the style guide.
 
   ```graphql
   type Mutation {
-    """
-    Cancels an order that hasn't shipped yet.
-    """
+    "Cancels an order that hasn't shipped yet."
     cancelOrder(input: CancelOrderInput!): CancelOrderPayload!
   }
   ```

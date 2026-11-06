@@ -82,8 +82,10 @@ type Order implements Node {
 - **Describe every type, field, argument and enum value** with a description
   string. Descriptions are part of the schema, so clients see them through
   introspection and in their tools.
-- Use a block string (`"""`) for a multi-line description and a plain string
-  (`"`) for a one-line description, placed directly above the definition.
+- Use a block string (`"""`) for the description of a type, and for any
+  description longer than one line. Use a plain string (`"`) for a one-line
+  description of a field, argument or enum value. Put each description
+  directly above its definition.
 - Use `#` comments only for notes to schema maintainers. They're dropped from
   the schema, so clients never see them.
 - Every deprecation gives a reason that says what to use instead:
