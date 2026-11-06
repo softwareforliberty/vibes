@@ -106,6 +106,47 @@ code.
   - `vibes:resource-leak-reviewer` when it acquires memory, files,
     connections, locks or threads.
 
+## Keep the state current
+
+Keep `.vibes/<name>/state.md` current, so an interrupted run can carry on
+where it stopped. Update it when a phase starts or ends, after every review
+round, and after every commit. It holds:
+
+- the task as the user gave it, their answers to open questions, and the
+  task's name and size;
+- the base branch, the spec directory and the languages;
+- the current phase and round, and the last step finished;
+- `status: running` until Phase 8 ends, then `status: done`.
+
+## Resume an unfinished run
+
+Before Phase 0, look for a `.vibes/*/state.md` with `status: running`.
+
+- **There's none:** start at Phase 0.
+- **There's one, and the task is empty or the same task:** resume it.
+- **There's one, for a different task:** ask the user whether to finish it
+  first, or set it aside and start the new one.
+
+To resume:
+
+1. **Read where the run stopped:** `state.md`, the spec and design, the
+   rebuild plan and the latest round directory. Tell the user which phase
+   and step you're resuming from.
+2. **Check git agrees.** The branches exist, the right one is checked out,
+   and its latest commits match the state. Where they disagree, git is
+   right: update `state.md` to match.
+3. **Look at uncommitted changes.** On the rebuild branch they're usually an
+   unfinished red, green or refactor step: finish it if the test list shows
+   which entry it belongs to, and ask the user otherwise. Never discard
+   changes without asking.
+4. **Carry on from the first unfinished step:**
+   - in a review round with findings files missing, run only the missing
+     reviewers, with the same brief;
+   - when the designer or the spiker didn't report, run it again, and tell
+     it what already exists so it carries on rather than starting over;
+   - in the build, carry on with the first entry in the test list that
+     isn't ticked off.
+
 ## Phase 0: Set up
 
 1. **Understand the task.** If the task is unclear or missing, ask the user
@@ -129,28 +170,32 @@ code.
    `design.md` will live in the repository. If the project already keeps
    specs or design documents somewhere, use a directory for the task there.
    Otherwise use `docs/specs/<name>/`.
-7. **Create the state directory** `.vibes/` for the workflow's own working
-   files: review rounds, the spike report and the rebuild plan. A
-   `.gitignore` inside it keeps the whole directory out of git, without
-   touching the project's own `.gitignore` or anything in `.git/`:
+7. **Create the task's state directory** `.vibes/<name>/` for the
+   workflow's own working files: the run's state, review rounds, the spike
+   report and the rebuild plan. A `.gitignore` in `.vibes/` keeps it all out
+   of git, without touching the project's own `.gitignore` or anything in
+   `.git/`:
 
    ```sh
-   mkdir -p .vibes
+   mkdir -p .vibes/<name>
    printf '*\n' > .vibes/.gitignore
    ```
+
+   Then write `.vibes/<name>/state.md`, as
+   [Keep the state current](#keep-the-state-current) describes.
 
 ## Review rounds
 
 Every review in the workflow runs in rounds, the same way. A round reviews
 one phase: `spec`, `design`, `spike` or `rebuild`.
 
-1. **Prepare the round directory,** `.vibes/review/<phase>-<round>/` (for
-   example `.vibes/review/spike-1/`). In the spike and rebuild phases, save
-   the change in it:
+1. **Prepare the round directory,** `.vibes/<name>/review/<phase>-<round>/`
+   (for example `.vibes/<name>/review/spike-1/`). In the spike and rebuild
+   phases, save the change in it:
 
    ```sh
-   git diff <base>...HEAD > .vibes/review/spike-1/diff.patch
-   git diff --name-only <base>...HEAD > .vibes/review/spike-1/files.txt
+   git diff <base>...HEAD > .vibes/<name>/review/spike-1/diff.patch
+   git diff --name-only <base>...HEAD > .vibes/<name>/review/spike-1/files.txt
    ```
 
    From round 2 on, copy the previous round's findings files and
@@ -164,7 +209,7 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
    Task: <the task, and the user's answers to any questions>
    Spec: <absolute path to spec.md>
    Design: <absolute path to design.md, once it exists>
-   Review directory: <absolute path to .vibes/review/spike-1>
+   Review directory: <absolute path to .vibes/<name>/review/spike-1>
    Phase: <spec, design, spike or rebuild>
    Languages: <languages>
    Round: <n>
@@ -234,10 +279,10 @@ Large tasks only. Small and medium tasks go straight to
 2. Spawn `vibes:spiker` with a brief giving the task, the spike branch, the
    base branch, the absolute paths of `spec.md` and `design.md`, and the
    languages.
-3. Save its report to `.vibes/spike-report.md`. Check the spike's commits are
-   on `spike/<name>`, and that the working tree is clean. If the spiker
-   changed the spec or design, read each change log entry, and ask the user
-   about any that alters what they asked for.
+3. Save its report to `.vibes/<name>/spike-report.md`. Check the spike's
+   commits are on `spike/<name>`, and that the working tree is clean. If the
+   spiker changed the spec or design, read each change log entry, and ask
+   the user about any that alters what they asked for.
 
 ## Phase 4: Review the spike
 
@@ -256,7 +301,7 @@ Large tasks only.
 The approved spike is a reference implementation, never production code. It
 stays on `spike/<name>` and is never merged.
 
-1. Write `.vibes/rebuild-plan.md`:
+1. Write `.vibes/<name>/rebuild-plan.md`:
    - **Test list:** every requirement and quality id in the spec as the
      spike phase left it, broken into behaviours to test, ordered from
      simplest to hardest. Each entry names the ids it covers, and every id
@@ -272,14 +317,14 @@ stays on `spike/<name>` and is never merged.
 ## Phase 6: Rebuild test-first
 
 Follow the [test-driven development](../test-driven-development/SKILL.md)
-skill, using the test list from `.vibes/rebuild-plan.md`, and the
+skill, using the test list from `.vibes/<name>/rebuild-plan.md`, and the
 [atomic commits](../atomic-commits/SKILL.md) skill for every commit.
 
 For a small or medium task, this is the first build, on the rebuild branch
-from Phase 1. Write `.vibes/rebuild-plan.md` first, with the test list from
-the spec as Phase 5 describes; there are no lessons or spec changes from a
-spike to list. Where there was no spike, the steps below that mention one
-don't apply.
+from Phase 1. Write `.vibes/<name>/rebuild-plan.md` first, with the test
+list from the spec as Phase 5 describes; there are no lessons or spec
+changes from a spike to list. Where there was no spike, the steps below that
+mention one don't apply.
 
 - **Build to the spec and design,** which are the source of truth. For a
   large task, that's the spec and design as the spike phase left them, on
@@ -323,4 +368,5 @@ and tested.
    - every reviewer's final verdict, and any deferred MINOR findings
    - for a large task, the spike branch, kept for reference: ask whether to
      delete it
-4. Don't push, merge or open a pull request unless the user asks.
+4. Set `status: done` in `state.md`.
+5. Don't push, merge or open a pull request unless the user asks.
