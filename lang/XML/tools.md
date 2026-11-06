@@ -26,7 +26,7 @@ Every XML file must be well-formed and match `xmllint --format` exactly.
 Run this from the repository root:
 
 ```sh
-for f in $(git ls-files '*.xml'); do
+for f in $(git ls-files '*.xml' '*.xsd' '*.rng' '*.svg'); do
   xmllint --format --nonet "$f" | diff -u "$f" - || exit 1
 done
 ```
@@ -36,6 +36,8 @@ done
   [style guide](coding-style.md#layout) asks.
 - A file that isn't well-formed fails to parse, so the same loop is the
   well-formedness check.
+- The loop covers the same file types as [.editorconfig](.editorconfig):
+  XML documents, the XSD and RELAX NG schemas kept with them, and SVG.
 - `--nonet` stops xmllint fetching anything from the network, as the
   [safe-reading rules](idioms.md#reading-xml-safely) require.
 - To fix a file's layout, write the formatted output back over it:
@@ -63,7 +65,7 @@ XML attack needs a DTD, so fail the build when any XML file in the repository
 declares a `DOCTYPE`:
 
 ```sh
-! git grep -l '<!DOCTYPE' -- '*.xml'
+! git grep -l '<!DOCTYPE' -- '*.xml' '*.xsd' '*.rng' '*.svg'
 ```
 
 The real defence is in the code that parses XML: review every parser it
