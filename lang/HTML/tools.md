@@ -26,6 +26,7 @@ settings on this page.
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
 | [`.prettierrc.json`](.prettierrc.json) | Prettier |
 | [`.htmlvalidate.json`](.htmlvalidate.json) | html-validate |
+| [`.htmlvalidateignore`](.htmlvalidateignore) | html-validate |
 | [`lighthouserc.json`](lighthouserc.json) | Lighthouse CI |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 | [`.opengrep/html.yaml`](.opengrep/html.yaml) | Opengrep |
@@ -37,7 +38,8 @@ Markup must pass all three checks with **no errors**:
 ```sh
 npx prettier --check "**/*.html"
 npx html-validate "**/*.html"
-java -jar vnu.jar --skip-non-html .
+find . -name '*.html' -not -path './node_modules/*' \
+  -exec java -jar vnu.jar --skip-info-messages {} +
 ```
 
 `.prettierrc.json`, shared by HTML, CSS and JavaScript:
@@ -71,6 +73,11 @@ java -jar vnu.jar --skip-non-html .
   closing slash (`<br />`). html-validate is set to expect both, so the
   formatter and the validator agree. In HTML the slash is optional and has
   no effect.
+- `--skip-info-messages` stops `vnu` reporting that slash on every void
+  element. Errors and warnings are still reported.
+- [`.htmlvalidateignore`](.htmlvalidateignore) keeps html-validate out of
+  `node_modules`. `vnu` has no ignore file, so `find` leaves that directory
+  out instead.
 - `vnu` checks against the current standard. html-validate adds rules the
   standard doesn't cover, such as accessibility checks and banned inline
   styles. Run both.
