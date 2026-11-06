@@ -122,9 +122,15 @@ fixed in one place and not the other.
 jscpd --format linker-script --min-tokens 50 --exitCode 1 .
 ```
 
-jscpd reads `.ld` files as its `linker-script` format. A preprocessed
-`.ld.S` script ends in `.S`, so jscpd checks its preprocessed `.ld` output in
-the build directory instead.
+jscpd reads `.ld` files as its `linker-script` format. It doesn't read a
+preprocessed `.ld.S` script, which ends in `.S`, or the script's output in
+the build directory, which `.jscpd.json` ignores. To check the output, run
+jscpd on the build directory with an ignore list that leaves it in:
+
+```sh
+jscpd --format linker-script --min-tokens 50 --exit-code 1 \
+    --ignore "**/node_modules/**" build
+```
 
 ### Dead code
 
