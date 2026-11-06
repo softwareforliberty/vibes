@@ -41,18 +41,18 @@ This repository is its own plugin marketplace. In Claude Code 2.1.275 or
 later:
 
 ```text
-/plugin install vibes --marketplace softwareforliberty/vibe-docs
+/plugin install vibes --marketplace softwareforliberty/vibes
 ```
 
 Or in two steps:
 
 ```text
-/plugin marketplace add softwareforliberty/vibe-docs
+/plugin marketplace add softwareforliberty/vibes
 /plugin install vibes@vibes
 ```
 
 To try a local checkout without installing it, start Claude Code with
-`claude --plugin-dir /path/to/vibe-docs`.
+`claude --plugin-dir /path/to/vibes`.
 
 The plugin provides:
 
@@ -93,7 +93,7 @@ Projects without `scripts/check` are never blocked. To enforce the gate for
 every commit, including your own, install the git hook:
 
 ```sh
-ln -s /path/to/vibe-docs/hooks/git_pre_commit .git/hooks/pre-commit
+ln -s /path/to/vibes/hooks/git_pre_commit .git/hooks/pre-commit
 ```
 
 The hooks need Bash, git and `realpath`. The Claude Code hook also uses `jq`

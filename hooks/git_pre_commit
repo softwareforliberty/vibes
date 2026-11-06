@@ -3,7 +3,7 @@
 # vibes-commit-gate
 #
 # Git pre-commit hook for the vibes commit gate. Install it in a project with:
-#   ln -s /path/to/vibe-docs/hooks/git_pre_commit .git/hooks/pre-commit
+#   ln -s /path/to/vibes/hooks/git_pre_commit .git/hooks/pre-commit
 
 set -euo pipefail
 
