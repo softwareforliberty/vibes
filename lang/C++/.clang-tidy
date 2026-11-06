@@ -10,6 +10,7 @@ Checks: >
   -bugprone-easily-swappable-parameters,
   -google-readability-todo,
   -modernize-use-trailing-return-type,
+  -performance-enum-size,
   -readability-identifier-length
 WarningsAsErrors: "*"
 CheckOptions:
@@ -32,4 +33,5 @@ CheckOptions:
   readability-identifier-naming.EnumConstantCase: CamelCase
   readability-identifier-naming.EnumConstantPrefix: k
   readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
+  readability-identifier-naming.MacroDefinitionIgnoredRegexp: ^[A-Z0-9_]+_$
   readability-implicit-bool-conversion.AllowPointerConditions: true

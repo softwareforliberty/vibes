@@ -71,6 +71,7 @@ Checks: >
   -bugprone-easily-swappable-parameters,
   -google-readability-todo,
   -modernize-use-trailing-return-type,
+  -performance-enum-size,
   -readability-identifier-length
 WarningsAsErrors: "*"
 CheckOptions:
@@ -93,12 +94,15 @@ CheckOptions:
   readability-identifier-naming.EnumConstantCase: CamelCase
   readability-identifier-naming.EnumConstantPrefix: k
   readability-identifier-naming.MacroDefinitionCase: UPPER_CASE
+  readability-identifier-naming.MacroDefinitionIgnoredRegexp: ^[A-Z0-9_]+_$
   readability-implicit-bool-conversion.AllowPointerConditions: true
 ```
 
 - The disabled checks conflict with rules in this guide: TODO format,
-  ordinary return types and short local names. `AllowPointerConditions`
-  permits the [`if (ptr)`](coding-style.md#statements-and-expressions) form.
+  ordinary return types, short local names and `int` as the default integer.
+  `MacroDefinitionIgnoredRegexp` lets include guards end in `_`.
+  `AllowPointerConditions` permits the
+  [`if (ptr)`](coding-style.md#statements-and-expressions) form.
 - Suppress a warning only on the line that needs it, with
   `// NOLINT(check-name)` and a reason. A bare `NOLINT` hides every check,
   including ones nobody meant to silence.
