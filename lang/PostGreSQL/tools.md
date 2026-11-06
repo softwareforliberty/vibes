@@ -99,6 +99,7 @@ skips function names written in lowercase with an underscore, which is how
 [your own functions](coding-style.md#case) are named. Review checks that
 built-in functions with an underscore in their name, such as `ROW_NUMBER()`,
 are uppercase.
+
 ## Migration safety
 
 Squawk checks migration files for changes that take long locks or break code

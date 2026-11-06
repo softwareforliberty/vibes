@@ -103,6 +103,7 @@ skips function names written in lowercase with an underscore, which is how
 [your own functions](coding-style.md#case) are named. Review checks that
 built-in functions with an underscore in their name, such as `ROW_NUMBER()`,
 are uppercase.
+
 ## Schema linting
 
 Skeema lints table definitions by running them on a MySQL server, so it
