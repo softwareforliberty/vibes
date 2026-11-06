@@ -27,6 +27,7 @@ settings on this page.
 | [`selene.toml`](selene.toml) | selene |
 | [`lua54.yml`](lua54.yml) | selene, as the Lua 5.4 standard library |
 | [`busted.yml`](busted.yml) | selene, as busted's standard library |
+| [`.busted`](.busted) | busted |
 | [`.luacov`](.luacov) | LuaCov |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 | [`.opengrep/lua.yaml`](.opengrep/lua.yaml) | Opengrep |
@@ -228,8 +229,19 @@ Run the tests with busted and collect coverage with LuaCov, then generate
 the report:
 
 ```sh
-busted --coverage
+busted
 luacov
+```
+
+`.busted` turns on coverage for every busted run, so `busted` needs no
+flags:
+
+```lua
+return {
+  _all = {
+    coverage = true,
+  },
+}
 ```
 
 LuaCov has no minimum of its own. Its report, `luacov.report.out`, ends with
