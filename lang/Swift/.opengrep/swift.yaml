@@ -10,7 +10,11 @@ rules:
     paths:
       exclude:
         - Tests/
-    pattern: try! $EXPR
+    # Opengrep's Swift parser doesn't tell try! from try or try?, so also
+    # match the text.
+    patterns:
+      - pattern: try! $EXPR
+      - pattern-regex: \btry!
   - id: swift-no-force-cast
     message: >-
       Don't use as! outside tests; cast with as? and handle the nil case.
@@ -20,7 +24,11 @@ rules:
     paths:
       exclude:
         - Tests/
-    pattern: $EXPR as! $TYPE
+    # Opengrep's Swift parser doesn't tell as! from as or as?, so also match
+    # the text.
+    patterns:
+      - pattern: $EXPR as! $TYPE
+      - pattern-regex: \bas!
   - id: swift-unchecked-sendable
     message: >-
       Don't use @unchecked Sendable to silence a warning; make the type
