@@ -13,8 +13,8 @@ export default [
       },
     },
     rules: {
-      'curly': ['error', 'all'],
-      'eqeqeq': ['error', 'always'],
+      curly: ['error', 'all'],
+      eqeqeq: ['error', 'always'],
       'func-style': ['error', 'declaration', { allowArrowFunctions: true }],
       'no-eval': 'error',
       'no-new-func': 'error',
