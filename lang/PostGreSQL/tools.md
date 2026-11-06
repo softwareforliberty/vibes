@@ -78,6 +78,7 @@ require_final_semicolon = True
 
 [sqlfluff:rules:references.quoting]
 prefer_quoted_identifiers = False
+case_sensitive = False
 
 [sqlfluff:rules:structure.subquery]
 forbid_subquery_in = both
