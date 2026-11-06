@@ -19,14 +19,17 @@ test quality, so leave those areas to them.
 The brief from the main agent gives you:
 
 - **The task:** what the change is meant to do.
-- **The review directory:** it holds `diff.patch`, the full change against the
-  base branch, and `files.txt`, the list of changed files. Earlier rounds also
-  leave `findings-<reviewer>.md` and `responses.md` there.
-- **The languages involved**, and the round number.
+- **The review directory:** it holds `spec.md` and `design.md`, the approved
+  spec and design, `diff.patch`, the full change against the base branch,
+  and `files.txt`, the list of changed files. Earlier rounds also leave
+  `findings-<reviewer>.md` and `responses.md` there.
+- **The phase,** `spike` or `rebuild`, the languages involved, and the round
+  number.
 
-Read all of `diff.patch`, then read every changed file in full. Read the
-surrounding code when you need it to judge a change, but review only what the
-change adds or modifies.
+Read `spec.md` and `design.md` to learn what the change must do and how it's
+meant to be structured. Then read all of `diff.patch`, and every changed file
+in full. Read the surrounding code when you need it to judge a change, but
+review only what the change adds or modifies.
 
 ## Standards
 
