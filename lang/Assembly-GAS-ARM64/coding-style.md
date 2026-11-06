@@ -68,13 +68,13 @@ Assembly reads like a table. Keep four columns, separated by tabs that are
 FUNC_BEGIN buf_sum
 	mov	x2, x0			// keep the array pointer
 	mov	x0, xzr			// sum = 0
-	cbz	x1, .Lbuf_sum_done	// empty array: return 0
-.Lbuf_sum_loop:
+	cbz	x1, LOCAL(buf_sum_done)	// empty array: return 0
+LOCAL(buf_sum_loop):
 	ldr	x3, [x2], #8
 	add	x0, x0, x3
 	subs	x1, x1, #1
-	b.ne	.Lbuf_sum_loop
-.Lbuf_sum_done:
+	b.ne	LOCAL(buf_sum_loop)
+LOCAL(buf_sum_done):
 	ret
 FUNC_END buf_sum
 ```
@@ -130,14 +130,16 @@ FUNC_END buf_sum
 - Labels and symbols use `snake_case`.
 - **Global** symbols are descriptive and start with their module's prefix,
   exactly like the C names they implement: `buf_sum`, `ctx_switch`.
-- **Local** labels start with `.L`, so they stay out of the symbol table and
-  debuggers don't mistake them for routines. A local label is visible in the
-  whole file, so give it the routine's name followed by what happens there or
-  why the code jumps there: `.Lbuf_sum_loop`, `.Lbuf_flush_err_unlock`. Don't
-  use numbered labels like `1:` outside macros.
-- Source that also builds for Apple platforms writes local labels with the
-  `LOCAL()` macro, `LOCAL(buf_sum_loop)`, which supplies the prefix Mach-O
-  treats as local (see [Apple platforms](idioms.md#apple-platforms)).
+- **Local** labels are assembler-local, so they stay out of the symbol table
+  and debuggers don't mistake them for routines. Write them with the
+  `LOCAL()` macro from `asm.h`, which adds the prefix each object format
+  treats as local: `.L` on ELF and `L` on Mach-O. A label written with `.L`
+  by hand stays in the symbol table on Apple platforms (see
+  [Apple platforms](idioms.md#apple-platforms)).
+- A local label is visible in the whole file, so give it the routine's name
+  followed by what happens there or why the code jumps there:
+  `LOCAL(buf_sum_loop)`, `LOCAL(buf_flush_err_unlock)`. Don't use numbered
+  labels like `1:` outside macros.
 - Constants and macros are `UPPER_SNAKE_CASE`: `PAGE_SIZE`, `FUNC_BEGIN`. An
   uppercase macro name tells the reader that the line expands to more than
   one instruction.
@@ -149,7 +151,8 @@ FUNC_END buf_sum
 - Never define symbols that start with `__` or with `_` followed by a capital
   letter. C reserves those names for the compiler and the C library, and
   assembly symbols share C's namespace.
-- The `.L` prefix belongs to assembler-local labels. Use it only for them.
+- The `.L` prefix, and `L` on Mach-O, belong to assembler-local labels.
+  Write those only with `LOCAL()`, and start no other name with either.
 
 ## Constants and data
 
@@ -207,7 +210,7 @@ FUNC_END buf_sum
 - Use `.macro` and `.endm` for macros that expand to instructions, and
   `#define` only for constants and simple text substitution.
 - Labels inside a `.macro` end in `\@`, so each expansion gets its own:
-  `.Lzero_loop\@`.
+  `LOCAL(zero_loop\@)`.
 - A macro must not jump to a label outside itself, and must not depend on a
   register holding a magic value. Pass what it needs as parameters.
 - Document every macro with a comment that gives its parameters and every
