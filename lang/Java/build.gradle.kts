@@ -7,9 +7,9 @@ plugins {
     java
     jacoco
     pmd
-    id("com.github.spotbugs") version "6.5.8"
-    id("net.ltgt.errorprone") version "5.1.0"
-    id("org.owasp.dependencycheck") version "12.2.2"
+    id("com.github.spotbugs") version "6.5.13"
+    id("net.ltgt.errorprone") version "5.2.0"
+    id("org.owasp.dependencycheck") version "13.0.0"
 }
 
 repositories {
@@ -17,7 +17,7 @@ repositories {
 }
 
 dependencies {
-    errorprone("com.google.errorprone:error_prone_core:2.42.0")
+    errorprone("com.google.errorprone:error_prone_core:2.52.0")
     spotbugsPlugins("com.h3xstream.findsecbugs:findsecbugs-plugin:1.14.0")
 }
 
