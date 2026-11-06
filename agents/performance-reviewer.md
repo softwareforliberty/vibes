@@ -39,7 +39,8 @@ The standards for each language live in `${CLAUDE_PLUGIN_ROOT}/lang/`, one
 directory per language (list it to find the right name, for example
 `Python`, `TypeScript` or `CSharp`). For every language in the change, read:
 
-- `idioms.md`: its performance section, where it has one.
+- `idioms.md`: its performance section, where it has one, and its advice on
+  reading large files, wherever it is.
 
 ## What to check
 
@@ -52,6 +53,13 @@ directory per language (list it to find the right name, for example
 - **Wasted work:** no repeated computation, copying or allocation in hot
   paths that could be done once.
 - **Databases:** queries can use an index and fetch only what they need.
+- **Large data:** input that can grow without limit is streamed, never read
+  whole into memory. Reads and writes are buffered, not a system call for
+  each byte or line. A large file that's read at random positions or many
+  times is memory-mapped where the language's `idioms.md` says how, while
+  small files and single passes from start to end aren't. Copies between
+  files and sockets use the kernel's copy calls where the language makes
+  that easy.
 - **Evidence:** report a problem only when it has a real cost at realistic
   sizes. Don't ask for micro-optimisations that make code harder to read.
 
