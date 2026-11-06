@@ -1,0 +1,8 @@
+# Skeema lint settings. Every skeema command run in this directory or below
+# reads them.
+lint-pk=error
+lint-has-enum=error
+allow-engine=innodb
+lint-engine=error
+allow-charset=utf8mb4
+lint-charset=error

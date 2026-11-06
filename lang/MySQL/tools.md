@@ -19,6 +19,7 @@ These files are in this directory, ready to copy to the root of a project:
 | --- | --- |
 | [.editorconfig](.editorconfig) | Editors and IDEs |
 | [.sqlfluff](.sqlfluff) | SQLFluff |
+| [.skeema](.skeema) | Skeema |
 | [.jscpd.json](.jscpd.json) | jscpd |
 
 ## Configuration
@@ -109,15 +110,27 @@ are uppercase.
 Skeema lints table definitions by running them on a MySQL server, so it
 catches problems that depend on how MySQL reads a definition, which SQLFluff
 can't see. In CI, apply the migrations to an empty server, export the
-resulting schema with `skeema init`, then lint it with the checks that match
-[idioms.md](idioms.md):
+resulting schema with `skeema init`, then lint it:
 
 ```sh
 skeema init -h 127.0.0.1 -u ci --dir schema
 cd schema
-skeema lint --lint-pk=error --lint-has-enum=error \
-    --allow-engine=innodb --lint-engine=error \
-    --allow-charset=utf8mb4 --lint-charset=error
+skeema lint
+```
+
+Skeema reads [.skeema](.skeema) from the project root, as well as the one
+`skeema init` writes in `schema`. It sets the checks that match
+[idioms.md](idioms.md):
+
+```ini
+# Skeema lint settings. Every skeema command run in this directory or below
+# reads them.
+lint-pk=error
+lint-has-enum=error
+allow-engine=innodb
+lint-engine=error
+allow-charset=utf8mb4
+lint-charset=error
 ```
 
 ## Auditing
