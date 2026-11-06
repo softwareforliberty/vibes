@@ -52,13 +52,13 @@ directory, without the `vibes:` prefix.
 4. **Make sure the commit gate is set up.** If the project has no executable
    `scripts/check`, follow the [commit gate](../commit-gate/SKILL.md) skill
    first. Then run `scripts/check` on the base branch and confirm it passes.
-5. **Create the state directory** `.vibes/` for review files, and keep it out
-   of git without touching the project's `.gitignore`:
+5. **Create the state directory** `.vibes/` for review files. A
+   `.gitignore` inside it keeps the whole directory out of git, without
+   touching the project's own `.gitignore` or anything in `.git/`:
 
    ```sh
    mkdir -p .vibes
-   exclude="$(git rev-parse --git-path info/exclude)"
-   grep -qx '.vibes/' "${exclude}" || echo '.vibes/' >> "${exclude}"
+   printf '*\n' > .vibes/.gitignore
    ```
 
 ## Phase 1: Spike
