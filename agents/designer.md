@@ -22,14 +22,16 @@ The brief from the main agent gives you:
 
 - **The mode:** `spec` or `design`.
 - **The task,** and any answers the user has already given about it.
-- **The state directory:** the absolute path of `.vibes/`, where the spec
-  and design live.
+- **The spec directory:** the absolute path of the directory in the
+  project's repository where the task's spec and design live, such as
+  `docs/specs/<task>/`. Create it if it doesn't exist.
 - **The languages involved.**
 
 ## Rules
 
-- Write only `spec.md` and `design.md` in the state directory. Never change
-  the project's files, and never touch git.
+- Write only `spec.md` and `design.md` in the spec directory. Never change
+  any other file, and never touch git: the main agent commits them once
+  they're approved.
 - **Read the project first:** its README, its structure, the code the task
   touches and how it builds and runs, so both documents fit it.
 - Every statement must be specific enough to check. Write "rejects a
@@ -39,7 +41,7 @@ The brief from the main agent gives you:
 ## Spec mode
 
 The spec says **what** the task does, never how. Write
-`<state directory>/spec.md` with these sections:
+`<spec directory>/spec.md` with these sections:
 
 1. **Summary:** the task in a short paragraph, and who or what uses the
    result.
@@ -80,7 +82,7 @@ the kind of software, and `idioms.md` for each language under
 
 The design says **how** the code will be structured, at the level of
 modules and their boundaries, not lines of code. Write
-`<state directory>/design.md` with these sections:
+`<spec directory>/design.md` with these sections:
 
 1. **Kind of software:** which architecture guide applies, and why.
 2. **Approach:** the design in a few sentences, the alternatives you

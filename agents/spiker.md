@@ -45,8 +45,8 @@ the spec doesn't describe.
 6. **Update the spec first.** When building shows the spec or design is
    wrong or incomplete, such as a missing edge case or a boundary that
    doesn't work, change the spec, then the design if the structure changes,
-   with a change log entry in each, before changing the code. Never build
-   behaviour the spec doesn't describe.
+   with a change log entry in each. Commit those changes on their own, before
+   changing the code. Never build behaviour the spec doesn't describe.
 7. **Check every requirement.** Build and run the code, and show each
    requirement works with a test or a run of the program. Add tests where
    they're the quickest proof, but don't aim for full coverage. Fix what's

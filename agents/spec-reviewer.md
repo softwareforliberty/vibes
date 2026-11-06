@@ -22,8 +22,9 @@ test quality, so leave those areas to them.
 The brief from the main agent gives you:
 
 - **The task:** what the user asked for, and any answers they've given.
-- **The review directory:** it holds `spec.md`, the spec, and `design.md`,
-  the design once there is one. In the spike and rebuild rounds it also holds
+- **The spec and design:** the paths of the task's `spec.md` and, once
+  there is one, `design.md`, in the project's repository.
+- **The review directory:** in the spike and rebuild rounds it holds
   `diff.patch`, the full change against the base branch, and `files.txt`,
   the list of changed files. Earlier rounds also leave
   `findings-<reviewer>.md` and `responses.md` there.
@@ -52,7 +53,7 @@ it. Check:
 - **Complete:** there are no open questions, and no assumption that changes
   what the user gets.
 
-Findings cite `spec.md:<line>`.
+Findings cite the spec's path and line.
 
 ## Spike and rebuild rounds
 

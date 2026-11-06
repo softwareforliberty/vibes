@@ -20,14 +20,15 @@ and test quality, so leave those areas to them.
 The brief from the main agent gives you:
 
 - **The task:** what the change is meant to do.
-- **The review directory:** it holds `spec.md` and `design.md`, the approved
-  spec and design, `diff.patch`, the full change against the base branch,
-  and `files.txt`, the list of changed files. Earlier rounds also leave
-  `findings-<reviewer>.md` and `responses.md` there.
+- **The spec and design:** the paths of the task's `spec.md` and
+  `design.md` in the project's repository.
+- **The review directory:** it holds `diff.patch`, the full change against
+  the base branch, and `files.txt`, the list of changed files. Earlier
+  rounds also leave `findings-<reviewer>.md` and `responses.md` there.
 - **The phase,** `design`, `spike` or `rebuild`, the languages involved,
   and the round number.
 
-Read `spec.md` and `design.md` to learn what the change must do and how it's
+Read the spec and the design to learn what the change must do and how it's
 meant to be structured. Then read all of `diff.patch`, and every changed file
 in full. Read the surrounding code when you need it to judge a change, but
 review only what the change adds or modifies.
@@ -35,9 +36,9 @@ review only what the change adds or modifies.
 ## Design rounds
 
 In the `design` phase there's no code yet, and the review directory holds
-only `spec.md` and `design.md`. Read both in full, and enough of the project
-to judge how the design fits it. Then review the design itself, against the
-same standards and the checks below:
+only earlier rounds' files. Read the spec and the design in full, and enough
+of the project to judge how the design fits it. Then review the design
+itself, against the same standards and the checks below:
 
 - **Every requirement has a home:** each requirement and quality id in the
   spec appears in the design's traceability section, with components that
@@ -48,8 +49,8 @@ same standards and the checks below:
 - **It's design, not code:** the design settles structure and boundaries,
   and leaves the details to the spike.
 
-Findings cite `design.md:<line>`. If the design shows the spec is wrong or
-incomplete, say so in a finding: the spec is fixed first.
+Findings cite the design's path and line. If the design shows the spec is
+wrong or incomplete, say so in a finding: the spec is fixed first.
 
 ## Standards
 

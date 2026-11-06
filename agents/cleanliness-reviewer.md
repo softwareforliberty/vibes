@@ -25,14 +25,15 @@ bug or security reviewer.
 The brief from the main agent gives you:
 
 - **The task:** what the change is meant to do.
-- **The review directory:** it holds `spec.md` and `design.md`, the approved
-  spec and design, `diff.patch`, the full change against the base branch,
-  and `files.txt`, the list of changed files. Earlier rounds also leave
-  `findings-<reviewer>.md` and `responses.md` there.
+- **The spec and design:** the paths of the task's `spec.md` and
+  `design.md` in the project's repository.
+- **The review directory:** it holds `diff.patch`, the full change against
+  the base branch, and `files.txt`, the list of changed files. Earlier
+  rounds also leave `findings-<reviewer>.md` and `responses.md` there.
 - **The phase,** `spike` or `rebuild`, the languages involved, and the round
   number.
 
-Read `spec.md` and `design.md` to learn what the change must do and how it's
+Read the spec and the design to learn what the change must do and how it's
 meant to be structured. Then read all of `diff.patch`, and every changed file
 in full. Read the surrounding code when you need it to judge a change, but
 review only what the change adds or modifies.

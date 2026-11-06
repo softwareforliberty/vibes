@@ -25,7 +25,9 @@ Run it in a project with `/vibes:vibe <task>`:
    error and edge case, each testable. You answer any open questions, and a
    spec reviewer checks it until it's complete.
 2. **Design.** The designer writes the design to the spec, and the
-   architecture reviewer checks it before any code exists.
+   architecture reviewer checks it before any code exists. The spec and
+   design are committed in your repository, in `docs/specs/<task>/` or
+   wherever the project already keeps them.
 3. **Spike.** A subagent builds the whole task quickly to the spec and
    design on a `spike/<task>` branch.
 4. **Review.** Reviewer subagents critique the spike in parallel, one each

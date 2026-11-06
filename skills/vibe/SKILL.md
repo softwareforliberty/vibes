@@ -48,16 +48,18 @@ directory, without the `vibes:` prefix.
 
 ## The spec comes first
 
-`.vibes/spec.md` is the single source of truth for what the task does, and
-`.vibes/design.md` for how its code is structured.
+The spec is the single source of truth for what the task does, and the
+design for how its code is structured. Both are part of the project: they
+live in its repository, in the spec directory, and are committed with the
+code.
 
 - **The spec is complete and approved before the design starts,** and the
   design is approved before any code is written.
 - **Every change goes into the spec first.** A review finding that changes
   behaviour, an edge case found while building, a change the user asks for:
-  each is written into the spec, with a change log entry, before any code
-  changes. If it changes the structure, the design is updated next. Only
-  then does the code change.
+  each is written into the spec, with a change log entry, and committed on
+  its own before any code changes. If it changes the structure, the design
+  is updated next, the same way. Only then does the code change.
 - **No code does anything the spec doesn't describe.**
 - **If a change would alter what the user asked for,** ask the user before
   writing it into the spec.
@@ -70,8 +72,8 @@ directory, without the `vibes:` prefix.
 
 1. **Understand the task.** If the task is unclear or missing, ask the user
    before doing anything else. Pick a short kebab-case name for it, such as
-   `order-export`. The spike branch is `spike/<name>` and the rebuild branch
-   is `vibe/<name>`.
+   `order-export`. The rebuild branch is `vibe/<name>` and the spike branch
+   is `spike/<name>`.
 2. **Check the working tree is clean** with `git status`. If it isn't, ask
    the user what to do with the changes. Note the current branch: it's the
    base branch.
@@ -83,10 +85,14 @@ directory, without the `vibes:` prefix.
    Commit the gate setup on the base branch as one commit of its own, so the
    spike and rebuild branches both start with it, and list it in the final
    report.
-5. **Create the state directory** `.vibes/` for the spec, the design and
-   review files. A `.gitignore` inside it keeps the whole directory out of
-   git, without touching the project's own `.gitignore` or anything in
-   `.git/`:
+5. **Choose the spec directory,** where the task's `spec.md` and
+   `design.md` will live in the repository. If the project already keeps
+   specs or design documents somewhere, use a directory for the task there.
+   Otherwise use `docs/specs/<name>/`.
+6. **Create the state directory** `.vibes/` for the workflow's own working
+   files: review rounds, the spike report and the rebuild plan. A
+   `.gitignore` inside it keeps the whole directory out of git, without
+   touching the project's own `.gitignore` or anything in `.git/`:
 
    ```sh
    mkdir -p .vibes
@@ -99,9 +105,8 @@ Every review in the workflow runs in rounds, the same way. A round reviews
 one phase: `spec`, `design`, `spike` or `rebuild`.
 
 1. **Prepare the round directory,** `.vibes/review/<phase>-<round>/` (for
-   example `.vibes/review/spike-1/`). Copy in `.vibes/spec.md`, and
-   `.vibes/design.md` once it exists. In the spike and rebuild phases, add
-   the change:
+   example `.vibes/review/spike-1/`). In the spike and rebuild phases, save
+   the change in it:
 
    ```sh
    git diff <base>...HEAD > .vibes/review/spike-1/diff.patch
@@ -117,6 +122,8 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
 
    ```text
    Task: <the task, and the user's answers to any questions>
+   Spec: <absolute path to spec.md>
+   Design: <absolute path to design.md, once it exists>
    Review directory: <absolute path to .vibes/review/spike-1>
    Phase: <spec, design, spike or rebuild>
    Languages: <languages>
@@ -136,7 +143,8 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
 5. **Record a response to every finding** in the round's `responses.md`:
    `fixed`, `rejected: <reason>` or `deferred: <reason>` (MINOR only).
 6. **Check the fixes.** In the spike and rebuild phases, run the code and
-   tests, then commit the fixes.
+   tests, then commit the fixes: any spec and design changes first, each in a
+   commit of its own, then the code.
 7. **Start the next round** with only the reviewers that requested changes.
 8. **Repeat** until every reviewer's latest verdict is `APPROVED`. Then, if
    anything changed after a reviewer approved it, run that reviewer once
@@ -150,13 +158,17 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
 
 ## Phase 1: Spec
 
-1. Spawn `vibes:designer` in `spec` mode, with the task, the absolute path
-   of `.vibes/` and the languages.
-2. **Resolve every open question.** Ask the user each one in the spec's
+1. Create the rebuild branch from the base branch:
+   `git switch -c vibe/<name>`. The spec and design are committed here, so
+   the spike and the rebuild both start from them.
+2. Spawn `vibes:designer` in `spec` mode, with the task, the absolute path
+   of the spec directory and the languages.
+3. **Resolve every open question.** Ask the user each one in the spec's
    open questions section, then write their answers into the spec as
    requirements, and empty the section.
-3. **Review the spec** in rounds with `vibes:spec-reviewer`, fixing its
+4. **Review the spec** in rounds with `vibes:spec-reviewer`, fixing its
    findings in `spec.md`, until it approves.
+5. **Commit the approved spec** on its own, through the gate.
 
 ## Phase 2: Design
 
@@ -166,14 +178,15 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
    shows the spec is wrong or incomplete goes back into the spec first, and
    the spec reviewer approves the changed spec in a `spec` round before the
    design rounds go on.
+3. **Commit the approved design** on its own, after any spec changes.
 
 ## Phase 3: Spike
 
-1. Create the spike branch from the base branch:
-   `git switch -c spike/<name>`.
+1. Create the spike branch from the rebuild branch, so it starts with the
+   spec and design: `git switch -c spike/<name>`.
 2. Spawn `vibes:spiker` with a brief giving the task, the spike branch, the
-   base branch, the absolute paths of `.vibes/spec.md` and `.vibes/design.md`,
-   and the languages.
+   base branch, the absolute paths of `spec.md` and `design.md`, and the
+   languages.
 3. Save its report to `.vibes/spike-report.md`. Check the spike's commits are
    on `spike/<name>`, and that the working tree is clean. If the spiker
    changed the spec or design, read each change log entry, and ask the user
@@ -198,8 +211,16 @@ stays on `spike/<name>` and is never merged.
      names the ids it covers, and every id appears at least once.
    - **Lessons:** what the review rounds changed, so the rebuild gets it right
      first time.
-2. Switch back to the base branch and create the rebuild branch:
-   `git switch <base> && git switch -c vibe/<name>`.
+2. Switch to the rebuild branch, and bring over the spec and design as the
+   spike review left them, in one commit of their own:
+
+   ```sh
+   git switch vibe/<name>
+   git checkout spike/<name> -- <spec directory>
+   ```
+
+   Their change logs say what changed and why. Commit nothing else from the
+   spike.
 
 ## Phase 6: Rebuild test-first
 
@@ -235,8 +256,8 @@ verdict must be `APPROVED`, with every requirement met and tested.
 2. Check `git status` is clean and `scripts/check` passes.
 3. Report to the user:
    - the rebuild branch and its commits (`git log --oneline <base>..HEAD`)
-   - the spec and design in `.vibes/`, every change made to the spec after
-     it was approved, and the spec reviewer's final coverage
+   - the spec and design in the spec directory, every change made to the
+     spec after it was approved, and the spec reviewer's final coverage
    - every reviewer's final verdict, and any deferred MINOR findings
    - the spike branch, kept for reference: ask whether to delete it
 4. Don't push, merge or open a pull request unless the user asks.
