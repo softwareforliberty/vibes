@@ -30,7 +30,8 @@ settings on this page.
 `build.gradle.kts` is a template: merge its settings into the project's own
 build script. `.groovylintrc.json` builds on npm-groovy-lint's recommended
 rules and sets the same indentation, line length, complexity and method size
-limits as `codenarc.xml`.
+limits as `codenarc.xml`. It also requires a space after the colon in map
+literals, which `npm-groovy-lint --format` would otherwise report.
 
 ## Recommended setup
 

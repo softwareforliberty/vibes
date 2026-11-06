@@ -7,6 +7,9 @@
     "formatting.LineLength": {
       "length": 120
     },
+    "formatting.SpaceAroundMapEntryColon": {
+      "characterAfterColonRegex": "\\s"
+    },
     "size.CyclomaticComplexity": {
       "maxMethodComplexity": 10
     },
