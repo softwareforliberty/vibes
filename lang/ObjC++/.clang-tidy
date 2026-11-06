@@ -10,10 +10,15 @@ Checks: >
   performance-*,
   readability-*,
   -bugprone-easily-swappable-parameters,
+  -cppcoreguidelines-use-enum-class,
   -google-readability-todo,
+  -misc-const-correctness,
   -modernize-use-trailing-return-type,
+  -modernize-use-using,
+  -performance-enum-size,
   -readability-identifier-length,
-  -readability-identifier-naming
+  -readability-identifier-naming,
+  -readability-redundant-parentheses
 WarningsAsErrors: "*"
 CheckOptions:
   readability-implicit-bool-conversion.AllowPointerConditions: true

@@ -79,10 +79,15 @@ Checks: >
   performance-*,
   readability-*,
   -bugprone-easily-swappable-parameters,
+  -cppcoreguidelines-use-enum-class,
   -google-readability-todo,
+  -misc-const-correctness,
   -modernize-use-trailing-return-type,
+  -modernize-use-using,
+  -performance-enum-size,
   -readability-identifier-length,
-  -readability-identifier-naming
+  -readability-identifier-naming,
+  -readability-redundant-parentheses
 WarningsAsErrors: "*"
 CheckOptions:
   readability-implicit-bool-conversion.AllowPointerConditions: true
@@ -90,6 +95,13 @@ CheckOptions:
 
 - Identifier naming is checked by review, not clang-tidy. One file holds two
   naming schemes, and the check can't tell which applies where.
+- Five more checks are off because they reject Objective-C idioms the style
+  guide requires. `cppcoreguidelines-use-enum-class`, `modernize-use-using`
+  and `performance-enum-size` reject `typedef NS_ENUM` and block `typedef`s.
+  `readability-redundant-parentheses` rejects `__typeof__(self)` in the
+  weak-self pattern, and `misc-const-correctness` asks for `NSString *const`
+  on every Objective-C local. Reviewers check the `enum class` rule in C++
+  code.
 - Suppress a warning only on the line that needs it, with
   `// NOLINT(check-name)` and a reason. A bare `NOLINT` hides every check,
   including ones nobody meant to silence.
