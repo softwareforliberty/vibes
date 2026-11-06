@@ -30,6 +30,7 @@ settings on this page.
 | [`eslint.config.js`](eslint.config.js) | ESLint |
 | [`knip.json`](knip.json) | Knip |
 | [`.c8rc.json`](.c8rc.json) | c8 |
+| [`tsconfig.json`](tsconfig.json) | `tsc`, for the optional type check |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 | [`.opengrep/javascript.yaml`](.opengrep/javascript.yaml) | Opengrep |
 
@@ -97,9 +98,34 @@ export default [
 - Prettier owns layout. Don't hand-format code it will rewrite, and don't
   argue with its output in review. ESLint checks only for bugs and unsafe
   patterns, so the two never conflict.
-- Optional type checking: add `// @ts-check` to the top of a file, or run
-  `npx tsc --noEmit --allowJs --checkJs`, to check the
-  [JSDoc](coding-style.md#comments) types. The source stays plain JavaScript.
+- Optional type checking: add `// @ts-check` to the top of a file to check
+  its [JSDoc](coding-style.md#comments) types in the editor, or run
+  `npx tsc` to check every file with the settings in `tsconfig.json`. The
+  source stays plain JavaScript.
+
+`tsconfig.json`, for the optional type check:
+
+```json
+{
+  "compilerOptions": {
+    "target": "es2022",
+    "module": "nodenext",
+    "types": ["node"],
+    "strict": true,
+    "allowJs": true,
+    "checkJs": true,
+    "noEmit": true
+  },
+  "include": ["src"]
+}
+```
+
+- Install `typescript` and `@types/node` as dev dependencies, so `npx tsc`
+  runs the project's compiler.
+- `allowJs` and `checkJs` check the JSDoc types in `.js` files, and
+  `noEmit` stops `tsc` writing any output.
+- `types` loads the Node.js types, which the tests need. TypeScript 6 and
+  later load no `@types` package unless it's listed here.
 
 ## Auditing
 
