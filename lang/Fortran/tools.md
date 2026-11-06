@@ -65,6 +65,10 @@ Put its settings in `fortitude.toml` at the project root:
 ```toml
 [check]
 line-length = 100
+# C003 asks for implicit none (type, external). This guide writes plain
+# implicit none, and gfortran's -Wimplicit-interface reports the calls
+# without an explicit interface that C003 guards against.
+ignore = ["C003"]
 ```
 
 ## Formatting
