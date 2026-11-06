@@ -85,6 +85,8 @@ if ($user) {
   `foreach ($item in $items)`.
 - One space inside the braces of a one-line script block:
   `{ $_.Name }`. No spaces just inside parentheses.
+- Line up the `=` signs of a multi-line hashtable, as in the splatting
+  example under [Commands](#commands). The formatter does it for you.
 
 ## Naming
 

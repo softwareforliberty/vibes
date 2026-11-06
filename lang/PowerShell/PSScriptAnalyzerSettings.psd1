@@ -20,13 +20,18 @@
             IndentationSize = 4
         }
         PSUseConsistentWhitespace                 = @{
-            Enable          = $true
-            CheckInnerBrace = $true
-            CheckOpenBrace  = $true
-            CheckOpenParen  = $true
-            CheckOperator   = $true
-            CheckPipe       = $true
-            CheckSeparator  = $true
+            Enable                                  = $true
+            CheckInnerBrace                         = $true
+            CheckOpenBrace                          = $true
+            CheckOpenParen                          = $true
+            CheckOperator                           = $true
+            CheckPipe                               = $true
+            CheckSeparator                          = $true
+            IgnoreAssignmentOperatorInsideHashTable = $true
+        }
+        PSAlignAssignmentStatement                = @{
+            Enable         = $true
+            CheckHashtable = $true
         }
         PSUseCorrectCasing                        = @{ Enable = $true }
         PSAvoidLongLines                          = @{

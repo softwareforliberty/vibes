@@ -77,13 +77,18 @@ the [style guide](coding-style.md):
             IndentationSize = 4
         }
         PSUseConsistentWhitespace                 = @{
-            Enable          = $true
-            CheckInnerBrace = $true
-            CheckOpenBrace  = $true
-            CheckOpenParen  = $true
-            CheckOperator   = $true
-            CheckPipe       = $true
-            CheckSeparator  = $true
+            Enable                                  = $true
+            CheckInnerBrace                         = $true
+            CheckOpenBrace                          = $true
+            CheckOpenParen                          = $true
+            CheckOperator                           = $true
+            CheckPipe                               = $true
+            CheckSeparator                          = $true
+            IgnoreAssignmentOperatorInsideHashTable = $true
+        }
+        PSAlignAssignmentStatement                = @{
+            Enable         = $true
+            CheckHashtable = $true
         }
         PSUseCorrectCasing                        = @{ Enable = $true }
         PSAvoidLongLines                          = @{
@@ -95,6 +100,11 @@ the [style guide](coding-style.md):
     }
 }
 ```
+
+`PSAlignAssignmentStatement` lines up the `=` signs of a multi-line
+hashtable, and `IgnoreAssignmentOperatorInsideHashTable` stops
+`PSUseConsistentWhitespace` from flagging the extra spaces that alignment
+adds, so the two rules don't fight.
 
 Never suppress a rule with `[Diagnostics.CodeAnalysis.SuppressMessageAttribute()]`
 without a `Justification` that explains why.
