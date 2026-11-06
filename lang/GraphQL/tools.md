@@ -63,7 +63,11 @@ export default [
     files: ['schema/**/*.graphql'],
     rules: {
       ...graphqlPlugin.configs['flat/schema-recommended'].rules,
-      '@graphql-eslint/input-name': ['error', { checkInputType: true }],
+      '@graphql-eslint/description-style': 'off',
+      '@graphql-eslint/input-name': [
+        'error',
+        { checkInputType: true, caseSensitiveInputType: false },
+      ],
       '@graphql-eslint/no-unused-fields': 'error',
       '@graphql-eslint/require-description': [
         'error',
@@ -73,6 +77,10 @@ export default [
           FieldDefinition: true,
           InputValueDefinition: true,
         },
+      ],
+      '@graphql-eslint/strict-id-in-types': [
+        'error',
+        { exceptions: { suffixes: ['Error', 'Payload'] } },
       ],
     },
   },
@@ -90,6 +98,13 @@ export default [
   require a reason on every `@deprecated`, and require an `id` field on
   object types. The overrides add the `Input` naming for mutation inputs and
   a description on every type, field, argument and enum value.
+- `caseSensitiveInputType: false` lets `cancelOrder` take a
+  `CancelOrderInput`. Without it, the rule expects `cancelOrderInput`.
+- The `id` check leaves out the `Payload` and `Error` types that the
+  [idioms](idioms.md#errors) use, which have no identity of their own.
+- `description-style` is off: it allows only block strings or only plain
+  strings, and the [style guide](coding-style.md#descriptions-and-comments)
+  uses both.
 - The recommended operation rules reject anonymous operations, check every
   operation against the schema, and report unused fragments and variables.
 - `eslint.config.js` is an ES module, like all code in this guide, so the
