@@ -74,9 +74,11 @@ the style guide.
 
 ## Decimal arithmetic
 
-- **Store money as packed decimal** (`COMP-3`) or display numeric fields,
-  with the decimal places in the picture: `PIC S9(11)V99 COMP-3`. Never use
-  the floating-point types `COMP-1` and `COMP-2` for money.
+- **Store money as packed decimal** or display numeric fields, with the
+  decimal places in the picture: `PIC S9(11)V99 PACKED-DECIMAL`. Write the
+  standard `PACKED-DECIMAL`, not the vendor spelling `COMP-3`, which
+  `-std=cobol2014` rejects. Never use the floating-point types `COMP-1` and
+  `COMP-2` for money.
 - Add `ROUNDED` to every calculation whose result has fewer decimal places
   than its inputs. Without it, the result is truncated.
 - Add `ON SIZE ERROR` to every calculation whose result could overflow the

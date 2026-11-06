@@ -117,7 +117,7 @@ with.
                88  WS-END-OF-CUSTOMERS           VALUE "Y".
        01  WS-TOTALS.
            05  WS-RECORD-COUNT         PIC 9(7)  VALUE ZERO.
-           05  WS-BALANCE-TOTAL        PIC S9(11)V99 COMP-3
+           05  WS-BALANCE-TOTAL        PIC S9(11)V99 PACKED-DECIMAL
                                                  VALUE ZERO.
 ```
 
