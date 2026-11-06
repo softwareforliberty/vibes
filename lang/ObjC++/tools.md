@@ -44,6 +44,7 @@ keeps diffs free of whitespace noise.
 Language: Cpp
 BasedOnStyle: Google
 DerivePointerAlignment: false
+IncludeBlocks: Preserve
 PointerAlignment: Right
 ---
 Language: ObjC
@@ -54,7 +55,11 @@ PointerAlignment: Right
 ```
 
 clang-format formats `.mm` files and Objective-C headers with the `ObjC`
-section, and pure C++ files with the `Cpp` section.
+section, and pure C++ files with the `Cpp` section. `IncludeBlocks: Preserve`
+keeps the include groups as written, as Google's Objective-C style already
+does. clang-format can't tell other libraries' headers from this project's,
+so it would otherwise merge those two
+[include groups](coding-style.md#include-order).
 
 ## Linting
 

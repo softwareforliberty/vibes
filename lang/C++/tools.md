@@ -44,8 +44,14 @@ keeps diffs free of whitespace noise.
 Language: Cpp
 BasedOnStyle: Google
 DerivePointerAlignment: false
+IncludeBlocks: Preserve
 PointerAlignment: Right
 ```
+
+`IncludeBlocks: Preserve` sorts includes within each group and keeps the
+groups as written. clang-format can't tell other libraries' headers from this
+project's, so it would merge those two
+[include groups](coding-style.md#include-order).
 
 ## Linting
 
