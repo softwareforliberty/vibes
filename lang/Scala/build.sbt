@@ -29,5 +29,8 @@ coverageMinimumStmtTotal := 80
 coverageMinimumBranchTotal := 80
 coverageFailOnMinimum := true
 
-// Fail the build on any vulnerability with a CVSS score of 7 or more.
+// Fail the build on any vulnerability with a CVSS score of 7 or more. The
+// dependencyCheck task reads the key dynamically, which sbt's unused-key check
+// can't see, so exclude it from that check.
 dependencyCheckFailBuildOnCVSS := 7
+Global / excludeLintKeys += dependencyCheckFailBuildOnCVSS
