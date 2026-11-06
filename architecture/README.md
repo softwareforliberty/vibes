@@ -16,6 +16,7 @@ dependency inversion above all.
 | --- | --- |
 | Web applications, HTTP APIs and the services behind them | [Web applications](web-applications.md) |
 | Desktop and other GUI applications | [Desktop applications](desktop-applications.md) |
+| OS components: kernels, drivers, firmware, system services and system libraries | [OS components](os-components.md) |
 | Anything else, such as a library, a command-line tool or a script | This page alone |
 
 A task that spans kinds uses the guide for each part.
