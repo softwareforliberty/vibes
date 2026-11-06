@@ -70,14 +70,12 @@ Put the settings in `.perlcriticrc`:
 ```ini
 severity = 3
 verbose  = 8
+# Test files have no shebang. Treat them as programs, not modules.
+program-extensions = .pl .t
 
-# use v5.36 turns on warnings, which this policy doesn't recognise in
-# every Perl::Critic release. It already treats use v5.12 or later as
-# turning on strict.
-[-TestingAndDebugging::RequireUseWarnings]
-
-# Signatures look like prototypes to this policy.
-[-Subroutines::ProhibitSubroutinePrototypes]
+# Every file starts with use v5.36, which this policy rejects as a
+# version string.
+[-ValuesAndExpressions::ProhibitVersionStrings]
 
 [Subroutines::ProhibitExcessComplexity]
 max_mccabe = 10
@@ -86,6 +84,10 @@ max_mccabe = 10
 Severity 3 adds the *Perl Best Practices* policies on top of the most
 serious ones. Never silence a policy with a `## no critic` comment without
 naming the policy and giving the reason on the same line.
+
+Use Perl::Critic 1.144 or later with PPI 1.281 or later. Older releases
+don't know that `use v5.36` turns on warnings and signatures, so they
+report every file.
 
 ## Auditing
 
