@@ -40,8 +40,11 @@ the project's own build.
 Format, then check. Code must build with **no warnings** and no findings.
 
 ```sh
-sbt scalafmtCheckAll "scalafixAll --check" compile
+sbt "scalafmtCheckAll; scalafixAll --check; compile"
 ```
+
+Pass the commands as one argument, separated by `;`. sbt 2 runs its
+arguments as a single command line, so separate arguments don't work there.
 
 Configure scalafmt in [`.scalafmt.conf`](.scalafmt.conf). Pin the version,
 so every machine formats the same way. The settings indent parameter lists
@@ -221,5 +224,5 @@ build pass.
 branches with scoverage, and fails the build below it:
 
 ```sh
-sbt clean coverage test coverageReport
+sbt "clean; coverage; test; coverageReport"
 ```
