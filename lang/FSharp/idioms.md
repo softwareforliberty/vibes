@@ -39,7 +39,10 @@ F# code correct, safe and maintainable. Every example follows the style guide.
 
   module Email =
       let create (text: string) : Result<Email, string> =
-          if text.Contains('@') then Ok(Email text) else Error "Email must contain @"
+          if text.Contains('@') then
+              Ok(Email text)
+          else
+              Error "Email must contain @"
 
       let value (Email text) = text
   ```

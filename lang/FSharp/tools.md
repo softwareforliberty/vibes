@@ -172,6 +172,7 @@ fsharp_space_before_uppercase_invocation = false
 fsharp_space_before_colon = false
 fsharp_space_after_comma = true
 fsharp_space_around_delimiter = true
+fsharp_multiline_bracket_style = aligned
 fsharp_keep_max_number_of_blank_lines = 1
 
 # JetBrains Rider, Visual Studio and VS Code (Ionide) format F# with Fantomas,

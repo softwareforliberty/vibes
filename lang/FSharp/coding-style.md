@@ -146,7 +146,7 @@ next to the .NET libraries it calls.
 ## Types
 
 - Write a record or union on one line only if it's short. Otherwise, put each
-  field or case on its own line:
+  field or case on its own line, and a record's braces on lines of their own:
 
   ```fsharp
   type PaymentResult =
@@ -155,9 +155,11 @@ next to the .NET libraries it calls.
       | Pending
 
   type Address =
-      { Street: string
-        City: string
-        PostCode: string }
+      {
+          Street: string
+          City: string
+          PostCode: string
+      }
   ```
 
 - Name the fields of union cases (`Approved of receipt: Receipt`), so pattern
