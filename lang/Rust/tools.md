@@ -28,7 +28,7 @@ describes.
 | File | Read by |
 | --- | --- |
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, including RustRover |
-| [`Cargo.toml`](Cargo.toml) | Cargo, rustc and Clippy: the edition, the minimum Rust version and the lints |
+| [`Cargo.toml`](Cargo.toml) | Cargo, rustc and Clippy: the edition, the minimum Rust version, the licence and the lints |
 | [`clippy.toml`](clippy.toml) | Clippy |
 | [`deny.toml`](deny.toml) | cargo-deny |
 | [`.opengrep/rust.yaml`](.opengrep/rust.yaml) | Opengrep: starter rules for the [unsafe code](idioms.md#unsafe-code) and [concurrency](idioms.md#concurrency) idioms |
@@ -65,6 +65,7 @@ name = "example"
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85"
+license = "MIT OR Apache-2.0"
 
 [lints.rust]
 missing_docs = "warn"
@@ -144,11 +145,17 @@ allowed licences, and only crates from crates.io. Put the settings in
 
 [licenses]
 allow = ["Apache-2.0", "BSD-3-Clause", "ISC", "MIT", "Unicode-3.0"]
+unused-allowed-license = "allow"
 
 [sources]
 unknown-registry = "deny"
 unknown-git = "deny"
 ```
+
+cargo-deny checks the project's own crates too, so the `Cargo.toml`
+template declares a `license`; `MIT OR Apache-2.0` is the Rust convention.
+`unused-allowed-license = "allow"` stops warnings about allowed licences
+that no dependency uses yet.
 
 ```sh
 cargo deny check licenses sources
