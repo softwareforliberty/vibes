@@ -1,0 +1,115 @@
+#!/usr/bin/env bash
+#
+# Checks the tests against the specs' requirement ids. Each test names the
+# requirements it covers in a comment, with the spec's directory name:
+#
+#   # Covers: order-export R1, R4
+#
+# Usage: scripts/check-requirements [--all] SPEC... -- PATH...
+#
+# It fails when a test names an id its spec doesn't have, an id the spec
+# marks as removed, or a spec that isn't given. With --all, it also fails
+# when an id in a spec has no test that covers it. SPEC is a spec.md, and
+# PATH a test file or directory to search.
+
+set -euo pipefail
+
+# A requirement line in a spec, such as "- **R4:** When ...".
+ID_RE='^[[:space:]]*-[[:space:]]+\*\*([RQ][0-9]+):\*\*'
+ID_RE+='[[:space:]]*(.*)$'
+readonly ID_RE
+# A marker in a test, such as "Covers: order-export R1, R4".
+MARKER_RE='Covers:[[:space:]]+[A-Za-z0-9._-]+'
+MARKER_RE+='([[:space:],]+[RQ][0-9]+)+'
+readonly MARKER_RE
+
+failed=0
+
+fail() {
+  printf 'check-requirements: %s\n' "$*" >&2
+  failed=1
+}
+
+# Prints "<id> live" or "<id> removed" for each requirement in a spec.
+spec_ids() {
+  local line
+  while IFS= read -r line; do
+    if [[ "${line}" =~ ${ID_RE} ]]; then
+      if [[ "${BASH_REMATCH[2]}" == Removed* ]]; then
+        printf '%s removed\n' "${BASH_REMATCH[1]}"
+      else
+        printf '%s live\n' "${BASH_REMATCH[1]}"
+      fi
+    fi
+  done <"$1"
+}
+
+# Prints "<spec name> <id>" for each id named in a marker under the paths.
+covered_ids() {
+  local marker name id
+  local -a words
+  while IFS= read -r marker; do
+    read -r -a words <<<"${marker//,/ }"
+    name="${words[1]}"
+    for id in "${words[@]:2}"; do
+      printf '%s %s\n' "${name}" "${id}"
+    done
+  done < <(grep -rhoE -- "${MARKER_RE}" "$@" || true)
+}
+
+main() {
+  local all="" spec name id state
+  local -a specs=() paths=()
+  if [[ "${1:-}" == "--all" ]]; then
+    all="yes"
+    shift
+  fi
+  while (($# > 0)) && [[ "$1" != "--" ]]; do
+    specs+=("$1")
+    shift
+  done
+  if (($# == 0)) || ((${#specs[@]} == 0)); then
+    printf 'usage: %s [--all] SPEC... -- PATH...\n' "$0" >&2
+    exit 2
+  fi
+  shift
+  paths=("$@")
+  if ((${#paths[@]} == 0)); then
+    printf 'usage: %s [--all] SPEC... -- PATH...\n' "$0" >&2
+    exit 2
+  fi
+
+  # Every spec's ids, as "<spec name> <id> <live|removed>" lines.
+  local known="" covered
+  for spec in "${specs[@]}"; do
+    name="$(basename -- "$(dirname -- "${spec}")")"
+    while read -r id state; do
+      known+="${name} ${id} ${state}"$'\n'
+    done < <(spec_ids "${spec}")
+  done
+  covered="$(covered_ids "${paths[@]}" | sort -u)"
+
+  while read -r name id; do
+    [[ -n "${name}" ]] || continue
+    if [[ $'\n'"${known}" != *$'\n'"${name} "* ]]; then
+      fail "a test covers ${name} ${id}, but no spec given is named ${name}"
+    elif [[ $'\n'"${known}" == *$'\n'"${name} ${id} removed"$'\n'* ]]; then
+      fail "a test covers ${name} ${id}, which the spec marks as removed"
+    elif [[ $'\n'"${known}" != *$'\n'"${name} ${id} live"$'\n'* ]]; then
+      fail "a test covers ${name} ${id}, which the spec doesn't have"
+    fi
+  done <<<"${covered}"
+
+  if [[ -n "${all}" ]]; then
+    while read -r name id state; do
+      [[ -n "${name}" && "${state}" == "live" ]] || continue
+      if [[ $'\n'"${covered}"$'\n' != *$'\n'"${name} ${id}"$'\n'* ]]; then
+        fail "no test covers ${name} ${id}"
+      fi
+    done <<<"${known}"
+  fi
+
+  exit "${failed}"
+}
+
+main "$@"

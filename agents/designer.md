@@ -45,8 +45,8 @@ The spec says **what** the task does, never how. Copy
 `<spec directory>/spec.md`, and fill in every section as its comment
 describes, replacing the comments.
 
-- Never renumber ids. A removed requirement keeps its id, marked as
-  removed, with the reason.
+- Never renumber ids. A removed requirement keeps its id, written as
+  `- **R3:** Removed: <the reason>.`
 - An assumption is only for a detail. Anything that changes what the user
   gets is an open question, with the options you see.
 

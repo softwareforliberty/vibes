@@ -71,6 +71,13 @@ that's **local and reasonably fast**:
   enforce the dependency rules between the project's layers. When the
   project has a design document, such as the `design.md` the vibe workflow
   writes, the rules come from it.
+- **Requirement markers,** when the project keeps specs with requirement
+  ids, such as the vibe workflow's. Copy
+  `${CLAUDE_PLUGIN_ROOT}/skills/commit-gate/templates/check-requirements`
+  to `scripts/check-requirements`. In `scripts/check`, it fails when a test's
+  `Covers:` comment names a requirement its spec doesn't have, or one the
+  spec marks as removed. Requirements without a test yet are allowed here,
+  because a test-first build adds them one commit at a time.
 
 Rules for the script:
 
@@ -121,7 +128,10 @@ main() {
 
   # One line per check, using the commands from each guide's tools.md.
   check 'shell format' shfmt -d scripts/
-  check 'shell lint' shellcheck scripts/check scripts/audit
+  check 'shell lint' shellcheck scripts/check scripts/audit \
+    scripts/check-requirements
+  check 'requirements' scripts/check-requirements docs/specs/*/spec.md \
+    -- tests
   check 'format' ruff format --check .
   check 'lint' ruff check .
   check 'types' mypy .
@@ -142,8 +152,10 @@ main "$@"
 `scripts/audit` holds the checks that are **slow or need the network**, such
 as dependency vulnerability scans (OSV-Scanner and the guide's own audit
 tool), gitleaks over the full history, and the complexity and duplication
-reports (lizard, jscpd). It follows the same rules as `scripts/check`. The
-vibe workflow runs it before finishing a task, and CI should run it too.
+reports (lizard, jscpd). It also runs `scripts/check-requirements --all`,
+which fails when any requirement in a spec has no test that names it. It
+follows the same rules as `scripts/check`. The vibe workflow runs it before
+finishing a task, and CI should run it too.
 
 ## Step 4: install the hooks
 
@@ -159,8 +171,9 @@ vibe workflow runs it before finishing a task, and CI should run it too.
 
    If the project already has a pre-commit hook, ask the user before
    replacing it.
-3. Commit `scripts/check`, `scripts/audit` and the tool config files in one
-   commit. The gate runs on that commit too.
+3. Commit `scripts/check`, `scripts/audit`, `scripts/check-requirements`
+   if the project has specs, and the tool config files in one commit. The
+   gate runs on that commit too.
 
 ## When the project needs a new guide
 

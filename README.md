@@ -160,6 +160,12 @@ Once it exists, the gate:
 - skips `spike/*` branches
 - in Claude Code, also blocks `git commit -a` and `--no-verify`
 
+For a project with specs, `scripts/check` also checks the tests'
+requirement markers. Each test names the requirements it covers, such as
+`# Covers: order-export R1, R4`. Every commit fails on a marker naming a
+requirement the spec doesn't have, and `scripts/audit`, run before a task
+finishes, fails on any requirement no test covers.
+
 Projects without `scripts/check` are never blocked. To enforce the gate for
 every commit, including your own, install the git hook:
 

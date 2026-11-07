@@ -480,9 +480,12 @@ panel from [Size the task](#size-the-task), including
 `vibes:test-reviewer`. A fresh builder in `fix` mode fixes the findings
 the same way as the build: the spec first for any change in behaviour, then
 a failing test, then the fix, committed together as atomic commits through
-the gate. The
-spec reviewer's final verdict must be `APPROVED`, with every requirement met
-and tested.
+the gate.
+
+Before round 1, run `scripts/check-requirements --all` with the task's spec
+and the tests, if the project has it, and have a builder add a test for any
+requirement it reports. The spec reviewer's final verdict must be
+`APPROVED`, with every requirement met and tested.
 
 ## Phase 8: Finish
 

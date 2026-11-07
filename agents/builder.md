@@ -53,6 +53,9 @@ Build each entry in your batch, in the plan's order:
 - **Red, green, refactor, commit,** as the test-driven development skill
   says: a failing test for one behaviour, the least code that passes it,
   then a clean-up with the tests still passing, then an atomic commit.
+- **Name the requirements each test covers,** in a comment with the spec's
+  directory name, such as `# Covers: order-export R1, R4`, as that skill
+  says. The gate checks every id named is in the spec.
 - **The spec and design are the source of truth.** For a task that had a
   spike, you may read the spike's code for reference with
   `git show <spike branch>:<path>`, but write every line fresh. Never paste

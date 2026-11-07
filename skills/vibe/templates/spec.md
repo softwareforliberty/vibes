@@ -36,7 +36,9 @@ never "validates the quantity".
 Every behaviour, one per entry, grouped by feature under ### headings.
 
 - Each has a stable id: R1, R2 and so on. Never renumber them. A removed
-  requirement keeps its id, marked as removed, with the reason.
+  requirement keeps its id, written as "- **R3:** Removed: <the reason>."
+- Tests name the ids they cover in a comment, "Covers: <spec directory
+  name> R1, R2", and scripts/check-requirements checks them.
 - Each says what happens for which input, in which state, with acceptance
   criteria precise enough to write a test from.
 - Errors and edge cases are requirements too: empty, missing, duplicate,

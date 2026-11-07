@@ -38,6 +38,12 @@ it test-first.
    too. Add to the list as you discover more; don't try to finish it up front.
    When the task has a spec, the list covers every requirement in it, and a
    behaviour you discover goes into the spec before it goes on the list.
+4. **Name the requirements each test covers.** When the task has a spec
+   with requirement ids, each test says which it covers in a comment, with
+   the spec's directory name, such as `# Covers: order-export R1, R4`. A
+   project with the commit gate checks these with
+   `scripts/check-requirements`, so every requirement gets a test and no
+   test claims one that doesn't exist.
 
 ## The cycle
 

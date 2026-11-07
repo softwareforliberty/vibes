@@ -57,6 +57,10 @@ sets the standard for tests.
 - **Behaviour coverage:** every behaviour the change adds or fixes has a
   test, including edge and error cases. Coverage meets the minimum in
   `tools.md`.
+- **Honest requirement markers:** each test's `Covers:` comment names the
+  spec requirements it really tests, and only those. A script checks that
+  every requirement has a marker, not that the test behind it checks the
+  requirement: that's for you.
 - **One behaviour per test:** each test has one reason to fail, and its name
   says what behaviour it checks.
 - **Through the public interface:** tests check what callers see, not
