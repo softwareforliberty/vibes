@@ -5,7 +5,8 @@ The design says how the code will be structured, at the level of modules
 and their boundaries, not lines of code. Keep every heading, replace each
 comment with the section's content, and write "None." under a heading that
 doesn't apply. Keep to structure and boundaries: the details are the
-spike's to test.
+spike's to test. Name the spec's ids instead of restating requirements, and
+say each thing once: every agent in the run reads the design.
 -->
 
 ## Kind of software
@@ -15,15 +16,16 @@ spike's to test.
 ## Approach
 
 <!--
-The design in a few sentences, the alternatives considered, and why this
-one was chosen.
+The design in a few sentences, and each alternative considered in a line,
+with why it wasn't chosen.
 -->
 
 ## Components
 
 <!--
 Each module or layer: its one job, what it may depend on, and its
-interface, as the main types and function signatures.
+interface, as the main types and the signatures other components call. Leave
+out private helpers and parameter-by-parameter prose.
 -->
 
 ### Component
@@ -65,7 +67,11 @@ How each layer reports errors, and where they become what the user sees.
 
 ## Testing
 
-<!-- How each layer is tested, and how each requirement will be verified. -->
+<!--
+How each layer is tested, and any requirement that needs something other
+than an ordinary test, such as a separate process or a real filesystem.
+The traceability table already maps the rest.
+-->
 
 ## Traceability
 

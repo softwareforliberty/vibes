@@ -5,7 +5,8 @@ The spec says what the task does, never how. Keep every heading, replace
 each comment with the section's content, and write "None." under a heading
 that doesn't apply. Every statement must be specific enough to check:
 "rejects a quantity below 1 with the error `quantity must be at least 1`",
-never "validates the quantity".
+never "validates the quantity". Say each thing once, in as few words as
+that precision allows: every agent in the run reads the spec.
 -->
 
 ## Summary
@@ -26,7 +27,11 @@ never "validates the quantity".
 
 ## Definitions
 
-<!-- Every term a reader might misread. -->
+<!--
+Every term a reader might misread, and every outcome several requirements
+share, such as what a usage error prints and its exit status, so the
+requirements can name it instead of repeating it.
+-->
 
 - **Term:** what it means here.
 
@@ -39,8 +44,10 @@ Every behaviour, one per entry, grouped by feature under ### headings.
   requirement keeps its id, written as "- **R3:** Removed: <the reason>."
 - Tests name the ids they cover in a comment, "Covers: <spec directory
   name> R1, R2", and scripts/check-requirements checks them.
-- Each says what happens for which input, in which state, with acceptance
-  criteria precise enough to write a test from.
+- Each says what happens for which input, in which state, precisely
+  enough to write a test from. Add an acceptance check, such as an example
+  input and its result, only when the requirement's own words don't
+  already say how to check it, and never restate the requirement in it.
 - Errors and edge cases are requirements too: empty, missing, duplicate,
   too large, invalid, concurrent, interrupted and unauthorised input,
   wherever they can happen.
@@ -49,7 +56,7 @@ Every behaviour, one per entry, grouped by feature under ### headings.
 ### Feature
 
 - **R1:** When <input, in this state>, <what happens>. Acceptance:
-  <how to tell it's met>.
+  <an example that shows it's met, where one helps>.
 
 ## Interfaces
 
@@ -76,8 +83,9 @@ measurable target. Leave out the ones that don't apply.
 ## Assumptions
 
 <!--
-Each decision made where the task was silent, and why. Keep these to
-details: anything that changes what the user gets is an open question.
+Each decision made where the task was silent, in a line or two: the
+decision, why, and any options not chosen. Keep these to details: anything
+that changes what the user gets is an open question.
 -->
 
 ## Open questions

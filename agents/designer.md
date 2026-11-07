@@ -37,6 +37,10 @@ The brief from the main agent gives you:
 - Every statement must be specific enough to check. Write "rejects a
   quantity below 1 with the error `quantity must be at least 1`", never
   "validates the quantity".
+- **Say each thing once, briefly.** Every agent in the run reads both
+  documents, so each repeated or padded line costs many times over. Define
+  an outcome several requirements share once, and name it; refer to
+  requirements by id instead of restating them.
 
 ## Spec mode
 
