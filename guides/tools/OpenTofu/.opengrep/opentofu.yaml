@@ -1,0 +1,167 @@
+---
+rules:
+  - id: opentofu-variable-without-description
+    message: >-
+      Give every variable a description, which callers read to know what to
+      pass.
+    severity: ERROR
+    languages:
+      - hcl
+    patterns:
+      - pattern: |
+          variable $NAME {
+            ...
+          }
+      - pattern-not: |
+          variable $NAME {
+            ...
+            description = $D
+            ...
+          }
+  - id: opentofu-variable-without-type
+    message: >-
+      Give every variable a type, so a wrong value fails at plan time instead
+      of deep inside a resource.
+    severity: ERROR
+    languages:
+      - hcl
+    patterns:
+      - pattern: |
+          variable $NAME {
+            ...
+          }
+      - pattern-not: |
+          variable $NAME {
+            ...
+            type = $T
+            ...
+          }
+  - id: opentofu-output-without-description
+    message: >-
+      Give every output a description, which callers read to know what it
+      holds.
+    severity: ERROR
+    languages:
+      - hcl
+    patterns:
+      - pattern: |
+          output $NAME {
+            ...
+          }
+      - pattern-not: |
+          output $NAME {
+            ...
+            description = $D
+            ...
+          }
+  - id: opentofu-secret-variable-not-sensitive
+    message: >-
+      Mark a variable that holds a secret sensitive = true, so OpenTofu hides
+      it in plans and output.
+    severity: ERROR
+    languages:
+      - hcl
+    patterns:
+      - pattern: |
+          variable $NAME {
+            ...
+          }
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i).*(password|passphrase|secret|token|private_key|api_key)$
+      - pattern-not: |
+          variable $NAME {
+            ...
+            sensitive = true
+            ...
+          }
+  - id: opentofu-secret-variable-with-default
+    message: >-
+      Don't give a secret a default: the value is then committed to the
+      repository. Pass it in from a secret store when OpenTofu runs.
+    severity: ERROR
+    languages:
+      - hcl
+    patterns:
+      - pattern: |
+          variable $NAME {
+            ...
+            default = $D
+            ...
+          }
+      - metavariable-regex:
+          metavariable: $NAME
+          regex: (?i).*(password|passphrase|secret|token|private_key|api_key)$
+  - id: opentofu-required-version-missing
+    message: >-
+      Set required_version next to required_providers, so an OpenTofu version
+      the code was never tested with refuses to run it.
+    severity: ERROR
+    languages:
+      - hcl
+    patterns:
+      - pattern: |
+          terraform {
+            ...
+            required_providers {
+              ...
+            }
+            ...
+          }
+      - pattern-not: |
+          terraform {
+            ...
+            required_version = $V
+            ...
+          }
+  - id: opentofu-provider-without-version
+    message: >-
+      Give every required provider a version constraint, so a new major
+      version can't change the code's behaviour without review.
+    severity: ERROR
+    languages:
+      - hcl
+    patterns:
+      - pattern-inside: |
+          required_providers {
+            ...
+          }
+      - pattern: |
+          $NAME = {
+            ...
+          }
+      - pattern-not: |
+          $NAME = {
+            ...
+            version = $V
+            ...
+          }
+  - id: opentofu-local-exec
+    message: >-
+      Don't run local-exec: the command runs on whatever machine applies the
+      plan, isn't in the plan, and isn't undone by destroy. Use a provider
+      resource instead.
+    severity: ERROR
+    languages:
+      - hcl
+    pattern: |
+      provisioner "local-exec" {
+        ...
+      }
+  - id: opentofu-name-not-snake-case
+    message: >-
+      Name resources, data sources, modules, variables and outputs in
+      lowercase snake_case, as OpenTofu's own names are.
+    severity: ERROR
+    languages:
+      - hcl
+    pattern-regex: >-
+      (?m)^(?:(?:resource|data)\s+"[^"]+"|module|variable|output)\s+"[^"]*[^a-z0-9_"][^"]*"
+  - id: opentofu-comment-style
+    message: >-
+      Write comments with #, the style tofu fmt and OpenTofu's own generated
+      code use; tofu fmt leaves // and /* */ alone.
+    severity: ERROR
+    languages:
+      - hcl
+    pattern-regex: (?m)^\s*(?://|/\*)

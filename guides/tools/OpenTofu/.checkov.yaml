@@ -1,0 +1,16 @@
+---
+# Scan only the OpenTofu code, with the checks built into Checkov, and never
+# contact Prisma Cloud, so the scan runs offline and sends nothing out.
+framework:
+  - terraform
+skip-download: true
+compact: true
+quiet: true
+skip-check:
+  # Cross-region replication is a disaster-recovery choice for each bucket,
+  # not a default; the spec says which buckets need it.
+  - CKV_AWS_144
+  # Lifecycle rules and event notifications are features a bucket may need,
+  # not security controls.
+  - CKV2_AWS_61
+  - CKV2_AWS_62

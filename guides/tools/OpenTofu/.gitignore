@@ -1,0 +1,7 @@
+# OpenTofu's working directory: the providers and modules init downloads.
+.terraform/
+# State and saved plans hold secrets in plain text. State lives in the
+# backend, and a saved plan stays in the pipeline that made it.
+*.tfstate
+*.tfstate.*
+*.tfplan

@@ -1,0 +1,41 @@
+# EditorConfig: https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# OpenTofu code, variable files and test files: 2-space indents, as tofu fmt
+# writes them. tofu fmt doesn't wrap lines, so 100 columns is a guide.
+[*.{tf,tofu,tfvars,hcl}]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+# JetBrains IDEs
+ij_visual_guides = 100
+ij_wrap_on_typing = false
+
+# Rego policies: tabs, as conftest fmt and opa fmt write them.
+[*.rego]
+indent_style = tab
+
+[*.{yaml,yml}]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+# JetBrains IDEs
+ij_yaml_align_values_properties = do_not_align
+ij_yaml_autoinsert_sequence_marker = true
+ij_yaml_block_mapping_on_new_line = false
+ij_yaml_indent_sequence_value = true
+ij_yaml_keep_indents_on_empty_lines = false
+ij_yaml_keep_line_breaks = true
+ij_yaml_sequence_on_new_line = false
+ij_yaml_space_before_colon = false
+ij_yaml_spaces_within_braces = false
+ij_yaml_spaces_within_brackets = false
+
+# VS Code, Visual Studio, Vim, Emacs and Neovim read only the standard
+# properties above.
