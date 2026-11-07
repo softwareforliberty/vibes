@@ -83,10 +83,13 @@ could lose your work.
    is blocked if anything fails.
 8. **Review again.** The same reviewers, plus reviewers for code
    cleanliness, coding style, idioms and test quality, check the rebuild,
-   and their findings are fixed test-first. The spec reviewer
-   verifies every requirement is met and tested.
+   and their findings are fixed test-first. The spec reviewer verifies
+   every requirement is met and tested.
 
 Nothing is pushed or merged unless you ask.
+
+To see what a run looks like, from the spec to the first rebuild batches,
+read the [worked example](docs/example/README.md).
 
 ## Install as a Claude Code plugin
 
