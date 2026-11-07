@@ -1,0 +1,41 @@
+---
+extends: default
+
+rules:
+  anchors:
+    forbid-unused-anchors: true
+  braces:
+    forbid: non-empty
+  brackets:
+    forbid: non-empty
+  empty-values:
+    forbid-in-block-mappings: true
+    forbid-in-flow-mappings: true
+  float-values:
+    forbid-inf: true
+    forbid-nan: true
+    require-numeral-before-decimal: true
+  indentation:
+    spaces: 2
+    indent-sequences: true
+  line-length:
+    max: 80
+    # A uses: line pinned to a commit SHA, with its version comment, can't be
+    # split and often runs past 80 columns. The Opengrep rule
+    # github-actions-line-too-long checks every other line in these files.
+    ignore:
+      - .github/workflows/
+      - .github/actions/
+      - action.yaml
+  octal-values:
+    forbid-explicit-octal: true
+    forbid-implicit-octal: true
+  quoted-strings:
+    quote-type: double
+    required: only-when-needed
+    allow-quoted-quotes: true
+  truthy:
+    allowed-values:
+      - "true"
+      - "false"
+    check-keys: true

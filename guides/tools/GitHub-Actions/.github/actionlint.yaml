@@ -1,0 +1,15 @@
+---
+# Configuration variables the workflows may read. An empty list makes every
+# vars.NAME an error, so a misspelt name fails here instead of expanding to
+# an empty string at run time. Add each variable the workflows use.
+config-variables: []
+
+paths:
+  .github/workflows/*.yaml:
+    # actionlint 1.7.12 predates two features GitHub added in 2026: the
+    # cache-mode key, and $/ in uses: for an action or reusable workflow in
+    # the same repository. Delete these once actionlint accepts them.
+    ignore:
+      - unexpected key "cache-mode"
+      - specifying action "\$/
+      - reusable workflow call "\$/

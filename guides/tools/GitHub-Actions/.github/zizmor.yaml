@@ -1,0 +1,9 @@
+---
+rules:
+  # The actions this project trusts: GitHub's own, and each other action
+  # someone has reviewed and added. A uses: of any other action fails until
+  # it's reviewed and listed here.
+  forbidden-uses:
+    config:
+      allow:
+        - actions/*

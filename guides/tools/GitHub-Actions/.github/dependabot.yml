@@ -1,0 +1,17 @@
+---
+# Dependabot opens a pull request for each new release of an action the
+# workflows and composite actions use, moving the commit SHA and the version
+# comment beside it together.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    # / covers .github/workflows. Composite actions are listed by directory.
+    directories:
+      - /
+      - /.github/actions/*
+    schedule:
+      interval: weekly
+    # Wait a week before proposing a new release. A compromised release is
+    # usually found and pulled within days, before it reaches this project.
+    cooldown:
+      default-days: 7

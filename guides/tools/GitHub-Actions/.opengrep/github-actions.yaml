@@ -1,0 +1,114 @@
+---
+# Rules for the traps in GitHub Actions workflows and composite actions
+# that actionlint and zizmor don't check.
+rules:
+  - id: github-actions-job-without-timeout
+    message: >-
+      Give every job a timeout-minutes, or a hung step holds the runner for
+      the default of 360 minutes.
+    severity: ERROR
+    languages:
+      - yaml
+    paths:
+      include:
+        - /.github/workflows/
+    patterns:
+      - pattern-inside: |
+          jobs:
+            ...
+      - pattern: |
+          $JOB:
+            ...
+            runs-on: $RUNNER
+            ...
+      - pattern-not: |
+          $JOB:
+            ...
+            timeout-minutes: $MINUTES
+            ...
+  - id: github-actions-continue-on-error
+    message: >-
+      Don't set continue-on-error to true, which reports a failed step or job
+      as a success.
+    severity: ERROR
+    languages:
+      - yaml
+    paths:
+      include:
+        - /.github/
+        - action.yaml
+    pattern: "continue-on-error: true"
+  - id: github-actions-runner-latest
+    message: >-
+      Name the runner image's version, such as ubuntu-24.04, so the operating
+      system doesn't change when GitHub moves the -latest label.
+    severity: ERROR
+    languages:
+      - yaml
+    paths:
+      include:
+        - /.github/workflows/
+    pattern-regex: (?m)^\s*runs-on:\s*["']?[\w-]+-latest\b
+  - id: github-actions-folded-run
+    message: >-
+      Write a multi-line run: with |, which keeps each line a command. With >,
+      the lines are folded into one.
+    severity: ERROR
+    languages:
+      - yaml
+    paths:
+      include:
+        - /.github/
+        - action.yaml
+    pattern-regex: (?m)^\s*(?:-\s+)?run:\s*>
+  - id: github-actions-long-inline-script
+    message: >-
+      Move a run: script longer than 10 lines into a script file, where it
+      gets its own linting, formatting and tests.
+    severity: ERROR
+    languages:
+      - yaml
+    paths:
+      include:
+        - /.github/
+        - action.yaml
+    pattern-regex: (?m)^( *)(?:-\s+)?run:\s*\|[-+]?\n(?:(?:\1 +\S.*)?\n){11,}
+  - id: github-actions-line-too-long
+    message: >-
+      Keep lines to 80 columns. Only a uses: line pinned to a commit SHA may
+      run longer.
+    severity: ERROR
+    languages:
+      - yaml
+    paths:
+      include:
+        - /.github/workflows/
+        - /.github/actions/
+        - action.yaml
+    pattern-regex: (?m)^(?!\s*(?:-\s+)?uses:\s).{81,}$
+  - id: github-actions-sha-without-version-comment
+    message: >-
+      Put the version after a commit SHA pin, as in "@<sha>  # v7.0.1", so
+      readers and Dependabot know which release it is.
+    severity: ERROR
+    languages:
+      - yaml
+    paths:
+      include:
+        - /.github/
+        - action.yaml
+    pattern-regex: (?m)^\s*(?:-\s+)?uses:\s*[^\s@#]+@[0-9a-f]{40}\s*$
+  - id: github-actions-step-without-name
+    message: >-
+      Start every step with a name:, which the run log shows instead of the
+      raw command or action reference.
+    severity: ERROR
+    languages:
+      - yaml
+    paths:
+      include:
+        - /.github/
+        - action.yaml
+    pattern-regex: >-
+      (?mx)^\s*-\s+(?:id|if|uses|run|with|env|shell|working-directory
+      |timeout-minutes|continue-on-error):

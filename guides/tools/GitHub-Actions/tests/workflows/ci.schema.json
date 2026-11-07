@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "The spec of .github/workflows/ci.yaml, checked before it runs.",
+  "type": "object",
+  "required": ["on", "permissions", "concurrency", "jobs"],
+  "properties": {
+    "on": {
+      "$comment": "Pull requests to main, pushes to main, weekly, on demand.",
+      "type": "object",
+      "required": ["pull_request", "push", "schedule", "workflow_dispatch"],
+      "additionalProperties": false,
+      "properties": {
+        "pull_request": { "const": { "branches": ["main"] } },
+        "push": { "const": { "branches": ["main"] } },
+        "schedule": { "const": [{ "cron": "0 6 * * 1" }] },
+        "workflow_dispatch": { "const": {} }
+      }
+    },
+    "permissions": { "const": {} },
+    "concurrency": {
+      "type": "object",
+      "required": ["group", "cancel-in-progress"],
+      "properties": { "cancel-in-progress": { "const": true } }
+    },
+    "jobs": {
+      "type": "object",
+      "required": ["check", "audit"],
+      "properties": {
+        "check": {
+          "$comment": "Branch protection requires the check named Check.",
+          "not": { "required": ["if"] },
+          "properties": {
+            "name": { "const": "Check" },
+            "timeout-minutes": { "maximum": 15 }
+          }
+        }
+      },
+      "patternProperties": {
+        "^[A-Za-z_][A-Za-z0-9_-]*$": {
+          "$comment": "Every job: a read-only token and a timeout.",
+          "type": "object",
+          "required": ["permissions", "timeout-minutes"],
+          "properties": {
+            "permissions": { "const": { "contents": "read" } },
+            "timeout-minutes": { "type": "integer", "maximum": 30 }
+          }
+        }
+      }
+    }
+  }
+}
