@@ -5,6 +5,7 @@ description: >-
   rebuild satisfy every requirement in it. Used by the vibe workflow's spec
   and review rounds.
 tools: Read, Grep, Glob, Bash
+disallowedTools: Write, Edit, NotebookEdit
 model: inherit
 ---
 
@@ -32,7 +33,9 @@ The brief from the main agent gives you:
 - **The languages involved**, and the round number.
 
 You may run the project's build, its tests and the program itself, to check
-what it does. Never edit a file, and never change git state.
+what it does. Never edit a file, and never change git state. The plugin's
+hooks block Bash commands that would, such as `rm`, `git add` or a
+redirection into a file.
 
 ## Spec rounds
 

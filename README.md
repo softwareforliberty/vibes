@@ -19,7 +19,8 @@ while holding it to the standards of careful, experienced developers.
   and a guide each for web applications, desktop applications and OS
   components.
 - **`agents/`:** the designer, the spike agent and ten reviewer agents.
-- **`hooks/`:** the commit gate, for Claude Code and for git.
+- **`hooks/`:** the commit gate, for Claude Code and for git, and a guard
+  that keeps the spec reviewer from changing files or git state.
 - **`evals/`:** evals that check each reviewer agent finds the defects in
   its area and approves clean code, run with `claude plugin eval`.
 

@@ -1,0 +1,138 @@
+#!/usr/bin/env bash
+#
+# Claude Code PreToolUse hook that keeps read-only agents read-only. The spec
+# reviewer may build, test and run the program, but must never change files
+# or git state, so this blocks (exit 2) any Bash command of its that would.
+# It guards against mistakes, not a determined attacker: a program the
+# reviewer runs can still write files.
+
+set -euo pipefail
+
+# shellcheck source=hooks/lib/hook_input.sh
+source "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/lib/hook_input.sh"
+
+# Agents this hook applies to, as plugin agents and as plain agents.
+readonly READ_ONLY_AGENTS=" vibes:spec-reviewer spec-reviewer "
+# git subcommands that only read.
+GIT_READERS=" blame cat-file describe diff grep log ls-files ls-tree"
+GIT_READERS+=" merge-base rev-parse shortlog show status "
+readonly GIT_READERS
+# Commands whose job is to change files.
+FILE_WRITERS=" chgrp chmod chown cp dd install ln mkdir mv patch rm rmdir"
+FILE_WRITERS+=" shred tee touch truncate unlink "
+readonly FILE_WRITERS
+# A redirection and its target: > file, >> file, 2> file or &> file.
+readonly REDIRECT_RE='[0-9&]?>>?[[:space:]]*([^[:space:];&|<>()]+)'
+
+# Prints why a redirection in the command writes to a file, or nothing.
+redirect_reason() {
+  local rest="$1"
+  while [[ "${rest}" =~ ${REDIRECT_RE} ]]; do
+    if [[ "${BASH_REMATCH[1]}" != "/dev/null" ]]; then
+      printf 'it redirects output to %s\n' "${BASH_REMATCH[1]}"
+      return 0
+    fi
+    rest="${rest#*"${BASH_REMATCH[0]}"}"
+  done
+}
+
+# Prints why git with these arguments changes git state, or nothing.
+git_reason() {
+  local -a args=("$@")
+  local i=0
+  # Skip git's own options, two of which take a value.
+  while ((i < ${#args[@]})) && [[ "${args[i]}" == -* ]]; do
+    case "${args[i]}" in
+      -C | -c) ((i += 2)) ;;
+      *) ((i += 1)) ;;
+    esac
+  done
+  ((i < ${#args[@]})) || return 0
+  local sub="${args[i]}"
+  local next="${args[i + 1]:-}"
+  if [[ "${GIT_READERS}" == *" ${sub} "* ]] \
+    || [[ "${sub} ${next}" == "branch --show-current" ]] \
+    || [[ "${sub} ${next}" == "stash list" ]] \
+    || [[ "${sub} ${next}" == "config --get"* ]] \
+    || [[ "${sub} ${next}" == "config --list" ]]; then
+    return 0
+  fi
+  printf 'git %s can change git state\n' "${sub}"
+}
+
+# Prints why one simple command changes files or git state, or nothing.
+command_reason() {
+  local -a words
+  read -r -a words <<<"$1"
+  # Bash 3.2 treats an empty array as unset, which set -u rejects.
+  ((${#words[@]} > 0)) || return 0
+  local i=0
+  # Skip variable assignments, shell keywords, and wrappers that run the
+  # next word.
+  while ((i < ${#words[@]})); do
+    case "${words[i]}" in
+      *=* | ! | '{' | if | then | else | elif | do | while | until | env | \
+        command | exec | nice | nohup | sudo | time | xargs)
+        ((i += 1))
+        ;;
+      *) break ;;
+    esac
+  done
+  ((i < ${#words[@]})) || return 0
+  local name="${words[i]##*/}"
+  local word
+  if [[ "${FILE_WRITERS}" == *" ${name} "* ]]; then
+    printf '%s changes files\n' "${name}"
+  elif [[ "${name}" == "git" ]]; then
+    git_reason "${words[@]:i+1}"
+  elif [[ " sed perl ruby " == *" ${name} "* ]]; then
+    # -i, alone or among other short options, edits in place. -e, -I and
+    # -M take values, which may contain an i.
+    for word in "${words[@]:i+1}"; do
+      case "${word}" in
+        --in-place* | -i* | -[!-eIM]*i*)
+          printf '%s %s edits files in place\n' "${name}" "${word}"
+          return 0
+          ;;
+        *) ;;
+      esac
+    done
+  fi
+}
+
+# Prints the first reason the command changes files or git state, or nothing.
+reason() {
+  local command="$1" part found
+  found="$(redirect_reason "${command}")"
+  if [[ -n "${found}" ]]; then
+    printf '%s\n' "${found}"
+    return 0
+  fi
+  # Split into simple commands at ; & | ( ) and backquotes.
+  while IFS= read -r part; do
+    found="$(command_reason "${part}")"
+    if [[ -n "${found}" ]]; then
+      printf '%s\n' "${found}"
+      return 0
+    fi
+  done <<<"${command//[;&|()\`]/$'\n'}"
+}
+
+main() {
+  local input agent command found
+  input="$(cat)"
+  agent="$(hook::json_field "${input}" '.agent_type')"
+  if [[ -z "${agent}" || "${READ_ONLY_AGENTS}" != *" ${agent} "* ]]; then
+    exit 0
+  fi
+  command="$(hook::json_field "${input}" '.tool_input.command' \
+    | hook::strip_text)"
+  found="$(reason "${command}")"
+  if [[ -n "${found}" ]]; then
+    printf 'vibes: %s is read-only, and %s. ' "${agent}" "${found}" >&2
+    printf 'It can build, test and run code, but not change files or git.\n' >&2
+    exit 2
+  fi
+}
+
+main "$@"

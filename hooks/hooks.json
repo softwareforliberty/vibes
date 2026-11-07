@@ -8,6 +8,10 @@
             "type": "command",
             "if": "Bash(git commit *)",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/claude_commit_gate\""
+          },
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/hooks/claude_read_only_agents\""
           }
         ]
       }
