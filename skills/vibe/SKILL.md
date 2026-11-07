@@ -93,9 +93,10 @@ code.
   user. A small task that needs a new module, interface or dependency gets a
   design. A medium task whose design proves uncertain gets a spike.
 - **A small task has no designer and no design document.** You write the
-  spec yourself, in the format of the designer's spec mode in
-  `${CLAUDE_PLUGIN_ROOT}/agents/designer.md`, with only the sections that
-  apply. Its constraints section names the code the change touches.
+  spec yourself, from the template in
+  `${CLAUDE_PLUGIN_ROOT}/skills/vibe/templates/spec.md`, writing "None."
+  under the sections that don't apply. Its constraints section names the
+  code the change touches.
 - **The review panel depends on the size.** Medium and large tasks get every
   reviewer. A small task gets `vibes:spec-reviewer`, `vibes:bug-reviewer`,
   `vibes:cleanliness-reviewer` and `vibes:test-reviewer`, and also:
