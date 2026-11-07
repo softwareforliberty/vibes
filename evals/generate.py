@@ -275,8 +275,8 @@ class StockService:""",
         items: The items to write, in report order.
         path: The file to write. An existing file is replaced.
 
-    Text that a spreadsheet would run as a formula is written with a leading
-    apostrophe, so opening the report can't run anything.
+    Text that a spreadsheet would run as a formula is written with a
+    leading apostrophe, so opening the report can't run anything.
     """
 ''',
                 "",
@@ -394,8 +394,8 @@ def test_rejects_pages_below_one(
             ),
             Edit(
                 "src/stock/service.py",
-                """            ValueError: If threshold is negative, or page or page_size is
-                below 1.""",
+                """            ValueError: If threshold is negative, or page or page_size
+                is below 1.""",
                 "            ValueError: If page or page_size is below 1.",
             ),
             Edit(

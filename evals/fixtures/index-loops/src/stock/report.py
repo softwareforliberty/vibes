@@ -22,8 +22,8 @@ def export_low_stock_csv(items: Iterable[Item], path: Path) -> None:
         items: The items to write, in report order.
         path: The file to write. An existing file is replaced.
 
-    Text that a spreadsheet would run as a formula is written with a leading
-    apostrophe, so opening the report can't run anything.
+    Text that a spreadsheet would run as a formula is written with a
+    leading apostrophe, so opening the report can't run anything.
     """
     with path.open("w", newline="", encoding="utf-8") as file:
         writer = csv.writer(file)

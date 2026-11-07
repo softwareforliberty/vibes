@@ -31,7 +31,7 @@ class ItemRepository:
         return Item(*row)
 
     def save(self, item: Item) -> None:
-        """Insert the item, or replace the stored item with the same SKU."""
+        """Save the item, replacing any item stored with its SKU."""
         with self._connection:
             self._connection.execute(
                 "INSERT OR REPLACE INTO item (sku, name, quantity) VALUES (?, ?, ?)",

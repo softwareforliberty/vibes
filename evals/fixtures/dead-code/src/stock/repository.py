@@ -15,8 +15,8 @@ class ItemRepository:
     def __init__(self, connection: sqlite3.Connection) -> None:
         """Use the given database connection."""
         self._connection = connection
-        # SQLite only folds the case of ASCII letters, so name searches use
-        # Python's full Unicode case folding instead.
+        # SQLite only folds the case of ASCII letters, so name searches
+        # use Python's full Unicode case folding instead.
         connection.create_function("casefold", 1, str.casefold, deterministic=True)
 
     def get(self, sku: str) -> Item:
@@ -34,7 +34,7 @@ class ItemRepository:
         return Item(*row)
 
     def save(self, item: Item) -> None:
-        """Insert the item, or replace the stored item with the same SKU."""
+        """Save the item, replacing any item stored with its SKU."""
         with self._connection:
             self._connection.execute(
                 "INSERT OR REPLACE INTO item (sku, name, quantity) VALUES (?, ?, ?)",

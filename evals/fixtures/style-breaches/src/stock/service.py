@@ -61,11 +61,11 @@ class StockService:
             page_size: How many items a page holds.
 
         Returns:
-            One page of matching items, sorted by quantity and then by SKU.
+            One page of matching items, sorted by quantity, then SKU.
 
         Raises:
-            ValueError: If threshold is negative, or page or page_size is
-                below 1.
+            ValueError: If threshold is negative, or page or page_size
+                is below 1.
         """
         if threshold < 0:
             raise ValueError("threshold must not be negative")

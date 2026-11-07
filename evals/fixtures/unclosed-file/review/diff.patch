@@ -1,6 +1,6 @@
 diff --git a/src/stock/report.py b/src/stock/report.py
 new file mode 100644
-index 0000000..9515fd5
+index 0000000..a9dae85
 --- /dev/null
 +++ b/src/stock/report.py
 @@ -0,0 +1,33 @@
@@ -28,8 +28,8 @@ index 0000000..9515fd5
 +        items: The items to write, in report order.
 +        path: The file to write. An existing file is replaced.
 +
-+    Text that a spreadsheet would run as a formula is written with a leading
-+    apostrophe, so opening the report can't run anything.
++    Text that a spreadsheet would run as a formula is written with a
++    leading apostrophe, so opening the report can't run anything.
 +    """
 +    file = path.open("w", newline="", encoding="utf-8")
 +    writer = csv.writer(file)
@@ -38,15 +38,15 @@ index 0000000..9515fd5
 +        writer.writerow([_neutralise(item.sku), _neutralise(item.name), item.quantity])
 +    file.close()
 diff --git a/src/stock/repository.py b/src/stock/repository.py
-index f282acf..06a74b4 100644
+index 287081e..053dc8d 100644
 --- a/src/stock/repository.py
 +++ b/src/stock/repository.py
 @@ -15,6 +15,9 @@ class ItemRepository:
      def __init__(self, connection: sqlite3.Connection) -> None:
          """Use the given database connection."""
          self._connection = connection
-+        # SQLite only folds the case of ASCII letters, so name searches use
-+        # Python's full Unicode case folding instead.
++        # SQLite only folds the case of ASCII letters, so name searches
++        # use Python's full Unicode case folding instead.
 +        connection.create_function("casefold", 1, str.casefold, deterministic=True)
  
      def get(self, sku: str) -> Item:
@@ -85,7 +85,7 @@ index f282acf..06a74b4 100644
 +        ).fetchall()
 +        return [Item(*row) for row in rows]
 diff --git a/src/stock/service.py b/src/stock/service.py
-index 585d508..9a88b74 100644
+index 585d508..7630e42 100644
 --- a/src/stock/service.py
 +++ b/src/stock/service.py
 @@ -5,6 +5,8 @@ from dataclasses import replace
@@ -120,11 +120,11 @@ index 585d508..9a88b74 100644
 +            page_size: How many items a page holds.
 +
 +        Returns:
-+            One page of matching items, sorted by quantity and then by SKU.
++            One page of matching items, sorted by quantity, then SKU.
 +
 +        Raises:
-+            ValueError: If threshold is negative, or page or page_size is
-+                below 1.
++            ValueError: If threshold is negative, or page or page_size
++                is below 1.
 +        """
 +        if threshold < 0:
 +            raise ValueError("threshold must not be negative")

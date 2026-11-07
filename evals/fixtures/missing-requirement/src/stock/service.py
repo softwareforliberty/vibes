@@ -61,7 +61,7 @@ class StockService:
             page_size: How many items a page holds.
 
         Returns:
-            One page of matching items, sorted by quantity and then by SKU.
+            One page of matching items, sorted by quantity, then SKU.
 
         Raises:
             ValueError: If page or page_size is below 1.
