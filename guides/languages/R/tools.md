@@ -36,8 +36,22 @@ Code must pass all three checks with **no errors, warnings or notes**:
 ```sh
 Rscript -e 'styler::style_pkg(dry = "fail")'
 Rscript -e 'if (length(lintr::lint_package())) quit(status = 1)'
-R CMD build . && R CMD check --as-cran *.tar.gz
+out="$(mktemp -d)"
+(cd "${out}" && R CMD build "${OLDPWD}" &&
+  _R_CHECK_CRAN_INCOMING_=false R CMD check --as-cran --no-manual ./*.tar.gz)
+grep -qx 'Status: OK' "${out}"/*.Rcheck/00check.log
 ```
+
+- **`R CMD check` exits 0 on warnings and notes,** and fails only on
+  errors. The last line fails the check unless the log's status is `OK`.
+- **Build and check in a temporary directory.** Run in the project, they
+  leave a tarball and a `.Rcheck` directory behind, which the commit gate
+  refuses as untracked files.
+- `_R_CHECK_CRAN_INCOMING_=false` skips CRAN's incoming checks. They need
+  the network, and report every package that isn't on CRAN yet as a new
+  submission. Run a full `R CMD check --as-cran` before submitting to CRAN.
+- `--no-manual` skips building the PDF manual, which needs LaTeX. The
+  documentation checks still run.
 
 Put the lintr settings in `.lintr` at the package root:
 
