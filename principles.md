@@ -5,7 +5,7 @@ The design principles every change is held to, in any language. The
 against them, and anyone writing code in the vibe workflow should follow
 them.
 
-Each language's `idioms.md` in [lang/](lang/) has its own principles. Where
+Each language's `idioms.md` in [guides/](guides/) has its own principles. Where
 it disagrees with this guide, the language's guide wins. Where the codebase
 has an established pattern, follow it unless it breaks a principle badly
 enough to be worth a finding.

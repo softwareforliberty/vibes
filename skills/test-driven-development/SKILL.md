@@ -29,8 +29,8 @@ it test-first.
 1. **Find how the project runs its tests.** Look for the test command in the
    README, the build file or CI config. For the standard test, coverage and
    lint tools of each language, see that language's `tools.md` in
-   [`lang/`](../../lang/), for example
-   [`lang/Python/tools.md`](../../lang/Python/tools.md).
+   [`guides/`](../../guides/), for example the
+   [Python tools](../../guides/languages/Python/tools.md).
 2. **Run the existing suite once** and confirm it passes. If it doesn't, stop
    and report it: you can't tell your failures from existing ones.
 3. **Write a test list.** Break the task into small behaviours, one line each,
@@ -69,7 +69,7 @@ should take minutes, not hours.
 ### 3. Refactor: clean up while green
 
 - Improve names, remove duplication and simplify, in both the code and the
-  tests. Follow the language's `coding-style.md` and `idioms.md` in `lang/`.
+  tests. Follow the language's `coding-style.md` and `idioms.md` in `guides/`.
 - Change structure only, never behaviour. Run the tests after each small
   step, so a failure points at the step that caused it.
 - Stop refactoring when the code is clear. Then pick the next test from the
@@ -140,7 +140,7 @@ the test.
 - **Skipping the refactor step.** The code works but gets harder to change
   with every cycle.
 - **Chasing coverage.** Coverage shows what isn't tested; it doesn't prove
-  what is. Write tests for behaviour, and let coverage follow. The `lang/`
+  what is. Write tests for behaviour, and let coverage follow. The `guides/`
   tools set an 80% branch-coverage minimum as a floor, not a goal.
 
 ## Checklist

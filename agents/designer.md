@@ -78,7 +78,7 @@ with the reason.
 Read the approved `spec.md`, then `${CLAUDE_PLUGIN_ROOT}/principles.md`,
 `${CLAUDE_PLUGIN_ROOT}/architecture/README.md` and the guide it names for
 the kind of software, and `idioms.md` for each language under
-`${CLAUDE_PLUGIN_ROOT}/lang/`.
+`${CLAUDE_PLUGIN_ROOT}/guides/`.
 
 The design says **how** the code will be structured, at the level of
 modules and their boundaries, not lines of code. Write

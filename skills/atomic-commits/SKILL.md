@@ -159,7 +159,7 @@ commits instead.
 ## Never commit
 
 - **Secrets:** keys, passwords, tokens and `.env` files. Scan with gitleaks
-  (see any language's `tools.md` in [`lang/`](../../lang/)). If a secret is
+  (see any language's `tools.md` in [`guides/`](../../guides/)). If a secret is
   committed, rotate it: removing it from history doesn't make it safe again.
 - **Build output and dependencies:** compiled files, `node_modules/` and
   similar. Ignore them in `.gitignore`.

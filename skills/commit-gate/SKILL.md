@@ -35,7 +35,7 @@ same logic:
 ## Step 1: find the languages
 
 List the languages the project uses (source, tests, build files, config).
-For each one, find its directory under `${CLAUDE_PLUGIN_ROOT}/lang/` and read
+For each one, find its directory under `${CLAUDE_PLUGIN_ROOT}/guides/` and read
 its `tools.md`. Its tool table, config files and commands are what the
 scripts will run.
 
@@ -57,14 +57,14 @@ that's **local and reasonably fast**:
 Rules for the script:
 
 - It's an executable Bash script that follows
-  `${CLAUDE_PLUGIN_ROOT}/lang/BASH/coding-style.md`, runs from the repository
-  root, and exits non-zero when any check fails.
+  `${CLAUDE_PLUGIN_ROOT}/guides/languages/BASH/coding-style.md`, runs from
+  the repository root, and exits non-zero when any check fails.
 - It runs every check even after one fails, then reports them all, so one
   commit attempt shows every problem.
 - Each check prints its name, and only prints details when it fails.
 - It needs no network access, and nothing outside the project's own
   development dependencies.
-- Copy each tool's config file from the language's directory in `lang/` into
+- Copy each tool's config file from the language's directory in `guides/` into
   the project, and adjust paths to the project's layout.
 - It passes on a project with no tests yet. Some test runners fail when they
   find no tests, such as pytest, which exits with status 5. Treat only that

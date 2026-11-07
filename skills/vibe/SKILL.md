@@ -157,7 +157,7 @@ To resume:
    the user what to do with the changes. Note the current branch: it's the
    base branch.
 3. **Find the languages** the task will touch, and read `coding-style.md`,
-   `idioms.md` and `tools.md` for each from `${CLAUDE_PLUGIN_ROOT}/lang/`.
+   `idioms.md` and `tools.md` for each from `${CLAUDE_PLUGIN_ROOT}/guides/`.
 4. **Size the task,** as [Size the task](#size-the-task) describes, and tell
    the user the size.
 5. **Make sure the commit gate is set up.** If the project has no executable

@@ -3,10 +3,13 @@
 Guides and tooling for clean vibe coding: letting an AI agent write the code,
 while holding it to the standards of careful, experienced developers.
 
-- **`lang/`:** per-language guides for 55 languages. Each has a
-  `coding-style.md`, an `idioms.md` and a `tools.md` listing FOSS linting,
-  auditing and code-quality tools, plus a `.editorconfig` and drop-in config
-  files for those tools.
+- **`guides/`:** 55 guides, grouped by kind: `languages/` for 40
+  programming languages, `web/` for HTML, CSS and Sass, `data/` for SQL,
+  database dialects, data formats and schema languages, and `build/` for
+  CMake, Make and linker scripts. Each has a `coding-style.md`, an
+  `idioms.md` and a `tools.md` listing FOSS linting, auditing and
+  code-quality tools, plus a `.editorconfig` and drop-in config files for
+  those tools.
 - **`skills/`:** agent skills for the workflow, test-driven development,
   atomic commits and setting up the commit gate.
 - **`principles.md`:** the programming principles every change is held
@@ -96,7 +99,7 @@ too:
 - Point the agent at a skill's `SKILL.md` or an agent definition in
   `agents/`, and replace `${CLAUDE_PLUGIN_ROOT}` with the path to your
   checkout of this repository.
-- Read the guides in `lang/` directly, and copy a language's `.editorconfig`
+- Read the guides in `guides/` directly, and copy a guide's `.editorconfig`
   and tool configs into your project.
 - Install the commit gate as a git hook (see below).
 

@@ -27,7 +27,7 @@ Where guides disagree, the more specific one wins:
    reason to depart from it;
 2. the established pattern of the framework, toolkit or kernel the code
    builds on;
-3. the language's `idioms.md` in [lang/](../lang/);
+3. the language's `idioms.md` in [guides/](../guides/);
 4. the guide for the kind of software;
 5. this page.
 

@@ -31,7 +31,7 @@ the spec doesn't describe.
 2. **Read the project first.** Understand its structure, conventions and how
    it builds and runs, so the spike fits the existing architecture.
 3. **Read the standards.** For each language involved, read `coding-style.md`
-   and `idioms.md` in its directory under `${CLAUDE_PLUGIN_ROOT}/lang/`.
+   and `idioms.md` in its directory under `${CLAUDE_PLUGIN_ROOT}/guides/`.
    Read `${CLAUDE_PLUGIN_ROOT}/principles.md` too, the programming
    principles such as SOLID, DRY and KISS. Follow them wherever it costs
    little; reviewers will hold the spike to them.
