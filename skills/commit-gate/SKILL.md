@@ -2,7 +2,7 @@
 name: commit-gate
 description: >-
   Sets up the vibes commit gate in a project: writes scripts/check (format,
-  lint and full tests) and scripts/audit from the languages' tools.md, and
+  lint and full tests) and scripts/audit from the guides' tools.md, and
   installs the git hook so no commit lands unless every check passes. Use when
   starting the vibe workflow in a project, or when asked to add a commit gate.
 ---
@@ -27,17 +27,35 @@ same logic:
    spikes live.
 3. It blocks the commit when there are unstaged changes or untracked files,
    because the checks would then test something other than the commit.
-4. It runs `scripts/check` and blocks the commit if it fails, showing the end
+4. It blocks the commit when a staged file needs a guide that the
+   `# Guides:` line in `scripts/check` doesn't name, or when no guide
+   covers a staged file and no `# No guide:` line lists it. So a project
+   that starts using a new language or tool midway, such as a C++ project
+   that adds a Python script or a Dockerfile, can't commit those files
+   until the gate checks them too.
+5. It runs `scripts/check` and blocks the commit if it fails, showing the end
    of its output.
-5. In Claude Code it also blocks `git commit -a`, `--all`, `--no-verify` and
+6. In Claude Code it also blocks `git commit -a`, `--all`, `--no-verify` and
    `-n`. Each change is staged deliberately, and the gate is never bypassed.
 
-## Step 1: find the languages
+## Step 1: find the guides
 
-List the languages the project uses (source, tests, build files, config).
-For each one, find its directory under `${CLAUDE_PLUGIN_ROOT}/guides/` and read
-its `tools.md`. Its tool table, config files and commands are what the
-scripts will run.
+List the guides the project needs, for its languages, formats and tools
+alike:
+
+```sh
+git ls-files | "${CLAUDE_PLUGIN_ROOT}/bin/guides-for"
+```
+
+It reads `${CLAUDE_PLUGIN_ROOT}/guides/map.tsv`. An entry such as
+`languages/C|languages/C++` means either guide will do: pick the one the
+project uses. A file listed as `no guide:` has no vibes guide: tell the
+user, and list a pattern for it on the `# No guide:` line in Step 2.
+`scripts/check` is itself a Bash script, so the project always needs
+`languages/BASH`.
+
+For each guide, read its `tools.md` in `${CLAUDE_PLUGIN_ROOT}/guides/`. Its
+tool table, config files and commands are what the scripts will run.
 
 ## Step 2: write scripts/check
 
@@ -46,7 +64,7 @@ that's **local and reasonably fast**:
 
 - **Formatting,** in check mode only. It never rewrites files.
 - **Linting and type checking,** with warnings treated as errors.
-- **Static security checks that run locally,** such as the language's
+- **Static security checks that run locally,** such as the guide's
   security linter and Opengrep rules from `tools.md`.
 - **The full test suite,** with the coverage minimum from `tools.md`.
 - **Architecture tests,** from the Architecture section of `tools.md`, that
@@ -64,7 +82,11 @@ Rules for the script:
 - Each check prints its name, and only prints details when it fails.
 - It needs no network access, and nothing outside the project's own
   development dependencies.
-- Copy each tool's config file from the language's directory in `guides/` into
+- **Name the guides it checks** on a `# Guides:` line, and the files no
+  guide covers on a `# No guide:` line, as patterns from `map.tsv`'s rules.
+  Either line can repeat. The gate reads them, and blocks a commit that
+  needs a guide the gate doesn't check.
+- Copy each tool's config file from the guide's directory in `guides/` into
   the project, and adjust paths to the project's layout.
 - It passes on a project with no tests yet. Some test runners fail when they
   find no tests, such as pytest, which exits with status 5. Treat only that
@@ -77,6 +99,9 @@ A skeleton to start from:
 #!/usr/bin/env bash
 #
 # Run every pre-commit check: formatting, lint, types and the full tests.
+#
+# Guides: languages/BASH languages/Python
+# No guide: *.ipynb
 
 set -euo pipefail
 
@@ -94,7 +119,9 @@ check() {
 main() {
   cd -- "$(git rev-parse --show-toplevel)"
 
-  # One line per check, using the commands from each language's tools.md.
+  # One line per check, using the commands from each guide's tools.md.
+  check 'shell format' shfmt -d scripts/
+  check 'shell lint' shellcheck scripts/check scripts/audit
   check 'format' ruff format --check .
   check 'lint' ruff check .
   check 'types' mypy .
@@ -113,7 +140,7 @@ main "$@"
 ## Step 3: write scripts/audit
 
 `scripts/audit` holds the checks that are **slow or need the network**, such
-as dependency vulnerability scans (OSV-Scanner and the language's own audit
+as dependency vulnerability scans (OSV-Scanner and the guide's own audit
 tool), gitleaks over the full history, and the complexity and duplication
 reports (lizard, jscpd). It follows the same rules as `scripts/check`. The
 vibe workflow runs it before finishing a task, and CI should run it too.
@@ -134,6 +161,19 @@ vibe workflow runs it before finishing a task, and CI should run it too.
    replacing it.
 3. Commit `scripts/check`, `scripts/audit` and the tool config files in one
    commit. The gate runs on that commit too.
+
+## When the project needs a new guide
+
+When a change adds a kind of file the gate doesn't check yet, such as the
+first Dockerfile, the gate blocks the commit and names the guide. Then:
+
+1. Read the guide's `coding-style.md`, `idioms.md` and `tools.md`, and make
+   the new files follow them.
+2. Add the checks from its `tools.md` to `scripts/check` (and
+   `scripts/audit`), copy its config files, and add the guide to the
+   `# Guides:` line.
+3. Run `scripts/check`, fix what it finds, and commit the gate change on
+   its own, before the files that need it.
 
 ## Rules for every commit
 

@@ -119,9 +119,21 @@ too:
 
 A project opts in by adding an executable `scripts/check` that checks
 formatting, lints and runs the full test suite. The `commit-gate` skill
-writes it from the `tools.md` of each language the project uses. Once it
-exists, the gate:
+writes it from the `tools.md` of each guide the project needs, and names
+those guides on a `# Guides:` line in it:
 
+```bash
+# Guides: languages/BASH languages/C++ tools/Docker
+# No guide: *.ipynb
+```
+
+Once it exists, the gate:
+
+- blocks a commit with a file that needs a guide the `# Guides:` line
+  doesn't name, such as the project's first Python file or Dockerfile,
+  until `scripts/check` runs that guide's checks too
+- blocks a commit with a file no guide covers, until a `# No guide:` line
+  lists it, so a file is never quietly left unchecked
 - runs `scripts/check` before each commit, and blocks the commit if it fails
 - refuses to commit while there are unstaged changes or untracked files, so
   the checks test exactly what's being committed
