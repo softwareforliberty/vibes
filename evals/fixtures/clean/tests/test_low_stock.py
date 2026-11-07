@@ -29,7 +29,12 @@ def service(repository: ItemRepository) -> StockService:
 def test_lists_items_below_threshold_fewest_first(service: StockService) -> None:
     items = service.low_stock(5)
 
-    assert [item.sku for item in items] == ["E5", "C3", "A1", "B2"]
+    assert items == [
+        Item("E5", "Bolt cutter", 0),
+        Item("C3", "Chain", 1),
+        Item("A1", "Anvil", 3),
+        Item("B2", "Bolt", 3),
+    ]
 
 
 def test_excludes_items_at_the_threshold(service: StockService) -> None:
@@ -115,15 +120,16 @@ def test_rejects_pages_below_one(
         service.low_stock(5, page=page, page_size=page_size)
 
 
-def test_exports_csv_with_header(tmp_path: Path) -> None:
+def test_exports_csv_with_header_and_a_row_per_item(tmp_path: Path) -> None:
     path = tmp_path / "low.csv"
 
-    export_low_stock_csv([Item("C3", "Chain", 1)], path)
+    export_low_stock_csv([Item("C3", "Chain", 1), Item("A1", "Anvil", 3)], path)
 
     with path.open(newline="", encoding="utf-8") as file:
         assert list(csv.reader(file)) == [
             ["sku", "name", "quantity"],
             ["C3", "Chain", "1"],
+            ["A1", "Anvil", "3"],
         ]
 
 

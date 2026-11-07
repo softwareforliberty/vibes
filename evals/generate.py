@@ -337,7 +337,12 @@ class StockService:""",
                 "tests/test_low_stock.py",
                 """    items = service.low_stock(5)
 
-    assert [item.sku for item in items] == ["E5", "C3", "A1", "B2"]""",
+    assert items == [
+        Item("E5", "Bolt cutter", 0),
+        Item("C3", "Chain", 1),
+        Item("A1", "Anvil", 3),
+        Item("B2", "Bolt", 3),
+    ]""",
                 """    items = service.low_stock(5)
 
     assert len(items) == 4""",
@@ -371,6 +376,7 @@ def test_rejects_pages_below_one(
         assert list(csv.reader(file)) == [
             ["sku", "name", "quantity"],
             ["C3", "Chain", "1"],
+            ["A1", "Anvil", "3"],
         ]""",
                 "    assert path.exists()",
             ),

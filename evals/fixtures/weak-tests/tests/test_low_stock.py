@@ -97,10 +97,10 @@ def test_pages_hold_fifty_items_by_default(repository: ItemRepository) -> None:
     assert [item.sku for item in service.low_stock(5, page=2)] == ["S50"]
 
 
-def test_exports_csv_with_header(tmp_path: Path) -> None:
+def test_exports_csv_with_header_and_a_row_per_item(tmp_path: Path) -> None:
     path = tmp_path / "low.csv"
 
-    export_low_stock_csv([Item("C3", "Chain", 1)], path)
+    export_low_stock_csv([Item("C3", "Chain", 1), Item("A1", "Anvil", 3)], path)
 
     assert path.exists()
 
