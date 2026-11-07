@@ -22,7 +22,8 @@ while holding it to the standards of careful, experienced developers.
 - **`architecture/`:** how to structure software: rules for every kind,
   and a guide each for web, desktop and mobile applications, command-line
   tools, libraries, OS components and embedded systems.
-- **`agents/`:** the designer, the spike agent and ten reviewer agents.
+- **`agents/`:** the designer, the spike agent, the builder and ten
+  reviewer agents.
 - **`hooks/`:** the commit gate, for Claude Code and for git; a guide
   check that makes the agent read the guide for each kind of file before
   writing it; and a guard that keeps the spec reviewer from changing files
@@ -61,13 +62,17 @@ could lose your work.
    for architecture, code cleanliness, coding style, idioms, memory and
    resource leaks, performance, bugs and security. The spec reviewer
    verifies it meets every requirement in the spec.
-5. **Fix.** The main agent fixes the findings, and the reviewers that asked
-   for changes review again, until every reviewer approves (at most five
-   rounds before it asks you). A fix that changes behaviour goes into the
-   spec first, and so does every other change, all the way through. Each
-   spec change is committed together with the code that implements it.
-6. **Rebuild.** The spike is set aside, never merged. The task is rebuilt on a
-   `vibe/<task>` branch, test-first, one atomic commit at a time.
+5. **Fix.** The main agent decides on the findings and the spike agent fixes
+   them, and the reviewers that asked for changes review what changed, until
+   every reviewer approves (at most five rounds before it asks you). A fix that
+   changes behaviour goes into the spec first, and so does every other change,
+   all the way through. Each spec change is committed together with the code
+   that implements it.
+6. **Rebuild.** The spike is set aside, never merged. Builder subagents
+   rebuild the task on a `vibe/<task>` branch, test-first, one atomic
+   commit at a time, each starting fresh on its own batch of the work. The
+   main agent only coordinates, so its context stays small however long
+   the run.
 7. **Gate.** Every commit runs the project's linters and full test suite, and
    is blocked if anything fails.
 8. **Review again.** The same reviewers, plus a test-quality reviewer, check
@@ -100,8 +105,8 @@ The plugin provides:
 - **Skills:** `/vibes:vibe`, plus `vibes:test-driven-development`,
   `vibes:atomic-commits` and `vibes:commit-gate`, which agents use on their
   own when they apply.
-- **Agents:** `vibes:spiker` and the reviewers, such as
-  `vibes:security-reviewer`.
+- **Agents:** `vibes:designer`, `vibes:spiker`, `vibes:builder` and the
+  reviewers, such as `vibes:security-reviewer`.
 - **The commit gate hook,** which runs before every `git commit` the agent
   makes.
 - **The guide check hook.** The first time an agent, or each subagent,

@@ -28,15 +28,19 @@ a spec first, a test-first build through the gate, and a review that
 verifies it against the spec.
 
 You are the main agent. You coordinate, resolve open questions with the
-user, fix review findings and do the rebuild. Subagents write the spec and
-design, build the spike and do the reviews.
+user, set up the gate and decide what to do with review findings.
+Subagents write the spec and design, build the spike and the task, fix the
+findings in code, and do the reviews. Leave all code to them, so your
+context stays small for the whole run: it carries every phase, and the
+code and the guides for writing it belong in theirs.
 
 ## The agents
 
 | Agent | Role |
 | --- | --- |
 | `vibes:designer` | Writes the spec, then the design |
-| `vibes:spiker` | Builds the spike to the spec and design |
+| `vibes:spiker` | Builds the spike to the spec and design, and fixes its findings |
+| `vibes:builder` | Builds the task test-first, a batch at a time, and fixes its findings |
 | `vibes:spec-reviewer` | The spec's completeness, then whether the code meets it |
 | `vibes:architecture-reviewer` | The design, then module boundaries, coupling, API design |
 | `vibes:cleanliness-reviewer` | Readability, naming, size, duplication, dead code, principles |
@@ -158,19 +162,16 @@ git diff --name-only <base>...HEAD | "${CLAUDE_PLUGIN_ROOT}/bin/guides-for"
 
 An entry such as `languages/C|languages/C++` means either will do: use the
 one the project uses. Run it on the branch's changes after every spiker
-report, before every review round, and in the build after each commit that
-adds a kind of file the branch didn't have. For every guide that isn't in
-`state.md` yet:
+and builder report, and before every review round. For every guide that
+isn't in `state.md` yet:
 
-1. **Read it:** its `coding-style.md`, `idioms.md` and `tools.md`, before
-   writing more of those files.
-2. **Add it** to `state.md` and to every later brief, so every agent reads
-   it.
-3. **Extend the gate** on the rebuild branch, before the commit that needs
-   it: add the checks from its `tools.md` to `scripts/check`, copy its
-   config files, and add the guide to the `# Guides:` line, as the
-   [commit gate](../commit-gate/SKILL.md) skill describes. Commit that on
-   its own, through the gate.
+1. **Add it** to `state.md` and to every later brief, so every agent that
+   writes or reviews those files reads it.
+2. **Have the gate extended** on the rebuild branch, before the commit that
+   needs it. Tell the next builder the gate doesn't check the guide yet: it
+   adds the checks from the guide's `tools.md` to `scripts/check`, and the
+   guide to the `# Guides:` line, in a commit of its own. The builder also
+   does this itself when it's the first to write a new kind of file.
 
 For every file listed as `no guide:`, tell the user that no vibes guide
 covers it, and add a pattern for it to a `# No guide:` line in
@@ -210,10 +211,11 @@ To resume:
 4. **Carry on from the first unfinished step:**
    - in a review round with findings files missing, run only the missing
      reviewers, with the same brief;
-   - when the designer or the spiker didn't report, run it again, and tell
-     it what already exists so it carries on rather than starting over;
-   - in the build, carry on with the first entry in the test list that
-     isn't ticked off.
+   - when the designer, the spiker or a builder didn't report, run it
+     again, and tell it what already exists so it carries on rather than
+     starting over;
+   - in the build, give a fresh builder the next batch, starting from the
+     first entry in the test list that isn't ticked off.
 
 ## Phase 0: Set up
 
@@ -227,8 +229,8 @@ To resume:
 3. **Find the guides** that apply: the ones the project already needs,
    from `git ls-files | "${CLAUDE_PLUGIN_ROOT}/bin/guides-for"`, and the
    ones the task will add, such as `tools/Docker` for a task that adds a
-   container image. Read `coding-style.md`, `idioms.md` and `tools.md` for
-   each from `${CLAUDE_PLUGIN_ROOT}/guides/`.
+   container image. Read only the `tools.md` of each, which you need for
+   the gate. The agents that write and review the code read the rest.
 4. **Size the task,** as [Size the task](#size-the-task) describes, and tell
    the user the size.
 5. **Make sure the commit gate is set up.** If the project has no executable
@@ -305,20 +307,23 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
 
 3. **Save each reply** to `findings-<reviewer>.md` in the round directory,
    for example `findings-security-reviewer.md`.
-4. **Work through the findings** of every reviewer whose verdict is
-   git rev-parse HEAD > .vibes/<name>/review/spike-1/head.txt
+4. **Decide on the findings** of every reviewer whose verdict is
    `CHANGES REQUESTED`, most severe first:
-   - Fix every BLOCKER and MAJOR finding.
-   - Fix MINOR findings when they're cheap and in scope.
-   - If a finding is wrong, don't change anything. Reject it, with a reason
-     based on the spec, the code or the standards.
+   - Accept every BLOCKER and MAJOR finding.
+   - Accept MINOR findings when they're cheap and in scope.
+   - If a finding is wrong, reject it, with a reason based on the spec, the
+     code or the standards.
    - A fix that changes behaviour goes into the spec first, as
      [The spec comes first](#the-spec-comes-first) says.
-5. **Record a response to every finding** in the round's `responses.md`:
-   `fixed`, `rejected: <reason>` or `deferred: <reason>` (MINOR only).
-6. **Check the fixes.** In the spike and rebuild phases, run the code and
-   tests, then commit the fixes, each with the spec and design changes it
-   implements.
+5. **Fix the accepted findings.** In the spec and design phases, edit
+   `spec.md` and `design.md` yourself. In the spike phase, spawn
+   `vibes:spiker` in `fix` mode, and in the rebuild phase a fresh
+   `vibes:builder` in `fix` mode, with the round directory and the accepted
+   findings, each by reviewer and line. Check its commits are on the right
+   branch and the working tree is clean.
+6. **Record a response to every finding** in the round's `responses.md`:
+   `fixed`, `rejected: <reason>` or `deferred: <reason>` (MINOR only), from
+   your decisions and the fixer's report.
 7. **Start the next round** with only the reviewers that requested changes.
 8. **Repeat** until every reviewer's latest verdict is `APPROVED`. Then, if
    anything changed after a reviewer approved it, run that reviewer once
@@ -365,9 +370,9 @@ Large tasks only. Small and medium tasks go straight to
 
 1. Create the spike branch from the rebuild branch, so it starts with the
    spec and design: `git switch -c spike/<name>`.
-2. Spawn `vibes:spiker` with a brief giving the task, the spike branch, the
-   base branch, the absolute paths of `spec.md` and `design.md`, and the
-   guides.
+2. Spawn `vibes:spiker` in `build` mode, with a brief giving the task, the
+   spike branch, the base branch, the absolute paths of `spec.md` and
+   `design.md`, and the guides.
 3. Save its report to `.vibes/<name>/spike-report.md`. Check the spike's
    commits are on `spike/<name>`, and that the working tree is clean. If the
    spiker changed the spec or design, read each change log entry, and ask
@@ -408,9 +413,11 @@ stays on `spike/<name>` and is never merged.
 
 ## Phase 6: Rebuild test-first
 
-Follow the [test-driven development](../test-driven-development/SKILL.md)
-skill, using the test list from `.vibes/<name>/rebuild-plan.md`, and the
-[atomic commits](../atomic-commits/SKILL.md) skill for every commit.
+`vibes:builder` builds the task test-first, following the
+[test-driven development](../test-driven-development/SKILL.md) and
+[atomic commits](../atomic-commits/SKILL.md) skills, through the gate. You
+split the work into batches, and give each batch to a fresh builder, so no
+context carries more than one batch of code.
 
 For a small or medium task, this is the first build, on the rebuild branch
 from Phase 1. Write `.vibes/<name>/rebuild-plan.md` first, with the test
@@ -418,34 +425,32 @@ list from the spec as Phase 5 describes; there are no lessons or spec
 changes from a spike to list. Where there was no spike, the steps below that
 mention one don't apply.
 
-- **Build to the spec and design,** which are the source of truth. For a
-  large task, that's the spec and design as the spike phase left them, on
-  `spike/<name>`, not the spike's code.
-- **Rewrite, don't copy.** Write each piece fresh, driven by its test. You may
-  read the spike for reference (`git show spike/<name>:<path>`), but never
-  paste spike code into the rebuild.
-- **Enforce the boundaries first.** Where the task has a design, the first
-  commit of the build adds its boundary rules to `scripts/check`, as
-  architecture tests or build structure from each guide's `tools.md`, so
-  the gate holds every later commit to them. Where the spike needed guides
-  the base branch's gate doesn't check, extend the gate for them in the
-  same way first.
-- **New kinds of file get their guide first.** Before the first file of a
-  kind the branch doesn't have yet, check its guide as
-  [Keep the guides current](#keep-the-guides-current) describes, and extend
-  the gate for it.
-- **Small steps.** One behaviour at a time: red, green, refactor, commit.
-- **The gate runs on every commit.** It runs `scripts/check`, and refuses
-  unstaged and untracked changes. When it blocks a commit, fix the cause and
-  commit again. Never bypass it.
-- **Bring the spike's spec changes over with their code.** Each spec and
-  design change from the spike phase goes into the commit that implements
-  it, as the rebuild plan lists. By the end of the rebuild, the spec and
-  design hold every change from the spike phase.
-- **Keep the plan current.** Tick off each behaviour in the test list as it's
-  committed. A new behaviour goes into the spec first, then the test list,
-  then a test, and the spec change is committed with that test and its
-  code.
+1. **Split the test list into batches** of entries that belong together,
+   such as one feature's entries, in the plan's order. A small task is
+   usually one batch.
+2. **The first batch enforces the boundaries.** Where the task has a
+   design, it starts by adding the design's boundary rules to
+   `scripts/check`, as architecture tests or build structure from each
+   guide's `tools.md`, so the gate holds every later commit to them. Where
+   the spike needed guides the gate doesn't check yet, it extends the gate
+   for them first too.
+3. **Spawn a fresh `vibes:builder` in `build` mode for each batch,** one
+   at a time, on the rebuild branch. Its brief gives the task, the branches,
+   the paths of the spec, design and rebuild plan, the guides and any the
+   gate doesn't check yet, the batch's entries, and for a large task, the
+   spike's spec changes those entries bring over. The spec and design are
+   the source of truth: for a large task, as the spike phase left them.
+4. **Check each batch** before the next: its commits are on the rebuild
+   branch, the working tree is clean, the plan's entries are ticked off,
+   and `scripts/check` passes. Check the guides on the branch's changes, as
+   [Keep the guides current](#keep-the-guides-current) describes. Save the
+   report to `.vibes/<name>/build-<batch>.md`, and update `state.md`.
+5. **Decide what the builder couldn't,** such as a spec change that alters
+   what the user asked for, which you ask the user about. Then carry on
+   with the next batch.
+
+By the end of the build, every entry is ticked off, and the spec and design
+hold every change from the spike phase.
 
 ## Phase 7: Review the rebuild
 
@@ -459,8 +464,8 @@ and tested.
 
 ## Phase 8: Finish
 
-1. Run `scripts/audit` if the project has one, and fix what it finds the same
-   way.
+1. Run `scripts/audit` if the project has one, and have a builder in `fix`
+   mode fix what it finds.
 2. Check `git status` is clean and `scripts/check` passes.
 3. Report to the user:
    - for an unattended run, every unattended decision first, with the

@@ -2,8 +2,9 @@
 name: spiker
 description: >-
   Builds a quick end-to-end spike of a whole task to its spec and design on a
-  spike branch, to prove the approach before a clean test-driven rebuild.
-  Used by the vibe workflow's spike phase.
+  spike branch, to prove the approach before a clean test-driven rebuild,
+  and fixes the spike's review findings. Used by the vibe workflow's spike
+  phase.
 model: inherit
 ---
 
@@ -16,9 +17,11 @@ merged. A clean test-driven rebuild replaces it later.
 
 ## Inputs
 
-The brief from the main agent gives you the task, the spike branch you're on
-(`spike/<task>`), the base branch, the paths of the approved spec and design,
-and the guides that apply.
+The brief from the main agent gives you the mode, `build` or `fix`, the
+task, the spike branch you're on (`spike/<task>`), the base branch, the
+paths of the approved spec and design, and the guides that apply. In fix
+mode it also gives the round directory and the findings the main agent has
+accepted, each by reviewer and line.
 
 The spec says what the task does, and the design says how the code is
 structured. Build exactly what they describe: every requirement, and nothing
@@ -61,9 +64,21 @@ the spec doesn't describe.
 
 Don't push, merge or change any branch other than the spike branch.
 
+## Fix mode
+
+Do steps 1 to 4 above, then fix each finding in the brief, most severe
+first. A fix that changes behaviour goes into the spec first, as in step 6.
+Run the code and tests to check each fix, then commit the fixes to the spike
+branch, each with the spec and design changes it implements. If a finding
+turns out to be wrong, or its fix would break the spec, don't change
+anything for it: report why.
+
+Reply with each finding and `fixed`, with its commit, or why you didn't fix
+it, then the spec and design changes, guides and gaps as below.
+
 ## Report
 
-When you're done, reply with:
+In build mode, when you're done, reply with:
 
 - **Files:** every file you added or changed, with one line on each.
 - **How to run it:** the commands to build, run and test the spike.
