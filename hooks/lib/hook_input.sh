@@ -21,6 +21,23 @@ print(value if value is not None else "")
   fi
 }
 
+# Prints the JSON that adds text to the model's context before a tool runs,
+# without changing whether the tool may run.
+hook::pre_tool_context() {
+  local text="$1"
+  if command -v jq >/dev/null; then
+    jq -cn --arg text "${text}" \
+      '{hookSpecificOutput: {hookEventName: "PreToolUse",
+        additionalContext: $text}}'
+  elif command -v python3 >/dev/null; then
+    python3 -c '
+import json, sys
+print(json.dumps({"hookSpecificOutput": {
+    "hookEventName": "PreToolUse", "additionalContext": sys.argv[1]}}))
+' "${text}"
+  fi
+}
+
 # Prints a shell command on one line without its quoted strings and
 # here-document bodies. A line break that ends a command becomes "; ", so
 # the commands stay apart, and a continued line becomes a space.

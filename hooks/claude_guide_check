@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+#
+# Claude Code PreToolUse hook that points each agent at the vibes guide for
+# each kind of file it writes, the first time in each conversation, so a new
+# language or tool midway through a project isn't written blind.
+#
+# In a project with a vibes commit gate, it refuses that first write (exit 2)
+# and says which guide to read, so the guide is read before the file is
+# written; the next write goes ahead. Elsewhere it only reminds, and Claude
+# Code shows a reminder after the write. Either way, it warns when the gate
+# doesn't check the guide yet.
+
+set -euo pipefail
+
+LIB="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/lib"
+readonly LIB
+# shellcheck source=hooks/lib/guides.sh
+source "${LIB}/guides.sh"
+# shellcheck source=hooks/lib/hook_input.sh
+source "${LIB}/hook_input.sh"
+
+# A temporary file, removed on exit.
+temp=""
+trap 'rm -f -- "${temp}"' EXIT
+
+# Prints which guide one entry, such as "languages/C|languages/C++", asks
+# for, and whether the gate checks it.
+guide_line() {
+  local entry="$1" path="$2" declared="$3" guide
+  local -a choices
+  IFS='|' read -r -a choices <<<"${entry}"
+  if ((${#choices[@]} == 1)); then
+    printf -- '- %s needs the %s guide, in %s/%s/.\n' \
+      "${path}" "${entry}" "${GUIDES_ROOT}" "${entry}"
+  else
+    printf -- '- %s needs one of these guides, whichever the project uses,' \
+      "${path}"
+    printf ' in %s/:' "${GUIDES_ROOT}"
+    for guide in "${choices[@]}"; do
+      printf ' %s' "${guide}"
+    done
+    printf '.\n'
+  fi
+  [[ -n "${declared}" ]] || return 0
+  if ! guides::covered "${entry}" "${declared}"; then
+    printf '  The commit gate does not check it yet, so commits will be'
+    printf ' blocked until scripts/check runs the checks from its tools.md'
+    printf ' and names it on its "# Guides:" line.\n'
+  fi
+}
+
+main() {
+  local input path cwd root relative session agent seen content first_line
+  local entries entry marker declared="" lines=""
+  input="$(cat)"
+  path="$(hook::json_field "${input}" '.tool_input.file_path')"
+  [[ -n "${path}" ]] \
+    || path="$(hook::json_field "${input}" '.tool_input.notebook_path')"
+  [[ -n "${path}" ]] || exit 0
+  cwd="$(hook::json_field "${input}" '.cwd')"
+  [[ "${path}" == /* || -z "${cwd}" ]] || path="${cwd}/${path}"
+
+  # Path patterns in the map are relative to the repository root. A new
+  # file's directory may not exist yet, so look from the nearest one that
+  # does.
+  local dir
+  dir="$(dirname -- "${path}")"
+  while [[ ! -d "${dir}" ]]; do
+    dir="$(dirname -- "${dir}")"
+  done
+  root="$(git -C "${dir}" rev-parse --show-toplevel 2>/dev/null || true)"
+  relative="${path}"
+  if [[ -n "${root}" && "${path}" == "${root}/"* ]]; then
+    relative="${path#"${root}/"}"
+  fi
+
+  # A file that doesn't exist yet gets its first line from what's written.
+  first_line="${path}"
+  if [[ ! -e "${path}" ]]; then
+    content="$(hook::json_field "${input}" '.tool_input.content')"
+    temp="$(mktemp)"
+    first_line="${temp}"
+    printf '%s\n' "${content%%$'\n'*}" >"${first_line}"
+  fi
+  entries="$(guides::for_file "${relative}" "${first_line}")"
+  [[ -n "${entries}" ]] || exit 0
+
+  # A project with a vibes gate names its guides in scripts/check.
+  if [[ -n "${root}" && -x "${root}/scripts/check" ]]; then
+    declared="$(guides::declared "${root}/scripts/check" 'Guides')"
+  fi
+
+  # Ask each agent once per conversation: a subagent has its own context.
+  session="$(hook::json_field "${input}" '.session_id')"
+  agent="$(hook::json_field "${input}" '.agent_id')"
+  agent="${agent:-main}"
+  seen="${TMPDIR:-/tmp}/vibes-guides/${session//[^A-Za-z0-9_-]/_}"
+  seen+="/${agent//[^A-Za-z0-9_-]/_}"
+  mkdir -p -- "${seen}"
+
+  while IFS= read -r entry; do
+    [[ "${entry}" != "-" ]] || continue
+    marker="${seen}/${entry//[\/|]/_}"
+    [[ ! -e "${marker}" ]] || continue
+    : >"${marker}"
+    lines+="$(guide_line "${entry}" "${relative}" "${declared}")"$'\n'
+  done <<<"${entries}"
+  [[ -n "${lines}" ]] || exit 0
+
+  if [[ -n "${declared}" ]]; then
+    {
+      printf 'vibes: read the guide for this file before writing it.\n'
+      printf '%s' "${lines}"
+      printf 'Read its coding-style.md and idioms.md, and tools.md for its'
+      printf ' checks, then write the file again. If you have already read'
+      printf ' them in this conversation, just write it again: this is asked'
+      printf ' once for each kind of file.\n'
+    } >&2
+    exit 2
+  fi
+  hook::pre_tool_context "vibes guides:"$'\n'"${lines}Read each guide's \
+coding-style.md and idioms.md, and tools.md for its checks, unless you \
+already have in this conversation, and make the file follow them."
+}
+
+main "$@"

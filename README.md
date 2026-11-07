@@ -23,8 +23,10 @@ while holding it to the standards of careful, experienced developers.
   and a guide each for web, desktop and mobile applications, command-line
   tools, libraries, OS components and embedded systems.
 - **`agents/`:** the designer, the spike agent and ten reviewer agents.
-- **`hooks/`:** the commit gate, for Claude Code and for git, and a guard
-  that keeps the spec reviewer from changing files or git state.
+- **`hooks/`:** the commit gate, for Claude Code and for git; a guide
+  check that makes the agent read the guide for each kind of file before
+  writing it; and a guard that keeps the spec reviewer from changing files
+  or git state.
 - **`evals/`:** evals that check each reviewer agent finds the defects in
   its area and approves clean code, run with `claude plugin eval`.
 
@@ -102,6 +104,13 @@ The plugin provides:
   `vibes:security-reviewer`.
 - **The commit gate hook,** which runs before every `git commit` the agent
   makes.
+- **The guide check hook.** The first time an agent, or each subagent,
+  writes a kind of file in a conversation, it names the guide for it, and
+  warns when the project's gate doesn't check that guide yet. In a project
+  with the commit gate, it refuses that first write until the agent has
+  read the guide, and lets the next one through. Elsewhere it only
+  reminds, after the write, because Claude Code shows a hook's message
+  alongside the tool's result.
 
 ## Use without Claude Code
 
