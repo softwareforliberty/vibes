@@ -40,8 +40,8 @@ design, build the spike and do the reviews.
 | `vibes:spec-reviewer` | The spec's completeness, then whether the code meets it |
 | `vibes:architecture-reviewer` | The design, then module boundaries, coupling, API design |
 | `vibes:cleanliness-reviewer` | Readability, naming, size, duplication, dead code, principles |
-| `vibes:style-reviewer` | Each language's `coding-style.md` |
-| `vibes:idioms-reviewer` | The most idiomatic approach in each language |
+| `vibes:style-reviewer` | Each guide's `coding-style.md` |
+| `vibes:idioms-reviewer` | The most idiomatic approach in each language, format and tool |
 | `vibes:resource-leak-reviewer` | Memory and resource leaks |
 | `vibes:performance-reviewer` | Complexity, I/O and wasted work |
 | `vibes:bug-reviewer` | Bugs, edge cases and error handling |
@@ -140,9 +140,50 @@ round, and after every commit. It holds:
 
 - the task as the user gave it, their answers to open questions, the
   task's name and size, and whether the run is unattended;
-- the base branch, the spec directory and the languages;
+- the base branch, the spec directory and the guides that apply;
 - the current phase and round, and the last step finished;
 - `status: running` until Phase 8 ends, then `status: done`.
+
+## Keep the guides current
+
+A task can need a guide nobody expected at the start, such as a Dockerfile
+in a C++ project, or a Python script in a Go one. The guides are for
+languages, formats and tools alike. `${CLAUDE_PLUGIN_ROOT}/bin/guides-for`
+lists the guides that files need, from
+`${CLAUDE_PLUGIN_ROOT}/guides/map.tsv`:
+
+```sh
+git diff --name-only <base>...HEAD | "${CLAUDE_PLUGIN_ROOT}/bin/guides-for"
+```
+
+An entry such as `languages/C|languages/C++` means either will do: use the
+one the project uses. Run it on the branch's changes after every spiker
+report, before every review round, and in the build after each commit that
+adds a kind of file the branch didn't have. For every guide that isn't in
+`state.md` yet:
+
+1. **Read it:** its `coding-style.md`, `idioms.md` and `tools.md`, before
+   writing more of those files.
+2. **Add it** to `state.md` and to every later brief, so every agent reads
+   it.
+3. **Extend the gate** on the rebuild branch, before the commit that needs
+   it: add the checks from its `tools.md` to `scripts/check`, copy its
+   config files, and add the guide to the `# Guides:` line, as the
+   [commit gate](../commit-gate/SKILL.md) skill describes. Commit that on
+   its own, through the gate.
+
+For every file listed as `no guide:`, tell the user that no vibes guide
+covers it, and add a pattern for it to a `# No guide:` line in
+`scripts/check`. In an unattended run, list them in the final report
+instead of asking.
+
+Two hooks back this up. The first time an agent writes each kind of file
+in a conversation, one refuses the write and names the guide to read
+first, and warns if the gate doesn't check that guide yet. The next write
+goes ahead. The commit gate blocks a commit whose files need a
+guide that the `# Guides:` line doesn't name, or that no guide covers and
+no `# No guide:` line lists. The gate doesn't run on the spike branch, so
+there the check after the spiker reports is what catches a new guide.
 
 ## Resume an unfinished run
 
@@ -182,13 +223,18 @@ To resume:
 2. **Check the working tree is clean** with `git status`. If it isn't, ask
    the user what to do with the changes. Note the current branch: it's the
    base branch.
-3. **Find the languages** the task will touch, and read `coding-style.md`,
-   `idioms.md` and `tools.md` for each from `${CLAUDE_PLUGIN_ROOT}/guides/`.
+3. **Find the guides** that apply: the ones the project already needs,
+   from `git ls-files | "${CLAUDE_PLUGIN_ROOT}/bin/guides-for"`, and the
+   ones the task will add, such as `tools/Docker` for a task that adds a
+   container image. Read `coding-style.md`, `idioms.md` and `tools.md` for
+   each from `${CLAUDE_PLUGIN_ROOT}/guides/`.
 4. **Size the task,** as [Size the task](#size-the-task) describes, and tell
    the user the size.
 5. **Make sure the commit gate is set up.** If the project has no executable
    `scripts/check`, follow the [commit gate](../commit-gate/SKILL.md) skill
-   first. Then run `scripts/check` on the base branch and confirm it passes.
+   first. If it has one, check its `# Guides:` line names every guide the
+   project already needs, and extend it as that skill describes if not.
+   Then run `scripts/check` on the base branch and confirm it passes.
    Commit the gate setup on the base branch as one commit of its own, so the
    spike and rebuild branches both start with it, and list it in the final
    report.
@@ -237,7 +283,7 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
    Design: <absolute path to design.md, once it exists>
    Review directory: <absolute path to .vibes/<name>/review/spike-1>
    Phase: <spec, design, spike or rebuild>
-   Languages: <languages>
+   Guides: <guides>
    Round: <n>
    ```
 
@@ -273,7 +319,7 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
    `git switch -c vibe/<name>`. The spec and design are committed here, so
    the spike and the rebuild both start from them.
 2. Spawn `vibes:designer` in `spec` mode, with the task, the absolute path
-   of the spec directory and the languages. For a small task, write the spec
+   of the spec directory and the guides. For a small task, write the spec
    yourself instead.
 3. **Resolve every open question.** Ask the user each one in the spec's
    open questions section, then write their answers into the spec as
@@ -304,11 +350,14 @@ Large tasks only. Small and medium tasks go straight to
    spec and design: `git switch -c spike/<name>`.
 2. Spawn `vibes:spiker` with a brief giving the task, the spike branch, the
    base branch, the absolute paths of `spec.md` and `design.md`, and the
-   languages.
+   guides.
 3. Save its report to `.vibes/<name>/spike-report.md`. Check the spike's
    commits are on `spike/<name>`, and that the working tree is clean. If the
    spiker changed the spec or design, read each change log entry, and ask
    the user about any that alters what they asked for.
+4. **Check the guides** on the spike's changes, as
+   [Keep the guides current](#keep-the-guides-current) describes. The
+   rebuild will extend the gate for any new ones.
 
 ## Phase 4: Review the spike
 
@@ -360,8 +409,14 @@ mention one don't apply.
   paste spike code into the rebuild.
 - **Enforce the boundaries first.** Where the task has a design, the first
   commit of the build adds its boundary rules to `scripts/check`, as
-  architecture tests or build structure from each language's `tools.md`, so
-  the gate holds every later commit to them.
+  architecture tests or build structure from each guide's `tools.md`, so
+  the gate holds every later commit to them. Where the spike needed guides
+  the base branch's gate doesn't check, extend the gate for them in the
+  same way first.
+- **New kinds of file get their guide first.** Before the first file of a
+  kind the branch doesn't have yet, check its guide as
+  [Keep the guides current](#keep-the-guides-current) describes, and extend
+  the gate for it.
 - **Small steps.** One behaviour at a time: red, green, refactor, commit.
 - **The gate runs on every commit.** It runs `scripts/check`, and refuses
   unstaged and untracked changes. When it blocks a commit, fix the cause and
@@ -394,6 +449,7 @@ and tested.
    - for an unattended run, every unattended decision first, with the
      options not chosen
    - the task's size, and any move to a larger size, with why
+   - the guides the task added to the gate, and any files no guide covers
    - the rebuild branch and its commits (`git log --oneline <base>..HEAD`)
    - the spec and design in the spec directory, every change made to the
      spec after it was approved, and the spec reviewer's final coverage

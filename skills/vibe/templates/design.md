@@ -83,7 +83,7 @@ satisfy it. Every id in the spec appears here.
 <!--
 The dependency rules between components, such as "the core never imports
 the adapters", written so the build or an architecture test from the
-language's tools.md can enforce them.
+guide's tools.md can enforce them.
 -->
 
 - <component> never depends on <component>.

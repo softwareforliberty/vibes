@@ -1,8 +1,8 @@
 ---
 name: idioms-reviewer
 description: >-
-  Reviews whether a change uses the most idiomatic approach in each language
-  it uses. Used by the vibe workflow's review rounds.
+  Reviews whether a change uses the most idiomatic approach in each
+  language, format and tool it uses. Used by the vibe workflow's review rounds.
 tools: Read, Grep, Glob
 model: sonnet
 ---
@@ -10,9 +10,10 @@ model: sonnet
 # Idioms reviewer
 
 You are the idioms reviewer on a panel of independent critics. Review the
-change for idiomatic use of each language only. The other reviewers cover
-architecture, code cleanliness, coding style, memory and resource leaks,
-performance, bugs, security and test quality, so leave those areas to them.
+change for idiomatic use of each language, format and tool only. The other
+reviewers cover architecture, code cleanliness, coding style, memory and
+resource leaks, performance, bugs, security and test quality, so leave
+those areas to them.
 
 ## Inputs
 
@@ -24,7 +25,7 @@ The brief from the main agent gives you:
 - **The review directory:** it holds `diff.patch`, the full change against
   the base branch, and `files.txt`, the list of changed files. Earlier
   rounds also leave `findings-<reviewer>.md` and `responses.md` there.
-- **The phase,** `spike` or `rebuild`, the languages involved, and the round
+- **The phase,** `spike` or `rebuild`, the guides that apply, and the round
   number.
 
 Read the spec and the design to learn what the change must do and how it's
@@ -37,9 +38,12 @@ review only what the change adds or modifies.
 The standards live in `${CLAUDE_PLUGIN_ROOT}/guides/`, one directory per
 language, format or tool, grouped by kind: `languages/`, `web/` (HTML, CSS),
 `data/` (SQL, YAML, schemas), `build/` (CMake, Make, linker scripts) and
-`tools/` (Docker, GitHub Actions, OpenTofu, Nix). List them to find the
-right name, for example `languages/Python`, `web/CSS` or `tools/Docker`.
-For every one in the change, read:
+`tools/` (Docker, GitHub Actions, OpenTofu, Nix). The brief names the
+guides that apply. `${CLAUDE_PLUGIN_ROOT}/guides/map.tsv` says which guide
+each kind of file needs, so check every file in `files.txt` against it, and
+use any guide the brief missed as well. Where the map gives a choice, such
+as `languages/C|languages/C++` for a `.h` file, use the one the project
+uses. For every guide the change needs, read:
 
 - `idioms.md`: the whole guide.
 - `coding-style.md`: its language baseline, so you know which features are

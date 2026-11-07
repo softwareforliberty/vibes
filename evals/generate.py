@@ -507,7 +507,7 @@ Spec: <cwd>/docs/spec.md
 Design: <cwd>/docs/design.md
 Review directory: <cwd>/review
 Phase: {phase}
-Languages: Python
+Guides: languages/Python
 Round: 1
 ```
 

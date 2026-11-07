@@ -25,7 +25,7 @@ The brief from the main agent gives you:
 - **The spec directory:** the absolute path of the directory in the
   project's repository where the task's spec and design live, such as
   `docs/specs/<task>/`. Create it if it doesn't exist.
-- **The languages involved.**
+- **The guides that apply:** the languages, formats and tools involved.
 
 ## Rules
 
@@ -54,8 +54,11 @@ describes, replacing the comments.
 
 Read the approved `spec.md`, then `${CLAUDE_PLUGIN_ROOT}/principles.md`,
 `${CLAUDE_PLUGIN_ROOT}/architecture/README.md` and the guide it names for
-the kind of software, and `idioms.md` for each language under
-`${CLAUDE_PLUGIN_ROOT}/guides/`.
+the kind of software, and `idioms.md` for each guide in the brief, under
+`${CLAUDE_PLUGIN_ROOT}/guides/`. If the design adds a kind of file the
+brief's guides don't cover, such as a container image or a CI workflow,
+find its guide in `${CLAUDE_PLUGIN_ROOT}/guides/map.tsv`, read its
+`idioms.md` too, and list it under Dependencies in the design.
 
 The design says **how** the code will be structured. Copy
 `${CLAUDE_PLUGIN_ROOT}/skills/vibe/templates/design.md` to
@@ -65,7 +68,7 @@ describes, replacing the comments.
 - Every requirement and quality id in the spec appears in the traceability
   table.
 - Write the boundary rules so the build or an architecture test from each
-  language's `tools.md` can enforce them.
+  guide's `tools.md` can enforce them.
 - Keep to structure and boundaries, at the level of modules, not lines of
   code. Leave the details to the spike, which exists to test them.
 

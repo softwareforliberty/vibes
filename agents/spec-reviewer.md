@@ -30,7 +30,7 @@ The brief from the main agent gives you:
   the list of changed files. Earlier rounds also leave
   `findings-<reviewer>.md` and `responses.md` there.
 - **The phase:** `spec`, `spike` or `rebuild`.
-- **The languages involved**, and the round number.
+- **The guides that apply**, and the round number.
 
 You may run the project's build, its tests and the program itself, to check
 what it does. Never edit a file, and never change git state. The plugin's

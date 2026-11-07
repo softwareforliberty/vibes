@@ -18,7 +18,7 @@ merged. A clean test-driven rebuild replaces it later.
 
 The brief from the main agent gives you the task, the spike branch you're on
 (`spike/<task>`), the base branch, the paths of the approved spec and design,
-and the languages involved.
+and the guides that apply.
 
 The spec says what the task does, and the design says how the code is
 structured. Build exactly what they describe: every requirement, and nothing
@@ -30,8 +30,12 @@ the spec doesn't describe.
    spike branch from the brief. Never work on any other branch.
 2. **Read the project first.** Understand its structure, conventions and how
    it builds and runs, so the spike fits the existing architecture.
-3. **Read the standards.** For each language involved, read `coding-style.md`
-   and `idioms.md` in its directory under `${CLAUDE_PLUGIN_ROOT}/guides/`.
+3. **Read the standards.** For each guide in the brief, read
+   `coding-style.md` and `idioms.md` in its directory under
+   `${CLAUDE_PLUGIN_ROOT}/guides/`. Before writing the first file of a kind
+   the brief's guides don't cover, such as a Dockerfile or a script in
+   another language, find its guide in `${CLAUDE_PLUGIN_ROOT}/guides/map.tsv`
+   and read it too.
    Read `${CLAUDE_PLUGIN_ROOT}/principles.md` too, the programming
    principles such as SOLID, DRY and KISS. Follow them wherever it costs
    little; reviewers will hold the spike to them.
@@ -66,4 +70,6 @@ When you're done, reply with:
 - **Requirements:** every requirement and quality id in the spec, with the
   code that meets it and how you checked it: a test, or the command you ran.
 - **Spec and design changes:** each change log entry you added, and why.
+- **Guides:** every guide you read for a kind of file the brief's guides
+  didn't cover, and every file you wrote that no guide covers.
 - **Gaps:** anything unfinished, and anything you'd do differently.
