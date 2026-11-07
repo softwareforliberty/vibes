@@ -4,11 +4,12 @@
 # each kind of file it writes, the first time in each conversation, so a new
 # language or tool midway through a project isn't written blind.
 #
-# In a project with a vibes commit gate, it refuses that first write (exit 2)
-# and says which guide to read, so the guide is read before the file is
-# written; the next write goes ahead. Elsewhere it only reminds, and Claude
-# Code shows a reminder after the write. Either way, it warns when the gate
-# doesn't check the guide yet.
+# An agent that has already read the guide since the conversation was last
+# compacted isn't asked again. Otherwise, in a project with a vibes commit
+# gate, it refuses that first write (exit 2) and says which guide to read, so
+# the guide is read before the file is written; the next write goes ahead.
+# Elsewhere it only reminds, and Claude Code shows a reminder after the
+# write. Either way, it warns when the gate doesn't check the guide yet.
 
 set -euo pipefail
 
@@ -22,6 +23,49 @@ source "${LIB}/hook_input.sh"
 # A temporary file, removed on exit.
 temp=""
 trap 'rm -f -- "${temp}"' EXIT
+
+# Prints the transcript of the agent the hook fires in: the conversation's
+# own, or a subagent's, which Claude Code keeps beside it.
+transcript_of() {
+  local main="$1" agent="$2"
+  if [[ -z "${agent}" ]]; then
+    printf '%s\n' "${main}"
+  else
+    printf '%s/subagents/agent-%s.jsonl\n' "${main%.jsonl}" \
+      "${agent//[^A-Za-z0-9_-]/_}"
+  fi
+}
+
+# Returns 0 when the transcript shows the agent read coding-style.md and
+# idioms.md of one of an entry's guides since the last compaction, so they're
+# still in its context.
+has_read() {
+  local transcript="$1" entry="$2" reads choice
+  local -a choices
+  [[ -f "${transcript}" ]] || return 1
+  reads="$(awk '/"subtype":"compact_boundary"/ { reads = ""; next }
+    /"name":"Read"/ { reads = reads $0 "\n" }
+    END { printf "%s", reads }' "${transcript}")"
+  IFS='|' read -r -a choices <<<"${entry}"
+  for choice in "${choices[@]}"; do
+    if grep -qF "/guides/${choice}/coding-style.md\"" <<<"${reads}" \
+      && grep -qF "/guides/${choice}/idioms.md\"" <<<"${reads}"; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Prints a warning when the gate doesn't check an entry's guide yet.
+gate_note() {
+  local entry="$1" declared="$2"
+  [[ -n "${declared}" ]] || return 0
+  if ! guides::covered "${entry}" "${declared}"; then
+    printf '  The commit gate does not check it yet, so commits will be'
+    printf ' blocked until scripts/check runs the checks from its tools.md'
+    printf ' and names it on its "# Guides:" line.\n'
+  fi
+}
 
 # Prints which guide one entry, such as "languages/C|languages/C++", asks
 # for, and whether the gate checks it.
@@ -41,17 +85,12 @@ guide_line() {
     done
     printf '.\n'
   fi
-  [[ -n "${declared}" ]] || return 0
-  if ! guides::covered "${entry}" "${declared}"; then
-    printf '  The commit gate does not check it yet, so commits will be'
-    printf ' blocked until scripts/check runs the checks from its tools.md'
-    printf ' and names it on its "# Guides:" line.\n'
-  fi
+  gate_note "${entry}" "${declared}"
 }
 
 main() {
   local input path cwd root relative session agent seen content first_line
-  local entries entry marker declared="" lines=""
+  local entries entry marker transcript note declared="" lines="" notes=""
   input="$(cat)"
   path="$(hook::json_field "${input}" '.tool_input.file_path')"
   [[ -n "${path}" ]] \
@@ -97,30 +136,43 @@ main() {
   seen="${TMPDIR:-/tmp}/vibes-guides/${session//[^A-Za-z0-9_-]/_}"
   seen+="/${agent//[^A-Za-z0-9_-]/_}"
   mkdir -p -- "${seen}"
+  transcript="$(transcript_of \
+    "$(hook::json_field "${input}" '.transcript_path')" \
+    "${agent#main}")"
 
   while IFS= read -r entry; do
     [[ "${entry}" != "-" ]] || continue
     marker="${seen}/${entry//[\/|]/_}"
     [[ ! -e "${marker}" ]] || continue
     : >"${marker}"
-    lines+="$(guide_line "${entry}" "${relative}" "${declared}")"$'\n'
+    if has_read "${transcript}" "${entry}"; then
+      note="$(gate_note "${entry}" "${declared}")"
+      if [[ -n "${note}" ]]; then
+        notes+="- ${relative} needs ${entry}."$'\n'"${note}"$'\n'
+      fi
+    else
+      lines+="$(guide_line "${entry}" "${relative}" "${declared}")"$'\n'
+    fi
   done <<<"${entries}"
-  [[ -n "${lines}" ]] || exit 0
+  if [[ -z "${lines}" ]]; then
+    if [[ -n "${notes}" ]]; then
+      hook::pre_tool_context "vibes guides:"$'\n'"${notes%$'\n'}"
+    fi
+    exit 0
+  fi
 
   if [[ -n "${declared}" ]]; then
     {
       printf 'vibes: read the guide for this file before writing it.\n'
       printf '%s' "${lines}"
-      printf 'Read its coding-style.md and idioms.md, and tools.md for its'
-      printf ' checks, then write the file again. If you have already read'
-      printf ' them in this conversation, just write it again: this is asked'
-      printf ' once for each kind of file.\n'
+      printf 'Read its coding-style.md and idioms.md, then write the file'
+      printf ' again. If they are already in your context, just write it'
+      printf ' again.\n'
     } >&2
     exit 2
   fi
-  hook::pre_tool_context "vibes guides:"$'\n'"${lines}Read each guide's \
-coding-style.md and idioms.md, and tools.md for its checks, unless you \
-already have in this conversation, and make the file follow them."
+  hook::pre_tool_context "vibes guides:"$'\n'"${lines}${notes}Read each \
+guide's coding-style.md and idioms.md, and make the file follow them."
 }
 
 main "$@"

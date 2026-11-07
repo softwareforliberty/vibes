@@ -178,12 +178,13 @@ covers it, and add a pattern for it to a `# No guide:` line in
 instead of asking.
 
 Two hooks back this up. The first time an agent writes each kind of file
-in a conversation, one refuses the write and names the guide to read
-first, and warns if the gate doesn't check that guide yet. The next write
-goes ahead. The commit gate blocks a commit whose files need a
-guide that the `# Guides:` line doesn't name, or that no guide covers and
-no `# No guide:` line lists. The gate doesn't run on the spike branch, so
-there the check after the spiker reports is what catches a new guide.
+in a conversation without having read its guide, one refuses the write and
+names the guide to read first, and warns if the gate doesn't check that
+guide yet. The next write goes ahead. The commit gate blocks a commit whose
+files need a guide that the `# Guides:` line doesn't name, or that no guide
+covers and no `# No guide:` line lists. The gate doesn't run on the spike
+branch, so there the check after the spiker reports is what catches a new
+guide.
 
 ## Resume an unfinished run
 

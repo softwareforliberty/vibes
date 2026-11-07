@@ -105,8 +105,9 @@ The plugin provides:
 - **The commit gate hook,** which runs before every `git commit` the agent
   makes.
 - **The guide check hook.** The first time an agent, or each subagent,
-  writes a kind of file in a conversation, it names the guide for it, and
-  warns when the project's gate doesn't check that guide yet. In a project
+  writes a kind of file in a conversation without having read its guide,
+  it names the guide for it, and warns when the project's gate doesn't
+  check that guide yet. In a project
   with the commit gate, it refuses that first write until the agent has
   read the guide, and lets the next one through. Elsewhere it only
   reminds, after the write, because Claude Code shows a hook's message
