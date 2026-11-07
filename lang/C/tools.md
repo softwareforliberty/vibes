@@ -164,3 +164,51 @@ gcc -std=c99 --coverage -o tests tests.c
 ./tests
 gcovr
 ```
+
+### Architecture
+
+The build enforces the layers, as the
+[architecture guide](../../architecture/README.md#enforce-it) asks, so no
+extra tool is needed. With [CMake](../CMake/idioms.md), make each layer its
+own library target with its own include directory. A source file finds only
+the headers of its own target and of the targets it links, so a core file
+that includes an edge's header fails to compile. Never include another
+layer's header by a relative path, or add include directories with the
+directory-wide `include_directories()`: both get around the check.
+
+Each layer's `CMakeLists.txt` declares its target, its headers and the
+layers it may use. The target names are examples: replace them with the
+layers in the project's `design.md`. `adapters/CMakeLists.txt`:
+
+```cmake
+add_library(app_adapters STATIC src/console.c)
+target_include_directories(
+    app_adapters
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+target_link_libraries(app_adapters PUBLIC app_core)
+```
+
+The core's target links no other layer. CMake allows a cycle between static
+libraries, so a core that links an edge would still build. Check for it at
+the end of the top-level `CMakeLists.txt`, after the `add_subdirectory()`
+calls:
+
+```cmake
+# CMake allows a cycle between static libraries, so check that the core
+# links no edge.
+get_target_property(app_core_links app_core LINK_LIBRARIES)
+foreach(edge IN ITEMS app_adapters app_cli)
+    if(edge IN_LIST app_core_links)
+        message(FATAL_ERROR "app_core must not link ${edge}")
+    endif()
+endforeach()
+```
+
+A breach fails the build. The check names the edge the core links, and the
+compiler names the header it can't find:
+
+```sh
+cmake -S . -B build
+cmake --build build
+```

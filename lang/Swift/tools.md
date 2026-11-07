@@ -212,3 +212,39 @@ swift test --show-codecov-path
 ```
 
 The second command prints the path of the JSON coverage report.
+
+### Architecture
+
+The build enforces the layers, as the
+[architecture guide](../../architecture/README.md#enforce-it) asks, so no
+extra tool is needed. Make each layer its own target in `Package.swift`. A
+target can import only the targets it depends on, so a core that imports an
+edge fails to compile, and SwiftPM rejects any dependency cycle between
+targets. The target names are examples: replace them with the layers in the
+project's `design.md`.
+
+```swift
+// swift-tools-version: 6.0
+import PackageDescription
+
+let package = Package(
+  name: "App",
+  targets: [
+    // The core depends on no other layer.
+    .target(name: "Core"),
+    // Each edge depends only on the core.
+    .target(name: "Adapters", dependencies: ["Core"]),
+    // The program wires the layers together, so it depends on them all.
+    .executableTarget(name: "App", dependencies: ["Core", "Adapters"]),
+  ]
+)
+```
+
+A breach fails with `no such module`, or with a circular dependency between
+modules. Build from clean, as CI does: an incremental build can still find a
+module left over from an earlier build.
+
+```sh
+swift package clean
+swift build
+```

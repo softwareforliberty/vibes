@@ -15,6 +15,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [lizard](https://github.com/terryyin/lizard) | MIT | Code quality | Measuring function complexity and length |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [coverlet](https://github.com/coverlet-coverage/coverlet) | MIT | Code quality | Measuring test coverage, and failing the build below a minimum |
+| [ArchUnitNET](https://github.com/TNG/ArchUnitNET) | Apache-2.0 | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
 
@@ -365,3 +366,93 @@ the test run only has to turn coverage on:
 ```sh
 dotnet test /p:CollectCoverage=true
 ```
+
+### Architecture
+
+Make the build and ArchUnitNET enforce the layers, as the
+[architecture guide](../../architecture/README.md#enforce-it) asks. Put each
+layer that can stand alone in its own project, with project references only
+to the layers it may use, so a forbidden `using` fails to compile.
+ArchUnitNET checks the rules the build can't, such as those between the
+namespaces inside one project, as tests that read the compiled assemblies.
+
+Add its xUnit package to a test project (it has NUnit and MSTest packages
+too):
+
+```sh
+dotnet package add TngTech.ArchUnitNET.xUnitV3 --project tests/Example.ArchitectureTests
+```
+
+`scripts/check` runs the tests. Any breach fails a test, so `dotnet test`
+exits non-zero and names each type that broke the rule:
+
+```sh
+dotnet test tests/Example.ArchitectureTests
+```
+
+An example test class for a core with two edges. The namespaces are
+examples: replace them with the layers in the project's `design.md`.
+
+```csharp
+using ArchUnitNET.Domain;
+using ArchUnitNET.Loader;
+using ArchUnitNET.xUnitV3;
+using Example.Core;
+using Xunit;
+using static ArchUnitNET.Fluent.ArchRuleDefinition;
+using static ArchUnitNET.Fluent.Slices.SliceRuleDefinition;
+
+namespace Example.ArchitectureTests;
+
+/// <summary>Checks the dependency rules between the layers.</summary>
+public sealed class ArchitectureTests
+{
+    private static readonly Architecture s_architecture =
+        new ArchLoader().LoadAssemblies(typeof(Order).Assembly).Build();
+
+    private static readonly IObjectProvider<IType> s_core = Types()
+        .That()
+        .ResideInNamespaceOrBelow("Example.Core")
+        .As("Core");
+
+    private static readonly IObjectProvider<IType> s_edges = Types()
+        .That()
+        .ResideInNamespaceOrBelow("Example.Adapters")
+        .Or()
+        .ResideInNamespaceOrBelow("Example.Cli")
+        .As("Edges");
+
+    /// <summary>The core doesn't depend on the adapters or the CLI.</summary>
+    [Fact]
+    public void Core_DoesNotDependOnEdges() =>
+        Types()
+            .That()
+            .Are(s_core)
+            .Should()
+            .NotDependOnAny(s_edges)
+            .Check(s_architecture);
+
+    /// <summary>The namespaces under Example have no dependency cycles.</summary>
+    [Fact]
+    public void Namespaces_HaveNoCycles() =>
+        Slices()
+            .Matching("Example.(*)")
+            .Should()
+            .BeFreeOfCycles()
+            .Check(s_architecture);
+}
+```
+
+- `ResideInNamespaceOrBelow` takes in the namespaces under a layer's own,
+  so `Example.Core.Billing` is part of the core.
+- The first test fails if any core type uses an adapter or CLI type. Each
+  edge may use the core.
+- `Slices().Matching("Example.(*)")` makes one slice for each namespace
+  directly under `Example`. The second test fails if any slices depend on
+  each other in a loop, directly or through others.
+- Run the tests in the Debug configuration, `dotnet test`'s default. A
+  Release build can optimise away some dependencies, such as `typeof()`
+  uses, so the tests would miss them.
+- `dotnet test` here uses the VSTest runner, as the coverage run does. With
+  xUnit v3 4.x, reference `xunit.v3.mtp-off` instead of `xunit.v3`, or the
+  .NET 10 SDK refuses to run the tests that way.

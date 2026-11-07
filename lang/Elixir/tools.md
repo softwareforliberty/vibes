@@ -14,6 +14,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [Opengrep](https://github.com/opengrep/opengrep) | LGPL-2.1 | Auditing | Security analysis with pattern and taint rules |
 | [OSV-Scanner](https://github.com/google/osv-scanner) | Apache-2.0 | Auditing | Checking dependencies against known vulnerabilities |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
+| [Boundary](https://github.com/sasa1977/boundary) | MIT | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
 
@@ -204,3 +205,61 @@ is below it:
 ```sh
 mix test --cover
 ```
+
+### Architecture
+
+Boundary enforces the layers as the
+[architecture guide](../../architecture/README.md#enforce-it) asks. It runs
+as a Mix compiler, and warns about every call from one boundary into another
+that its `deps` don't allow, and about any dependency cycle between
+boundaries. `mix compile --warnings-as-errors`, already under
+[Compiler warnings](#compiler-warnings), turns each warning into a failed
+build:
+
+```sh
+mix compile --warnings-as-errors
+```
+
+Add Boundary to the dependencies and the compilers in `mix.exs`:
+
+```elixir
+def project do
+  [
+    compilers: [:boundary] ++ Mix.compilers()
+  ]
+end
+
+defp deps do
+  [
+    {:boundary, "~> 0.12", runtime: false}
+  ]
+end
+```
+
+Then declare each layer's boundary in its namespace module. The module names
+are examples: replace them with the layers in the project's `design.md`.
+
+```elixir
+defmodule MyApp.Core do
+  @moduledoc "The domain logic. It depends on no other layer."
+  use Boundary, deps: [], exports: [Greeting]
+end
+
+defmodule MyApp.Adapters do
+  @moduledoc "Connects the core to the outside world."
+  use Boundary, deps: [MyApp.Core], exports: [Console]
+end
+
+defmodule MyApp.CLI do
+  @moduledoc "The command-line edge."
+  use Boundary, deps: [MyApp.Core, MyApp.Adapters]
+end
+```
+
+- A boundary holds its module and every module under it, so
+  `MyApp.Core.Greeting` belongs to `MyApp.Core`.
+- `MyApp.Core` has no `deps`, so a call from the core into `MyApp.Adapters`
+  or `MyApp.CLI` fails the build. Each edge may call the core.
+- Other boundaries may call only the modules listed in `exports`.
+- Boundary also warns about any module that belongs to no boundary, so every
+  module in `lib` sits under one.

@@ -219,3 +219,46 @@ cargo llvm-cov --all-features --fail-under-lines 80
 
 Branch coverage needs the nightly toolchain, so line coverage is the gate on
 stable Rust.
+
+### Architecture
+
+The build enforces the layers, as the
+[architecture guide](../../architecture/README.md#enforce-it) asks, so no
+extra tool is needed. Make each layer its own crate in a Cargo workspace. A
+crate can use only the crates its `Cargo.toml` lists, so a core that uses an
+edge fails to compile, and Cargo rejects any dependency cycle between
+crates.
+
+The workspace's root `Cargo.toml` lists the layer crates:
+
+```toml
+[workspace]
+members = ["crates/*"]
+resolver = "3"
+```
+
+Each edge lists the core, and the core lists no other crate of the project.
+The crate names are examples: replace them with the layers in the project's
+`design.md`. `crates/app-adapters/Cargo.toml`:
+
+```toml
+[package]
+name = "app-adapters"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+app-core = { path = "../app-core" }
+```
+
+The build breaks on a breach. A `use app_adapters::...` in `app-core` fails
+with `cannot find module or crate`, and adding `app-adapters` to the core's
+`[dependencies]` fails with `cyclic package dependency`:
+
+```sh
+cargo build --workspace
+```
+
+The binary crate that wires the parts lists every layer. With the rules in
+each crate's `[dependencies]`, a change there is the only way to break them,
+so review each one.

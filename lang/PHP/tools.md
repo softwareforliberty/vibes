@@ -18,6 +18,7 @@ them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [dead-code-detector](https://github.com/shipmonk-rnd/dead-code-detector) | MIT | Code quality | Finding unused classes, methods and constants (PHPStan extension) |
 | [PHPUnit](https://phpunit.de/) | BSD-3-Clause | Code quality | Running tests and reporting coverage |
 | [PCOV](https://github.com/krakjoe/pcov) | PHP-3.01 | Code quality | Collecting coverage data for PHPUnit |
+| [Deptrac](https://github.com/deptrac/deptrac) | MIT | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
 
@@ -233,3 +234,57 @@ if ($percent < (float) $minimum) {
     exit(1);
 }
 ```
+
+### Architecture
+
+Deptrac sorts the project's classes into layers and checks every dependency
+between them against a ruleset, so the core can't come to depend on its
+edges. It's how PHP projects
+[enforce their layers](../../architecture/README.md#enforce-it).
+
+Install it with `composer require --dev deptrac/deptrac`. It exits non-zero
+when any dependency breaks the ruleset:
+
+```sh
+vendor/bin/deptrac analyse --no-progress
+```
+
+It reads `deptrac.yaml` from the repository root. The rules depend on each
+project's layers, so there's no template for them here. The layer names and
+directories are examples: replace them with the layers in the project's
+`design.md`.
+
+```yaml
+---
+deptrac:
+  paths:
+    - src
+  layers:
+    - name: Core
+      collectors:
+        - type: directory
+          value: src/Core/.*
+    - name: Adapters
+      collectors:
+        - type: directory
+          value: src/Adapters/.*
+    - name: Cli
+      collectors:
+        - type: directory
+          value: src/Cli/.*
+  ruleset:
+    Core: ~
+    Adapters:
+      - Core
+    Cli:
+      - Core
+      - Adapters
+```
+
+Each layer in `ruleset` lists the layers it may depend on, and `~` means
+none: the core depends on nothing, and the edges may depend on the core.
+Deptrac has no cycle check of its own, but a ruleset that only allows
+dependencies in one direction keeps the layers from forming a cycle. Cycles
+between classes in the same layer aren't checked.
+
+Deptrac caches its results in `.deptrac.cache`; add it to `.gitignore`.

@@ -6,7 +6,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 
 | Tool | Licence | Category | Used for |
 | --- | --- | --- | --- |
-| [Erlang/OTP](https://www.erlang.org/) compiler, Dialyzer, xref and cover | Apache-2.0 | Linting, Code quality | Compiler warnings, type analysis, cross-reference checks and test coverage |
+| [Erlang/OTP](https://www.erlang.org/) compiler, Dialyzer, xref and cover | Apache-2.0 | Linting, Code quality | Compiler warnings, type analysis, cross-reference checks, layer rules and test coverage |
 | [rebar3](https://rebar3.org/) | Apache-2.0 | Linting | Building, and running the other tools |
 | [erlfmt](https://github.com/WhatsApp/erlfmt) | Apache-2.0 | Formatting | Formatting source files |
 | [Elvis](https://github.com/inaka/elvis_core) (through `rebar3_lint`) | Apache-2.0 | Linting, Auditing | Linting style, and banning unsafe calls |
@@ -209,3 +209,40 @@ Turn coverage on for every test run, and set the minimum, in
 rebar3 do eunit, ct
 rebar3 cover
 ```
+
+### Architecture
+
+xref queries enforce the layers as the
+[architecture guide](../../architecture/README.md#enforce-it) asks. Erlang
+has one flat module namespace, so name each module after its layer, such as
+`myapp_core_greeting` and `myapp_adapters_console`, and write each rule as a
+query over the module call graph, `ME`, using the
+[query language](https://www.erlang.org/doc/apps/tools/xref.html). rebar3
+fails when a query's answer isn't the expected value, and prints the calls
+that broke it.
+
+The rules depend on the project's layers, so they aren't in the
+[template](rebar.config). Add them to the project's `rebar.config`. The
+module prefixes are examples: replace them with the layers in the project's
+`design.md`.
+
+```erlang
+{xref_queries, [
+    %% The core calls no edge module.
+    {"(ME | \"myapp_core_.*\" : Mod) || \"myapp_(adapters|cli).*\" : Mod", []},
+    %% No modules call each other in a cycle.
+    {"components ME", []}
+]}.
+```
+
+`rebar3 xref`, already under [Dead code](#dead-code), runs these queries
+with the other checks:
+
+```sh
+rebar3 xref
+```
+
+- The first query lists every call from a core module to an edge module, and
+  must find none. Edges may call the core.
+- The second lists the groups of modules that call each other, directly or
+  through others, and must find none.

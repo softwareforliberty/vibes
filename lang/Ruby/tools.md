@@ -17,6 +17,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [Flay](https://github.com/seattlerb/flay) | MIT | Code quality | Finding structurally similar code |
 | [debride](https://github.com/seattlerb/debride) | MIT | Code quality | Finding unused methods |
 | [SimpleCov](https://github.com/simplecov-ruby/simplecov) | MIT | Code quality | Measuring test coverage |
+| [Packwerk](https://github.com/Shopify/packwerk) | MIT | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
 
@@ -206,3 +207,69 @@ SimpleCov.configure do
   minimum_coverage line: 80, branch: 80
 end
 ```
+
+### Architecture
+
+Packwerk splits a Rails application into packages and checks every constant
+one package uses from another against the dependencies it declares, so the
+core can't come to depend on its edges. It's how Ruby projects
+[enforce their layers](../../architecture/README.md#enforce-it).
+
+Packwerk needs a Rails application, because it reads the autoload paths
+Rails sets up. For a gem or other code without Rails, no maintained FOSS tool
+checks these rules; a check in `scripts/check` that searches the `require`
+and `require_relative` lines can enforce the simple ones.
+
+Add `gem 'packwerk'` to the Gemfile's development group, then create its
+binstub and configuration:
+
+```sh
+bundle binstub packwerk
+bin/packwerk init
+```
+
+Run both checks. `validate` fails when the declared dependencies form a
+cycle, and `check` fails when code uses a constant from a package it doesn't
+depend on:
+
+```sh
+bin/packwerk validate
+bin/packwerk check
+```
+
+Each package is a directory, holding code Rails autoloads, with a
+`package.yml` that lists the packages it may use. The directories are
+examples: replace them with the layers in the project's `design.md`. They
+sit in `lib`, which Rails autoloads when `config/application.rb` calls
+`config.autoload_lib`, so `lib/core/cart.rb` defines `Core::Cart`.
+
+`lib/core/package.yml`:
+
+```yaml
+---
+# The core depends on no other package.
+enforce_dependencies: true
+```
+
+`lib/adapters/package.yml`:
+
+```yaml
+---
+enforce_dependencies: true
+dependencies:
+  - lib/core
+```
+
+`lib/cli/package.yml`:
+
+```yaml
+---
+enforce_dependencies: true
+dependencies:
+  - lib/core
+  - lib/adapters
+```
+
+`bin/packwerk update-todo` records existing violations in
+`package_todo.yml`, so `check` passes with them. Use it only when adopting
+Packwerk in existing code, never to let a new violation through.

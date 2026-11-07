@@ -193,3 +193,52 @@ bisect-ppx-report summary | tee coverage.txt
 awk -F'[(%]' '/Coverage:/ { seen = 1; if ($2 < 80) bad = 1 }
     END { exit bad || !seen }' coverage.txt
 ```
+
+### Architecture
+
+The build enforces the layers, as the
+[architecture guide](../../architecture/README.md#enforce-it) asks, so no
+extra tool is needed. Make each layer its own dune library. A library can use
+only the libraries its `libraries` field lists, so a core that uses an edge
+fails to compile, and dune rejects any dependency cycle between libraries.
+
+Give each layer a `dune` file in its own directory. Each library also keeps
+the `instrumentation` field from the [template](#compiler-warnings). The
+names are examples: replace them with the layers in the project's
+`design.md`.
+
+`lib/core/dune`:
+
+```lisp
+; The core depends on no other layer.
+
+(library
+ (name app_core))
+```
+
+`lib/adapters/dune`:
+
+```lisp
+; Each edge depends only on the core.
+
+(library
+ (name app_adapters)
+ (libraries app_core))
+```
+
+`bin/dune`:
+
+```lisp
+; The program wires the layers together, so it depends on them all.
+
+(executable
+ (name main)
+ (libraries app_core app_adapters))
+```
+
+A breach fails the build with `Unbound module App_adapters`, or with
+`Dependency cycle between` the libraries if the core lists an edge:
+
+```sh
+dune build @check
+```

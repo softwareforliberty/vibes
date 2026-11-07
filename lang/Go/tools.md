@@ -20,6 +20,7 @@ them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [deadcode](https://pkg.go.dev/golang.org/x/tools/cmd/deadcode) | BSD-3-Clause | Code quality | Finding functions no program path can reach |
 | [go test](https://pkg.go.dev/cmd/go#hdr-Test_packages) | BSD-3-Clause | Code quality | Running tests, the race detector and coverage |
+| [go-arch-lint](https://github.com/fe3dback/go-arch-lint) | MIT | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
 
@@ -184,3 +185,53 @@ go tool cover -func=cover.out | awk '/^total:/ { if ($3 + 0 < 80) exit 1 }'
 
 `go test` measures statements, not branches, and has no built-in minimum, so
 the second line fails the build when the total is under 80%.
+
+### Architecture
+
+Make the build and go-arch-lint enforce the layers, as the
+[architecture guide](../../architecture/README.md#enforce-it) asks. The Go
+compiler already rejects import cycles between packages, so go-arch-lint only
+has to check which way each import points: it fails the build when a package
+imports a layer it may not use.
+
+Install it with `go install github.com/fe3dback/go-arch-lint@v1.19.1`, and
+run it from the module root, where it reads `.go-arch-lint.yml`. It exits 1
+on a breach, and names the file and line of each forbidden import:
+
+```sh
+go-arch-lint check
+```
+
+An example `.go-arch-lint.yml` for a core with two edges. The package names
+are examples: replace them with the layers in the project's `design.md`.
+
+```yaml
+---
+version: 3
+components:
+  core:
+    in: internal/core/**
+  adapters:
+    in: internal/adapters/**
+  cli:
+    in: internal/cli/**
+  main:
+    in: cmd/**
+deps:
+  adapters:
+    mayDependOn:
+      - core
+  cli:
+    mayDependOn:
+      - core
+  main:
+    anyProjectDeps: true
+```
+
+- `core` has no entry under `deps`, so it may import no other component. An
+  import of `internal/adapters` or `internal/cli` fails the check.
+- Each edge may import the core, and `main`, which builds and wires the
+  parts, may import any of them.
+- An import of a third-party module fails too, until the module is listed
+  under `vendors` and the components that need it name it in `canUse`. The
+  standard library is always allowed.

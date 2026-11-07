@@ -16,6 +16,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [Vulture](https://github.com/jendrikseipp/vulture) | MIT | Code quality | Finding unused code |
 | [Coverage.py](https://coverage.readthedocs.io/) | Apache-2.0 | Code quality | Measuring test coverage |
+| [import-linter](https://github.com/seddonym/import-linter) | BSD-2-Clause | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
 
@@ -190,3 +191,44 @@ coverage report
 
 The settings are in `[tool.coverage]` in `pyproject.toml` (see
 [Configuration](#configuration)).
+
+### Architecture
+
+import-linter checks the imports between the project's own packages against
+a set of contracts, so the core can't come to depend on its edges. It's how
+Python projects
+[enforce their layers](../../architecture/README.md#enforce-it).
+
+Install it as a development dependency, and run it in an environment where
+the project itself is installed (`pip install -e .`), because it finds the
+packages by importing them. It exits non-zero when any contract is broken:
+
+```sh
+lint-imports
+```
+
+It reads its contracts from `pyproject.toml`. They depend on each project's
+layers, so they aren't in the template; add them to the project's own file.
+The package names here are examples: replace them with the layers in the
+project's `design.md`.
+
+```toml
+[tool.importlinter]
+root_package = "app"
+
+[[tool.importlinter.contracts]]
+name = "The core doesn't depend on the edges"
+type = "forbidden"
+source_modules = ["app.core"]
+forbidden_modules = ["app.adapters", "app.cli"]
+
+[[tool.importlinter.contracts]]
+name = "No import cycles between packages"
+type = "acyclic_siblings"
+ancestors = ["app"]
+```
+
+The `forbidden` contract also catches indirect imports, such as `app.core`
+importing a module that imports `app.adapters`. The edges may import the
+core. The `acyclic_siblings` contract fails when the packages under `app`
+import each other in a cycle.

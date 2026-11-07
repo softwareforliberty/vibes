@@ -230,3 +230,47 @@ awk '/expressions used/ { seen = 1; sub(/%/, "", $1); if ($1 < 80) bad = 1 }
 
 This reads one test suite. With more than one, merge their `.tix` files
 with `hpc sum` first.
+
+### Architecture
+
+The build enforces the layers, as the
+[architecture guide](../../architecture/README.md#enforce-it) asks, so no
+extra tool is needed. Make each layer its own library component in the
+`.cabal` file. A component can import modules only from the libraries in its
+`build-depends`, so a core that imports an edge fails to compile, and Cabal
+rejects any dependency cycle between components.
+
+Name each layer's library, and list the layers it may use as
+`<package>:<library>`. Each component imports the `shared` stanza from the
+[template](#compiler-warnings). The names are examples: replace them with the
+layers in the project's `design.md`.
+
+```cabal
+-- The core depends on no other layer.
+library core
+    import:          shared
+    hs-source-dirs:  core
+    exposed-modules: App.Core.Greeting
+
+-- Each edge depends only on the core.
+library adapters
+    import:          shared
+    hs-source-dirs:  adapters
+    exposed-modules: App.Adapters.Console
+    build-depends:   app:core
+
+-- The program wires the layers together, so it depends on them all.
+executable app
+    import:         shared
+    hs-source-dirs: cli
+    main-is:        Main.hs
+    build-depends:  app:core, app:adapters
+```
+
+A breach fails the build: GHC reports that the edge's module is in a hidden
+package, and Cabal reports a dependency cycle if the core lists an edge in
+its `build-depends`:
+
+```sh
+cabal build all --ghc-options=-Werror
+```

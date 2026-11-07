@@ -13,6 +13,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [OWASP Dependency-Check](https://owasp.org/www-project-dependency-check/) | Apache-2.0 | Auditing | Checking the resolved build classpath against known vulnerabilities |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [JaCoCo](https://www.jacoco.org/jacoco/) | EPL-2.0 | Code quality | Measuring test coverage, and failing the build below a minimum |
+| [ArchUnit](https://www.archunit.org/) | Apache-2.0 | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
 
@@ -168,3 +169,91 @@ In Gradle, the `jacoco` plugin's `jacocoTestCoverageVerification` task
 enforces the minimum; the template sets 80% for both lines and branches and
 runs it as part of `check`. In Maven, run the `jacoco-maven-plugin` `check`
 goal with the same limits.
+
+### Architecture
+
+Check the dependency rules between the project's layers, as the
+[architecture guide](../../architecture/README.md#enforce-it) asks. Where each
+layer is its own Gradle subproject, the build already rejects a forbidden
+dependency; ArchUnit checks the rest as a test, and also finds cycles.
+
+ArchUnit reads the compiled classes. Dynamic Groovy resolves method calls at
+run time, so ArchUnit sees the classes the code names, such as parameter
+types and `new`, but not each call. The explicit types
+[coding-style.md](coding-style.md#types-and-def) asks for keep those
+dependencies visible.
+
+Add ArchUnit beside Spock in the test dependencies, and make Gradle print the
+whole failure. Put the `import` at the top of `build.gradle.kts`. The rules
+run inside a Spock specification, so the plain `archunit` library is enough.
+
+```kotlin
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
+dependencies {
+    testImplementation("org.spockframework:spock-core:2.5-groovy-4.0")
+    testImplementation("com.tngtech.archunit:archunit:1.5.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.test {
+    useJUnitPlatform()
+    // Print each broken rule's violations in the build log.
+    testLogging.exceptionFormat = TestExceptionFormat.FULL
+}
+```
+
+Write the rules as a specification. This one stops the core depending on the
+edges, which may depend on the core, and forbids cycles between the
+top-level packages. The package names are examples: replace them with the
+layers in the project's `design.md`.
+
+```groovy
+package com.example.app
+
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
+import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices
+
+import com.tngtech.archunit.core.domain.JavaClasses
+import com.tngtech.archunit.core.importer.ClassFileImporter
+import com.tngtech.archunit.core.importer.ImportOption
+import spock.lang.Shared
+import spock.lang.Specification
+
+/** The dependency rules between the layers in design.md. */
+class ArchitectureSpec extends Specification {
+
+    @Shared
+    JavaClasses classes = new ClassFileImporter()
+        .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+        .importPackages('com.example.app')
+
+    def 'the core depends on no edge'() {
+        when:
+        noClasses()
+            .that().resideInAPackage('com.example.app.core..')
+            .should().dependOnClassesThat()
+            .resideInAnyPackage('com.example.app.adapters..', 'com.example.app.cli..')
+            .check(classes)
+
+        then:
+        noExceptionThrown()
+    }
+
+    def 'no two top-level packages depend on each other'() {
+        when:
+        slices().matching('com.example.app.(*)..').should().beFreeOfCycles().check(classes)
+
+        then:
+        noExceptionThrown()
+    }
+
+}
+```
+
+`scripts/check` runs it with the other tests. A broken rule fails the build
+and lists each dependency that breaks it, with its file and line:
+
+```sh
+./gradlew test
+```

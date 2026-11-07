@@ -16,6 +16,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [lizard](https://github.com/terryyin/lizard) | MIT | Code quality | Measuring function complexity and length |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [Kover](https://github.com/Kotlin/kotlinx-kover) | Apache-2.0 | Code quality | Measuring test coverage, and failing the build below a minimum |
+| [ArchUnit](https://www.archunit.org/) | Apache-2.0 | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
 
@@ -195,3 +196,78 @@ build pass.
 
 Kover enforces the minimum: the template sets `minBound` to 80% for both
 lines and branches in a `verify` rule. Run `./gradlew koverVerify`.
+
+### Architecture
+
+Check the dependency rules between the project's layers, as the
+[architecture guide](../../architecture/README.md#enforce-it) asks. Where each
+layer is its own Gradle subproject, the build already rejects a forbidden
+dependency; ArchUnit checks the rest as a test, and also finds cycles.
+
+ArchUnit reads the compiled classes, so it sees every dependency, imported
+or not. Konsist checks Kotlin source instead, but it reads only `import`
+lines and can't find cycles, so prefer ArchUnit for JVM code.
+
+Add ArchUnit's JUnit 6 support to the test dependencies, and make Gradle
+print the whole failure. Put the `import` at the top of `build.gradle.kts`.
+With JUnit 5, use `archunit-junit5` instead.
+
+```kotlin
+import org.gradle.api.tasks.testing.logging.TestExceptionFormat
+
+dependencies {
+    testImplementation("com.tngtech.archunit:archunit-junit6:1.5.1")
+    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.test {
+    useJUnitPlatform()
+    // Print each broken rule's violations in the build log.
+    testLogging.exceptionFormat = TestExceptionFormat.FULL
+}
+```
+
+Write the rules as a test. This one stops the core depending on the edges,
+which may depend on the core, and forbids cycles between the top-level
+packages. The package names are examples: replace them with the layers in
+the project's `design.md`.
+
+```kotlin
+package com.example.app
+
+import com.tngtech.archunit.core.importer.ImportOption
+import com.tngtech.archunit.junit.AnalyzeClasses
+import com.tngtech.archunit.junit.ArchTest
+import com.tngtech.archunit.lang.ArchRule
+import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
+import com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices
+
+/** The dependency rules between the layers in design.md. */
+@AnalyzeClasses(
+    packages = ["com.example.app"],
+    importOptions = [ImportOption.DoNotIncludeTests::class],
+)
+class ArchitectureTest {
+    /** The core depends on no edge; the edges may depend on the core. */
+    @ArchTest
+    val coreDoesNotDependOnEdges: ArchRule =
+        noClasses()
+            .that()
+            .resideInAPackage("com.example.app.core..")
+            .should()
+            .dependOnClassesThat()
+            .resideInAnyPackage("com.example.app.adapters..", "com.example.app.cli..")
+
+    /** No two top-level packages depend on each other. */
+    @ArchTest
+    val noCycles: ArchRule =
+        slices().matching("com.example.app.(*)..").should().beFreeOfCycles()
+}
+```
+
+`scripts/check` runs it with the other tests. A broken rule fails the build
+and lists each dependency that breaks it, with its file and line:
+
+```sh
+./gradlew test
+```

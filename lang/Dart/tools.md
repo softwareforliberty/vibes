@@ -14,6 +14,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [dart_code_linter](https://pub.dev/packages/dart_code_linter) | MIT | Code quality | Measuring function complexity, length and nesting |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [coverage](https://pub.dev/packages/coverage) | BSD-3-Clause | Code quality | Measuring test coverage |
+| [import_lint](https://pub.dev/packages/import_lint) | MIT | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
 
@@ -180,3 +181,42 @@ report as well:
 ```sh
 dart run coverage:test_with_coverage --branch-coverage --fail-under=80
 ```
+
+### Architecture
+
+import_lint enforces the layers as the
+[architecture guide](../../architecture/README.md#enforce-it) asks: it fails
+the build when a file imports a layer it may not use. It checks relative
+imports as well as `package:` ones. It has no check for dependency cycles,
+so write a rule for each import a layer may not make: when every allowed
+import points inward, no cycle between layers can form.
+
+Add it as a dev dependency with `dart pub add --dev import_lint`, then add
+the rules to `analysis_options.yaml`. The paths are examples: replace them
+with the layers in the project's `design.md`.
+
+```yaml
+plugins:
+  import_lint: ^2.0.0
+
+import_lint:
+  severity: error
+  rules:
+    core_imports_no_edge:
+      target: package:my_app/src/core/**
+      from: package:my_app/src/{adapters,cli}/**
+      except: []
+```
+
+- Each rule forbids files matching `target` from importing files matching
+  `from`. Here the core may import no edge, and the edges may import the
+  core.
+- `severity: error` makes the command exit 1 on a breach. It prints the file,
+  line and rule of each forbidden import:
+
+  ```sh
+  dart run import_lint
+  ```
+
+- The `plugins` entry also runs the rules inside the analyzer, so
+  `dart analyze --fatal-infos` and the IDE report the same breaches.

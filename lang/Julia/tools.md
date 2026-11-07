@@ -142,3 +142,57 @@ julia -e 'using Coverage
     println("coverage: ", round(100 * covered / total; digits=1), "%")
     covered / total >= 0.8 || exit(1)'
 ```
+
+### Architecture
+
+No maintained FOSS tool checks the dependencies between a Julia project's
+own modules, so let the package system
+[enforce the layers](../../architecture/README.md#enforce-it). Make each
+layer its own package, in its own directory under `lib/`, whose
+`Project.toml` lists in `[deps]` only the layers it may use. Julia won't load
+a package that uses one missing from its `[deps]`, so a forbidden `using`
+fails to precompile:
+
+```text
+ERROR: LoadError: ArgumentError: Package AppCore does not have AppAdapters in its dependencies:
+```
+
+Create each layer with `Pkg.generate("lib/AppCore")`, which writes its
+`Project.toml` and a fresh UUID. The package names are examples: replace them
+with the layers in the project's `design.md`. The core lists no other layer,
+and an edge lists the core, with a `[compat]` entry as for any dependency.
+`lib/AppAdapters/Project.toml`:
+
+```toml
+name = "AppAdapters"
+uuid = "93281a91-7a17-482a-bae8-ddee36e03d7f"
+version = "0.1.0"
+
+[deps]
+AppCore = "02e5cf4b-2116-41ed-a3f4-9cc656c7c120"
+
+[compat]
+AppCore = "0.1"
+```
+
+The application, in the repository root, adds the layers by path once. That
+records them in `Manifest.toml`, which an application commits (see
+[idioms.md](idioms.md)):
+
+```sh
+julia --project -e 'using Pkg
+    Pkg.develop([PackageSpec(path="lib/AppCore"),
+        PackageSpec(path="lib/AppAdapters")])'
+```
+
+`scripts/check` then precompiles every package, and fails when one breaks
+its `[deps]`:
+
+```sh
+julia --project -e 'using Pkg; Pkg.precompile()'
+```
+
+Pkg only warns about a cycle in the declared dependencies, with
+`Circular dependency detected`, and skips those packages. Keep every `[deps]`
+pointing towards the core, and review a change to a layer's `[deps]` as a
+change to the architecture.

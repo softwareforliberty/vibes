@@ -16,6 +16,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [OSV-Scanner](https://github.com/google/osv-scanner) | Apache-2.0 | Auditing | Checking dependencies against known vulnerabilities |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [coverlet](https://github.com/coverlet-coverage/coverlet) | MIT | Code quality | Measuring test coverage, and failing the build below a minimum |
+| [ArchUnitNET](https://github.com/TNG/ArchUnitNET) | Apache-2.0 | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
 
@@ -282,3 +283,79 @@ the test run only has to turn coverage on:
 ```sh
 dotnet test /p:CollectCoverage=true
 ```
+
+### Architecture
+
+Make the build and ArchUnitNET enforce the layers, as the
+[architecture guide](../../architecture/README.md#enforce-it) asks. Put each
+layer that can stand alone in its own project, with project references only
+to the layers it may use, so a forbidden `open` fails to compile. Inside one
+project, the compile order only stops a file using the files below it, so a
+core file listed after an edge file can still use it. ArchUnitNET checks the
+rules the build can't, as tests that read the compiled assemblies.
+
+Add its xUnit package to a test project (it has NUnit and MSTest packages
+too):
+
+```sh
+dotnet package add TngTech.ArchUnitNET.xUnitV3 --project tests/Example.ArchitectureTests
+```
+
+`scripts/check` runs the tests. Any breach fails a test, so `dotnet test`
+exits non-zero and names each type that broke the rule:
+
+```sh
+dotnet test tests/Example.ArchitectureTests
+```
+
+An example test module for a core with two edges. The namespaces are
+examples: replace them with the layers in the project's `design.md`.
+
+```fsharp
+/// Checks the dependency rules between the layers.
+module Example.ArchitectureTests
+
+open ArchUnitNET.Domain
+open ArchUnitNET.Loader
+open ArchUnitNET.xUnitV3
+open Example.Core
+open Xunit
+
+open type ArchUnitNET.Fluent.ArchRuleDefinition
+open type ArchUnitNET.Fluent.Slices.SliceRuleDefinition
+
+let private architecture =
+    ArchLoader().LoadAssemblies(typeof<Order>.Assembly).Build()
+
+let private core: IObjectProvider<IType> =
+    Types().That().ResideInNamespaceOrBelow("Example.Core").As("Core")
+
+let private edges: IObjectProvider<IType> =
+    Types().That().ResideInNamespaceOrBelow("Example.Adapters").Or().ResideInNamespaceOrBelow("Example.Cli").As("Edges")
+
+/// The core doesn't depend on the adapters or the CLI.
+[<Fact>]
+let ``the core doesn't depend on the edges`` () =
+    Types().That().Are(core).Should().NotDependOnAny(edges).Check(architecture)
+
+/// The namespaces under Example have no dependency cycles.
+[<Fact>]
+let ``namespaces have no cycles`` () =
+    Slices().Matching("Example.(*)").Should().BeFreeOfCycles().Check(architecture)
+```
+
+- `open type` brings in ArchUnitNET's static `Types()` and `Slices()`
+  methods.
+- `ResideInNamespaceOrBelow` takes in the namespaces under a layer's own,
+  so `Example.Core.Billing` is part of the core.
+- The first test fails if any core type uses an adapter or CLI type. Each
+  edge may use the core.
+- `Slices().Matching("Example.(*)")` makes one slice for each namespace
+  directly under `Example`. The second test fails if any slices depend on
+  each other in a loop, directly or through others.
+- Run the tests in the Debug configuration, `dotnet test`'s default. A
+  Release build can optimise away some dependencies, so the tests would miss
+  them.
+- `dotnet test` here uses the VSTest runner, as the coverage run does. With
+  xUnit v3 4.x, reference `xunit.v3.mtp-off` instead of `xunit.v3`, or the
+  .NET 10 SDK refuses to run the tests that way.

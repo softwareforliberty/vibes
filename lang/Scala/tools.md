@@ -16,6 +16,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [lizard](https://github.com/terryyin/lizard) | MIT | Code quality | Measuring function complexity and length |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [scoverage](https://github.com/scoverage/sbt-scoverage) | Apache-2.0 | Code quality | Measuring statement and branch coverage |
+| [ArchUnit](https://www.archunit.org/) | Apache-2.0 | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
 
@@ -225,4 +226,78 @@ branches with scoverage, and fails the build below it:
 
 ```sh
 sbt "clean; coverage; test; coverageReport"
+```
+
+### Architecture
+
+Check the dependency rules between the project's layers, as the
+[architecture guide](../../architecture/README.md#enforce-it) asks. Where each
+layer is its own sbt subproject, `dependsOn` already rejects a forbidden
+dependency; ArchUnit checks the rest as a test, and also finds cycles. It
+reads the compiled classes, so it works on Scala code too.
+
+Add ArchUnit to the test dependencies in `build.sbt`. ArchUnit logs through
+SLF4J, so add `slf4j-nop` too, unless the tests already have an SLF4J
+provider:
+
+```scala
+// ArchUnit logs through SLF4J: slf4j-nop stops the "no providers" warning.
+libraryDependencies ++= Seq(
+  "com.tngtech.archunit" % "archunit" % "1.5.1" % Test,
+  "org.slf4j" % "slf4j-nop" % "2.0.19" % Test,
+)
+```
+
+Write the rules as a test. This one, in [MUnit](https://scalameta.org/munit/),
+stops the core depending on the edges, which may depend on the core, and
+forbids cycles between the top-level packages. Any test framework works: a
+broken rule throws an `AssertionError`. The package names are examples:
+replace them with the layers in the project's `design.md`.
+
+```scala
+package com.example.app
+
+import com.tngtech.archunit.core.domain.JavaClasses
+import com.tngtech.archunit.core.importer.ClassFileImporter
+import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
+import com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices
+
+/** The dependency rules between the layers in design.md. */
+class ArchitectureSuite extends munit.FunSuite:
+  // Check the main code only: skip the directory or jar that this suite, and
+  // so every test class, was loaded from.
+  private val testCode = getClass.getProtectionDomain.getCodeSource.getLocation.getPath
+  private val classes: JavaClasses = ClassFileImporter()
+    .withImportOption(location => !location.contains(testCode))
+    .importPackages("com.example.app")
+
+  test("the core depends on no edge") {
+    noClasses()
+      .that()
+      .resideInAPackage("com.example.app.core..")
+      .should()
+      .dependOnClassesThat()
+      .resideInAnyPackage("com.example.app.adapters..", "com.example.app.cli..")
+      .check(classes)
+  }
+
+  test("no two top-level packages depend on each other") {
+    slices()
+      .matching("com.example.app.(*)..")
+      .should()
+      .beFreeOfCycles()
+      .check(classes)
+  }
+end ArchitectureSuite
+```
+
+ArchUnit's own `DoNotIncludeTests` option finds test classes by the output
+paths of Maven, Gradle and IntelliJ IDEA. sbt uses different paths, and sbt 2
+loads classes from its cache, so the suite skips its own location instead.
+
+`scripts/check` runs it with the other tests. A broken rule fails the build
+and lists each dependency that breaks it, with its file and line:
+
+```sh
+sbt test
 ```

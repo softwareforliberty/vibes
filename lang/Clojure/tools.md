@@ -14,6 +14,7 @@ to run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [nvd-clojure](https://github.com/rm-hull/nvd-clojure) | MIT | Auditing | Checking the resolved classpath against known vulnerabilities, using OWASP Dependency-Check |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [cloverage](https://github.com/cloverage/cloverage) | EPL-1.0 | Code quality | Measuring test coverage |
+| [clj-depend](https://github.com/fabiodomingues/clj-depend) | EPL-2.0 | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
 
@@ -185,3 +186,44 @@ clojure -M:coverage
 cloverage is the only FOSS coverage tool for Clojure. Its releases are
 infrequent, so check it still supports your Clojure version before relying
 on it.
+
+### Architecture
+
+Check the dependency rules between the project's layers, as the
+[architecture guide](../../architecture/README.md#enforce-it) asks.
+clj-depend reads each namespace's `ns` form and checks its requires against
+the layers you define.
+
+Define the layers in `.clj-depend/config.edn`. Each layer lists the layers it
+may require; a require of any other layer is a breach. This one stops the
+core requiring the edges, which may require the core. The namespace names are
+examples: replace them with the layers in the project's `design.md`.
+
+```clojure
+{:source-paths #{"src"}
+ :layers {:core {:defined-by "^app\\.core(\\.|$)"
+                 :accesses-layers #{}}
+          :adapters {:defined-by "^app\\.adapters(\\.|$)"
+                     :accesses-layers #{:core}}
+          :cli {:defined-by "^app\\.cli(\\.|$)"
+                :accesses-layers #{:adapters :core}}}}
+```
+
+`:defined-by` is a regular expression that may match anywhere in a namespace
+name, so anchor it with `^`.
+
+`scripts/check` runs it from the repository root. It prints each breach, such
+as `"app.core.pricing" should not depend on "app.adapters.store"`, and exits
+non-zero:
+
+```sh
+clojure -Sdeps \
+  '{:deps {com.fabiodomingues/clj-depend {:mvn/version "0.11.1"}}}' \
+  -M -m clj-depend.main
+```
+
+- clj-depend also reports two namespaces that require each other. Clojure
+  refuses to load any cycle, so loading the code, as the tests do, catches
+  longer ones.
+- Without `.clj-depend/config.edn`, clj-depend has no layers to check and
+  passes, so commit the file.

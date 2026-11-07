@@ -136,3 +136,68 @@ kcov --include-path=src zig-out/coverage zig-out/test
 
 kcov has no built-in minimum, so read the total from the `coverage.json` file
 it writes, and fail the build when it's under 80%.
+
+### Architecture
+
+The build enforces the layers, as the
+[architecture guide](../../architecture/README.md#enforce-it) asks, so no
+extra tool is needed. Make each layer its own module in `build.zig`. A file
+can `@import` only the modules its module's `.imports` lists, and no file
+that belongs to another module, so a core that imports an edge fails to
+compile.
+
+Zig analyses only the code that's referenced, so `zig build` misses a
+forbidden import in a function nothing calls yet. Give each layer a test, and
+reference every declaration from it as under [Dead code](#dead-code), so
+`zig build test` analyses all of it. The module names are examples: replace
+them with the layers in the project's `design.md`.
+
+```zig
+const std = @import("std");
+
+pub fn build(b: *std.Build) void {
+    const target = b.standardTargetOptions(.{});
+    const optimize = b.standardOptimizeOption(.{});
+
+    // The core imports no other layer.
+    const core = b.createModule(.{
+        .root_source_file = b.path("src/core/root.zig"),
+        .target = target,
+        .optimize = optimize,
+    });
+    // Each edge imports only the core.
+    const adapters = b.createModule(.{
+        .root_source_file = b.path("src/adapters/root.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{.{ .name = "core", .module = core }},
+    });
+    // The program wires the layers together, so it imports them all.
+    const exe = b.addExecutable(.{
+        .name = "app",
+        .root_module = b.createModule(.{
+            .root_source_file = b.path("src/cli/main.zig"),
+            .target = target,
+            .optimize = optimize,
+            .imports = &.{
+                .{ .name = "core", .module = core },
+                .{ .name = "adapters", .module = adapters },
+            },
+        }),
+    });
+    b.installArtifact(exe);
+
+    // Zig analyses only referenced code, so test every layer.
+    const test_step = b.step("test", "Run the tests");
+    for ([_]*std.Build.Module{ core, adapters }) |module| {
+        const tests = b.addTest(.{ .root_module = module });
+        test_step.dependOn(&b.addRunArtifact(tests).step);
+    }
+}
+```
+
+A breach fails the tests with `no module named 'adapters' available`:
+
+```sh
+zig build test
+```

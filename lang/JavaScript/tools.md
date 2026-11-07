@@ -17,6 +17,7 @@ to run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [Knip](https://knip.dev/) | ISC | Code quality | Finding unused files, exports and dependencies |
 | [c8](https://github.com/bcoe/c8) | ISC | Code quality | Measuring test coverage |
+| [dependency-cruiser](https://github.com/sverweij/dependency-cruiser) | MIT | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
 
@@ -250,3 +251,47 @@ npx c8 node --test
   "lines": 80
 }
 ```
+
+### Architecture
+
+dependency-cruiser follows the imports between the project's own modules
+and checks them against rules, so the core can't come to depend on its edges.
+It's how JavaScript projects
+[enforce their layers](../../architecture/README.md#enforce-it).
+
+Install it as a development dependency
+(`npm install --save-dev dependency-cruiser`). It exits non-zero when any
+rule with `error` severity is broken:
+
+```sh
+npx depcruise src
+```
+
+It reads its rules from `.dependency-cruiser.js` in the repository root. They
+depend on each project's layers, so there's no template for them here. The
+directory names are examples: replace them with the layers in the project's
+`design.md`.
+
+```js
+export default {
+  forbidden: [
+    {
+      name: 'core-not-to-edges',
+      comment: "The core doesn't depend on the edges.",
+      severity: 'error',
+      from: { path: '^src/core/' },
+      to: { path: '^src/(adapters|cli)/' },
+    },
+    {
+      name: 'no-circular',
+      comment: 'Modules form no import cycles.',
+      severity: 'error',
+      from: {},
+      to: { circular: true },
+    },
+  ],
+};
+```
+
+The edges may import the core, and the report names each broken rule with
+the import that breaks it.
