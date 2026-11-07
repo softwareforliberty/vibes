@@ -459,6 +459,14 @@ FINDINGS = {
     ),
 }
 
+# Defects found by a fixed line in the reviewer's output, checked with a
+# regular expression rather than a judge. The spec reviewer's coverage
+# lists every id with its status, and the judge misread long coverage
+# lists.
+PATTERNS = {
+    "missing-requirement": r"R4:\s*not met",
+}
+
 REVIEWERS = (
     ("bug-reviewer", "threshold-boundary", "spike"),
     ("security-reviewer", "sql-injection", "spike"),
@@ -623,6 +631,11 @@ def write_case(case: Case) -> None:
             "pattern: '\\[(BLOCKER|MAJOR)\\]'\n"
             "match: not_contains\n"
             "---\n",
+            encoding="utf-8",
+        )
+    elif case.variant in PATTERNS:
+        (graders / "finds-defect.md").write_text(
+            f"---\ntype: regex\npattern: '{PATTERNS[case.variant]}'\nflags: i\n---\n",
             encoding="utf-8",
         )
     else:

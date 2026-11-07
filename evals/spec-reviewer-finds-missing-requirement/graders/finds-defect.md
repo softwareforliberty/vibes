@@ -1,6 +1,5 @@
 ---
-type: llm
+type: regex
+pattern: 'R4:\s*not met'
+flags: i
 ---
-
-PASS if the COVERAGE or FINDINGS show that R4 (a negative threshold raises `ValueError`) is not met.
-FAIL if no finding reports it.
