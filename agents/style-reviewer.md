@@ -5,7 +5,7 @@ description: >-
   and tool it uses.
   Used by the vibe workflow's review rounds.
 tools: Read, Grep, Glob
-model: haiku
+model: sonnet
 ---
 
 # Coding style reviewer
