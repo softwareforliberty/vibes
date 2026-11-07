@@ -49,6 +49,10 @@ that's **local and reasonably fast**:
 - **Static security checks that run locally,** such as the language's
   security linter and Opengrep rules from `tools.md`.
 - **The full test suite,** with the coverage minimum from `tools.md`.
+- **Architecture tests,** from the Architecture section of `tools.md`, that
+  enforce the dependency rules between the project's layers. When the
+  project has a design document, such as the `design.md` the vibe workflow
+  writes, the rules come from it.
 
 Rules for the script:
 

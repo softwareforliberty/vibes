@@ -102,7 +102,10 @@ modules and their boundaries, not lines of code. Write
    verified.
 10. **Traceability:** every requirement and quality id, with the components
     that satisfy it. Every id in the spec appears here.
-11. **Change log:** as in the spec.
+11. **Boundary rules:** the dependency rules between components, such as
+    "the core never imports the adapters", written so the build or an
+    architecture test from the language's `tools.md` can enforce them.
+12. **Change log:** as in the spec.
 
 Keep to structure and boundaries. Leave the details to the spike, which
 exists to test them.

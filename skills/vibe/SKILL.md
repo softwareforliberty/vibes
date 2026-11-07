@@ -332,6 +332,10 @@ mention one don't apply.
 - **Rewrite, don't copy.** Write each piece fresh, driven by its test. You may
   read the spike for reference (`git show spike/<name>:<path>`), but never
   paste spike code into the rebuild.
+- **Enforce the boundaries first.** Where the task has a design, the first
+  commit of the build adds its boundary rules to `scripts/check`, as
+  architecture tests or build structure from each language's `tools.md`, so
+  the gate holds every later commit to them.
 - **Small steps.** One behaviour at a time: red, green, refactor, commit.
 - **The gate runs on every commit.** It runs `scripts/check`, and refuses
   unstaged and untracked changes. When it blocks a commit, fix the cause and
