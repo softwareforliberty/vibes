@@ -149,8 +149,14 @@ The user can ask for a run that never stops to ask them anything, such as
 - **Anything that could lose or overwrite the user's work,** such as
   uncommitted changes, an existing pre-commit hook or another task's
   unfinished run: never act on it. Stop, and report what needs a decision.
-- **The round limit:** stop, and report the outstanding findings as the
-  limit says.
+- **The round limit in the spike review:** go on to the rebuild, which
+  writes the code again and is reviewed again. Fix outstanding findings
+  about the spec or design in them on the rebuild branch, through a `spec`
+  round, and write the rest into the rebuild plan's lessons, to be built
+  right test-first. Record it as an unattended decision, with the
+  findings.
+- **The round limit anywhere else:** stop, and report the outstanding
+  findings as the limit says.
 - **The spike branch at the end:** keep it.
 
 The final report lists every unattended decision first, with the options
@@ -345,9 +351,12 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
    `fixed`, `rejected: <reason>` or `deferred: <reason>` (MINOR only), from
    your decisions and the fixer's report.
 7. **Start the next round** with only the reviewers that requested changes.
+   A reviewer that approved doesn't run again while others are still
+   requesting changes, even when their fixes touch its area.
 8. **Repeat** until every reviewer's latest verdict is `APPROVED`. Then, if
-   anything changed after a reviewer approved it, run that reviewer once
-   more to confirm the later changes didn't break its area. The spec
+   anything in a reviewer's area changed after it approved, run it once
+   more, in one last round, to confirm the later changes didn't break its
+   area. Its `Changes:` line covers everything since it last ran. The spec
    reviewer always runs in the last round of the spike and rebuild phases,
    so its final verdict covers the final code.
 9. **Stop at the round limit:** 3 rounds for the spec and design, and 5 for
@@ -406,9 +415,12 @@ Large tasks only. Small and medium tasks go straight to
 Large tasks only.
 
 Run review rounds in the `spike` phase with the panel from
-[Size the task](#size-the-task), without `vibes:test-reviewer`, and with
-the spiker fixing findings on the spike branch, until every reviewer
-approves. The spec reviewer's final verdict must be `APPROVED`, with every
+[Size the task](#size-the-task), and with the spiker fixing findings on the
+spike branch, until every reviewer approves. The panel leaves out
+`vibes:test-reviewer`, `vibes:style-reviewer`, `vibes:idioms-reviewer` and
+`vibes:cleanliness-reviewer`: the rebuild writes every line again, so their
+findings on the spike's code would be fixed in code that's thrown away. The
+rebuild review runs them on the code that's kept. The spec reviewer's final verdict must be `APPROVED`, with every
 requirement met: that's the verification that the spike satisfies the
 spec.
 

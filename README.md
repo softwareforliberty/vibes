@@ -64,9 +64,10 @@ could lose your work.
 3. **Spike.** A subagent builds the whole task quickly to the spec and
    design on a `spike/<task>` branch.
 4. **Review.** Reviewer subagents critique the spike in parallel, one each
-   for architecture, code cleanliness, coding style, idioms, memory and
-   resource leaks, performance, bugs and security. The spec reviewer
-   verifies it meets every requirement in the spec.
+   for architecture, memory and resource leaks, performance, bugs and
+   security. The spec reviewer verifies it meets every requirement in the
+   spec. Style, idioms and cleanliness wait for the rebuild, since the
+   spike's code is thrown away.
 5. **Fix.** The main agent decides on the findings and the spike agent fixes
    them, and the reviewers that asked for changes review what changed, until
    every reviewer approves (at most five rounds before it asks you). A fix that
@@ -80,8 +81,9 @@ could lose your work.
    the run.
 7. **Gate.** Every commit runs the project's linters and full test suite, and
    is blocked if anything fails.
-8. **Review again.** The same reviewers, plus a test-quality reviewer, check
-   the rebuild, and their findings are fixed test-first. The spec reviewer
+8. **Review again.** The same reviewers, plus reviewers for code
+   cleanliness, coding style, idioms and test quality, check the rebuild,
+   and their findings are fixed test-first. The spec reviewer
    verifies every requirement is met and tested.
 
 Nothing is pushed or merged unless you ask.
