@@ -5,7 +5,7 @@ description: >-
   spike branch, to prove the approach before a clean test-driven rebuild,
   and fixes the spike's review findings. Used by the vibe workflow's spike
   phase.
-model: inherit
+model: sonnet
 ---
 
 # Spiker

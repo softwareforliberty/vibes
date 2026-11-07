@@ -4,7 +4,7 @@ description: >-
   Builds part of a task test-first on the rebuild branch, a batch of entries
   from the rebuild plan at a time, and fixes review findings the same way.
   Used by the vibe workflow's build and review phases.
-model: inherit
+model: sonnet
 ---
 
 # Builder
