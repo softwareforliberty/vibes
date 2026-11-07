@@ -5,62 +5,16 @@
 
 set -euo pipefail
 
+LIB="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/lib"
+readonly LIB
 # shellcheck source=hooks/lib/commit_gate.sh
-source "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/lib/commit_gate.sh"
+source "${LIB}/commit_gate.sh"
+# shellcheck source=hooks/lib/hook_input.sh
+source "${LIB}/hook_input.sh"
 
 readonly COMMIT_RE='(^|[;&|[:space:]])git[[:space:]]+commit([[:space:]]|$)'
 # git commit's short options that take a value, which may be joined to them.
 readonly VALUE_OPTIONS='CcFmStu'
-
-# Prints one field of the hook's JSON input, or nothing if no parser exists.
-json_field() {
-  local json="$1"
-  local field="$2"
-  if command -v jq >/dev/null; then
-    jq -r "${field} // empty" <<<"${json}"
-  elif command -v python3 >/dev/null; then
-    python3 -c '
-import json, sys
-value = json.load(sys.stdin)
-for key in sys.argv[1].lstrip(".").split("."):
-    value = value.get(key) if isinstance(value, dict) else None
-print(value if value is not None else "")
-' "${field}" <<<"${json}"
-  fi
-}
-
-# Prints a shell command on one line without its quoted strings and
-# here-document bodies, so text in a commit message can't look like an option.
-strip_text() {
-  local line out="" quote="" delim="" i char
-  local heredoc_re="<<-?[[:space:]]*[\"']?([A-Za-z_][A-Za-z0-9_]*)"
-  while IFS= read -r line || [[ -n "${line}" ]]; do
-    if [[ -n "${delim}" ]]; then
-      # A body ends at its delimiter, which <<- allows to be indented.
-      [[ "${line#"${line%%[![:space:]]*}"}" == "${delim}" ]] && delim=""
-      continue
-    fi
-    if [[ -z "${quote}" && "${line}" =~ ${heredoc_re} ]]; then
-      delim="${BASH_REMATCH[1]}"
-    fi
-    for ((i = 0; i < ${#line}; i++)); do
-      char="${line:i:1}"
-      if [[ -z "${quote}" ]]; then
-        case "${char}" in
-          \' | \") quote="${char}" ;;
-          \\) ((i += 1)) ;;
-          *) out+="${char}" ;;
-        esac
-      elif [[ "${char}" == "${quote}" ]]; then
-        quote=""
-      elif [[ "${quote}" == '"' && "${char}" == \\ ]]; then
-        ((i += 1))
-      fi
-    done
-    out+=" "
-  done
-  printf '%s\n' "${out}"
-}
 
 # Prints the arguments of each git commit in a command, one commit per line:
 # the words after "git commit", up to the next ;, & or |.
@@ -110,10 +64,11 @@ git_hook_is_gate() {
 }
 
 main() {
-  local input command cwd options
+  local input command cwd options root
   input="$(cat)"
-  command="$(json_field "${input}" '.tool_input.command' | strip_text)"
-  cwd="$(json_field "${input}" '.cwd')"
+  command="$(hook::json_field "${input}" '.tool_input.command' \
+    | hook::strip_text)"
+  cwd="$(hook::json_field "${input}" '.cwd')"
 
   if [[ -n "${cwd}" ]]; then
     cd -- "${cwd}" || exit 0
@@ -122,8 +77,8 @@ main() {
   if [[ -n "${command}" ]] && ! [[ "${command}" =~ ${COMMIT_RE} ]]; then
     exit 0
   fi
-  if [[ ! -x "$(git rev-parse --show-toplevel 2>/dev/null)/scripts/check" ]]
-  then
+  root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+  if [[ ! -x "${root}/scripts/check" ]]; then
     exit 0
   fi
 
