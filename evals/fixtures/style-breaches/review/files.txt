@@ -1,0 +1,4 @@
+src/stock/report.py
+src/stock/repository.py
+src/stock/service.py
+tests/test_low_stock.py

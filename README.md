@@ -16,6 +16,8 @@ while holding it to the standards of careful, experienced developers.
   components.
 - **`agents/`:** the designer, the spike agent and ten reviewer agents.
 - **`hooks/`:** the commit gate, for Claude Code and for git.
+- **`evals/`:** evals that check each reviewer agent finds the defects in
+  its area and approves clean code, run with `claude plugin eval`.
 
 ## The workflow
 

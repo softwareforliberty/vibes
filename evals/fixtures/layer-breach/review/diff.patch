@@ -1,0 +1,332 @@
+diff --git a/src/stock/report.py b/src/stock/report.py
+new file mode 100644
+index 0000000..fb60e05
+--- /dev/null
++++ b/src/stock/report.py
+@@ -0,0 +1,34 @@
++"""Export stock reports."""
++
++import csv
++from collections.abc import Iterable
++from pathlib import Path
++
++from stock.models import Item
++
++# Spreadsheets run a cell that starts with one of these as a formula.
++_FORMULA_PREFIXES = ("=", "+", "-", "@", "\t", "\r")
++
++
++def _neutralise(text: str) -> str:
++    """Stop a spreadsheet from running text as a formula."""
++    return f"'{text}" if text.startswith(_FORMULA_PREFIXES) else text
++
++
++def export_low_stock_csv(items: Iterable[Item], path: Path) -> None:
++    """Write a low-stock report to a CSV file.
++
++    Args:
++        items: The items to write, in report order.
++        path: The file to write. An existing file is replaced.
++
++    Text that a spreadsheet would run as a formula is written with a leading
++    apostrophe, so opening the report can't run anything.
++    """
++    with path.open("w", newline="", encoding="utf-8") as file:
++        writer = csv.writer(file)
++        writer.writerow(["sku", "name", "quantity"])
++        for item in items:
++            writer.writerow(
++                [_neutralise(item.sku), _neutralise(item.name), item.quantity]
++            )
+diff --git a/src/stock/repository.py b/src/stock/repository.py
+index f282acf..06a74b4 100644
+--- a/src/stock/repository.py
++++ b/src/stock/repository.py
+@@ -15,6 +15,9 @@ class ItemRepository:
+     def __init__(self, connection: sqlite3.Connection) -> None:
+         """Use the given database connection."""
+         self._connection = connection
++        # SQLite only folds the case of ASCII letters, so name searches use
++        # Python's full Unicode case folding instead.
++        connection.create_function("casefold", 1, str.casefold, deterministic=True)
+ 
+     def get(self, sku: str) -> Item:
+         """Load the item with the given SKU.
+@@ -37,3 +40,32 @@ class ItemRepository:
+                 "INSERT OR REPLACE INTO item (sku, name, quantity) VALUES (?, ?, ?)",
+                 (item.sku, item.name, item.quantity),
+             )
++
++    def find_low_stock(
++        self,
++        threshold: int,
++        *,
++        name_contains: str | None,
++        limit: int,
++        offset: int,
++    ) -> list[Item]:
++        """Load items with fewer than threshold on hand, fewest first.
++
++        Args:
++            threshold: Items with a quantity below this are included.
++            name_contains: If given, keep only items whose name contains
++                this text, ignoring case.
++            limit: The most items to return.
++            offset: How many matching items to skip.
++
++        Returns:
++            The matching items, sorted by quantity and then by SKU.
++        """
++        needle = "" if name_contains is None else name_contains.casefold()
++        rows = self._connection.execute(
++            "SELECT sku, name, quantity FROM item"
++            " WHERE quantity < ? AND instr(casefold(name), ?) > 0"
++            " ORDER BY quantity, sku LIMIT ? OFFSET ?",
++            (threshold, needle, limit, offset),
++        ).fetchall()
++        return [Item(*row) for row in rows]
+diff --git a/src/stock/service.py b/src/stock/service.py
+index 585d508..e946521 100644
+--- a/src/stock/service.py
++++ b/src/stock/service.py
+@@ -5,6 +5,8 @@ from dataclasses import replace
+ from stock.models import Item
+ from stock.repository import ItemRepository
+ 
++DEFAULT_PAGE_SIZE = 50
++
+ 
+ class InsufficientStockError(ValueError):
+     """Raised when a shipment needs more than is on hand."""
+@@ -40,3 +42,40 @@ class StockService:
+         updated = replace(item, quantity=item.quantity - quantity)
+         self._repository.save(updated)
+         return updated
++
++    def low_stock(
++        self,
++        threshold: int,
++        *,
++        name_contains: str | None = None,
++        page: int = 1,
++        page_size: int = DEFAULT_PAGE_SIZE,
++    ) -> list[Item]:
++        """List the items running low, fewest on hand first.
++
++        Args:
++            threshold: Items with a quantity below this are included.
++            name_contains: If given, keep only items whose name contains
++                this text, ignoring case.
++            page: Which page of results to return, starting at 1.
++            page_size: How many items a page holds.
++
++        Returns:
++            One page of matching items, sorted by quantity and then by SKU.
++
++        Raises:
++            ValueError: If threshold is negative, or page or page_size is
++                below 1.
++        """
++        if threshold < 0:
++            raise ValueError("threshold must not be negative")
++        if page < 1 or page_size < 1:
++            raise ValueError("page and page_size must be at least 1")
++        needle = "" if name_contains is None else name_contains.casefold()
++        rows = self._repository._connection.execute(
++            "SELECT sku, name, quantity FROM item"
++            " WHERE quantity < ? AND instr(casefold(name), ?) > 0"
++            " ORDER BY quantity, sku LIMIT ? OFFSET ?",
++            (threshold, needle, page_size, (page - 1) * page_size),
++        ).fetchall()
++        return [Item(*row) for row in rows]
+diff --git a/tests/test_low_stock.py b/tests/test_low_stock.py
+new file mode 100644
+index 0000000..91afbad
+--- /dev/null
++++ b/tests/test_low_stock.py
+@@ -0,0 +1,185 @@
++import csv
++import sqlite3
++from collections.abc import Iterator
++from io import TextIOWrapper
++from pathlib import Path
++from typing import Literal
++
++import pytest
++
++from stock.models import Item
++from stock.report import export_low_stock_csv
++from stock.repository import ItemRepository
++from stock.service import StockService
++
++
++@pytest.fixture
++def service(repository: ItemRepository) -> StockService:
++    for item in [
++        Item("B2", "Bolt", 3),
++        Item("A1", "Anvil", 3),
++        Item("C3", "Chain", 1),
++        Item("D4", "Drill", 9),
++        Item("E5", "Bolt cutter", 0),
++    ]:
++        repository.save(item)
++    return StockService(repository)
++
++
++def test_lists_items_below_threshold_fewest_first(service: StockService) -> None:
++    items = service.low_stock(5)
++
++    assert [item.sku for item in items] == ["E5", "C3", "A1", "B2"]
++
++
++def test_excludes_items_at_the_threshold(service: StockService) -> None:
++    assert [item.sku for item in service.low_stock(3)] == ["E5", "C3"]
++
++
++def test_filters_by_name_ignoring_case(service: StockService) -> None:
++    items = service.low_stock(5, name_contains="BOLT")
++
++    assert [item.sku for item in items] == ["E5", "B2"]
++
++
++def test_name_filter_ignores_case_beyond_ascii(repository: ItemRepository) -> None:
++    repository.save(Item("F6", "ÉCROU", 1))
++    repository.save(Item("G7", "Straße", 1))
++    service = StockService(repository)
++
++    assert [item.sku for item in service.low_stock(5, name_contains="écrou")] == ["F6"]
++    assert [item.sku for item in service.low_stock(5, name_contains="STRASSE")] == [
++        "G7",
++    ]
++
++
++def test_name_filter_treats_wildcards_as_text(repository: ItemRepository) -> None:
++    repository.save(Item("F6", "50% off", 1))
++    repository.save(Item("G7", "a_b", 1))
++    repository.save(Item("H8", "500 off", 1))
++    repository.save(Item("J9", "axb", 1))
++    service = StockService(repository)
++
++    assert [item.sku for item in service.low_stock(5, name_contains="0% ")] == ["F6"]
++    assert [item.sku for item in service.low_stock(5, name_contains="a_")] == ["G7"]
++
++
++def test_returns_nothing_when_no_item_is_low(service: StockService) -> None:
++    assert service.low_stock(0) == []
++
++
++def test_pages_start_at_one(service: StockService) -> None:
++    first = service.low_stock(5, page=1, page_size=3)
++    second = service.low_stock(5, page=2, page_size=3)
++
++    assert [item.sku for item in first] == ["E5", "C3", "A1"]
++    assert [item.sku for item in second] == ["B2"]
++
++
++def test_reads_the_database_once(
++    service: StockService,
++    connection: sqlite3.Connection,
++) -> None:
++    statements: list[str] = []
++    connection.set_trace_callback(statements.append)
++
++    service.low_stock(5, page=1, page_size=3)
++
++    assert len(statements) == 1
++
++
++def test_pages_hold_fifty_items_by_default(repository: ItemRepository) -> None:
++    for number in range(51):
++        repository.save(Item(f"S{number:02}", "Screw", 1))
++    service = StockService(repository)
++
++    assert len(service.low_stock(5)) == 50
++    assert [item.sku for item in service.low_stock(5, page=2)] == ["S50"]
++
++
++def test_rejects_a_negative_threshold(service: StockService) -> None:
++    with pytest.raises(ValueError, match="threshold must not be negative"):
++        service.low_stock(-1)
++
++
++@pytest.mark.parametrize(
++    ("page", "page_size"),
++    [(0, 10), (-1, 10), (1, 0), (1, -1)],
++)
++def test_rejects_pages_below_one(
++    service: StockService,
++    page: int,
++    page_size: int,
++) -> None:
++    with pytest.raises(ValueError, match="must be at least 1"):
++        service.low_stock(5, page=page, page_size=page_size)
++
++
++def test_exports_csv_with_header(tmp_path: Path) -> None:
++    path = tmp_path / "low.csv"
++
++    export_low_stock_csv([Item("C3", "Chain", 1)], path)
++
++    with path.open(newline="", encoding="utf-8") as file:
++        assert list(csv.reader(file)) == [
++            ["sku", "name", "quantity"],
++            ["C3", "Chain", "1"],
++        ]
++
++
++def test_export_replaces_an_existing_file(tmp_path: Path) -> None:
++    path = tmp_path / "low.csv"
++    path.write_text("old contents\n", encoding="utf-8")
++
++    export_low_stock_csv([], path)
++
++    with path.open(newline="", encoding="utf-8") as file:
++        assert list(csv.reader(file)) == [["sku", "name", "quantity"]]
++
++
++@pytest.mark.parametrize("prefix", ["=", "+", "-", "@", "\t", "\r"])
++def test_export_stops_text_running_as_a_formula(tmp_path: Path, prefix: str) -> None:
++    path = tmp_path / "low.csv"
++
++    export_low_stock_csv([Item(f"{prefix}A1", f"{prefix}Bolt", 1)], path)
++
++    with path.open(newline="", encoding="utf-8") as file:
++        assert list(csv.reader(file))[1] == [f"'{prefix}A1", f"'{prefix}Bolt", "1"]
++
++
++def test_export_leaves_formula_characters_inside_text(tmp_path: Path) -> None:
++    path = tmp_path / "low.csv"
++
++    export_low_stock_csv([Item("A=1", "Bolt+Nut", 1)], path)
++
++    with path.open(newline="", encoding="utf-8") as file:
++        assert list(csv.reader(file))[1] == ["A=1", "Bolt+Nut", "1"]
++
++
++def test_export_closes_the_file_when_writing_fails(
++    tmp_path: Path,
++    monkeypatch: pytest.MonkeyPatch,
++) -> None:
++    opened: list[TextIOWrapper] = []
++    real_open = Path.open
++
++    def recording_open(
++        path: Path,
++        mode: Literal["w"],
++        *,
++        newline: str,
++        encoding: str,
++    ) -> TextIOWrapper:
++        file = real_open(path, mode, newline=newline, encoding=encoding)
++        opened.append(file)
++        return file
++
++    def failing_items() -> Iterator[Item]:
++        yield Item("C3", "Chain", 1)
++        raise OSError("disk full")
++
++    monkeypatch.setattr(Path, "open", recording_open)
++
++    with pytest.raises(OSError, match="disk full"):
++        export_low_stock_csv(failing_items(), tmp_path / "low.csv")
++    assert opened[0].closed
