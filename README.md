@@ -119,14 +119,28 @@ The plugin provides:
   reviewers, such as `vibes:security-reviewer`.
 - **The commit gate hook,** which runs before every `git commit` the agent
   makes.
-- **The guide check hook.** The first time an agent, or each subagent,
-  writes a kind of file in a conversation without having read its guide,
-  it names the guide for it, and warns when the project's gate doesn't
-  check that guide yet. In a project
-  with the commit gate, it refuses that first write until the agent has
-  read the guide, and lets the next one through. Elsewhere it only
+- **The guide check hook.** The first time an agent, or each subagent, writes a
+  kind of file in a conversation without having read its guide, it names the
+  guide for it, and warns when the project's gate doesn't check that guide yet.
+  In a project with the commit gate, it refuses that first write until the
+  agent has read the guide, and lets the next one through. Elsewhere it only
   reminds, after the write, because Claude Code shows a hook's message
   alongside the tool's result.
+
+### Updates
+
+Each release has a version, and [CHANGELOG.md](CHANGELOG.md) says what
+changed in it. An installed plugin stays on its version until a new release,
+so work in progress on `master` never reaches you. To update, run
+`claude plugin update vibes@vibes` in a shell, or
+`/plugin marketplace update vibes` and then `/reload-plugins` in a session.
+To update automatically, turn on auto-update for the marketplace under
+`/plugin` > **Marketplaces**.
+
+To release, move the changelog's Unreleased entries under a new version
+and date, set the same version in `.claude-plugin/plugin.json`, commit
+both, and tag the commit `v<version>`. Until 1.0, a minor version marks any
+change in how the workflow, the gate or the guides behave.
 
 ## Use without Claude Code
 
