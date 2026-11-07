@@ -47,9 +47,9 @@ breach of each looks like, when not to apply it, and how severe it is.
 The standards live in `${CLAUDE_PLUGIN_ROOT}/guides/`, one directory per
 language, format or tool, grouped by kind: `languages/`, `web/` (HTML, CSS),
 `data/` (SQL, YAML, schemas), `build/` (CMake, Make, linker scripts) and
-`tools/` (Docker). List them to find the right name, for example
-`languages/Python`, `web/CSS` or `tools/Docker`. For every one in the
-change, read:
+`tools/` (Docker, GitHub Actions, OpenTofu, Nix). List them to find the
+right name, for example `languages/Python`, `web/CSS` or `tools/Docker`.
+For every one in the change, read:
 
 - `idioms.md`: its principles. Where they disagree with `principles.md`,
   the language's guide wins.
