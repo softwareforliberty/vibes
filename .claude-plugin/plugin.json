@@ -1,6 +1,6 @@
 {
   "name": "vibes",
-  "description": "Clean vibe coding: write a complete spec and design, spike to them, review with a panel of critic agents, then rebuild test-first in atomic, gated commits, using per-language style, idiom and tool guides.",
+  "description": "Clean vibe coding: write a complete spec and design, spike to them, review with a panel of critic agents, then rebuild test-first in atomic, gated commits, using style, idiom and tool guides for each language, format and tool.",
   "author": {
     "name": "Reece Fowell"
   },

@@ -1,6 +1,6 @@
 {
   "name": "vibes",
-  "description": "Skills, reviewer agents and a commit gate for clean vibe coding, with per-language style, idiom and tool guides.",
+  "description": "Skills, reviewer agents and a commit gate for clean vibe coding, with style, idiom and tool guides for each language, format and tool.",
   "owner": {
     "name": "Reece Fowell"
   },
