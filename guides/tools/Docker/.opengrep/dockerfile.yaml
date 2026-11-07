@@ -1,0 +1,34 @@
+---
+rules:
+  - id: dockerfile-from-without-digest
+    message: >-
+      Pin the image by digest as well as tag (name:tag@sha256:...), so a tag
+      that is moved or overwritten can't change what the build runs.
+    severity: ERROR
+    languages:
+      - dockerfile
+    pattern-regex: (?im)^FROM\s+(?:--\S+\s+)?[^\s@]*[:/][^\s@]*(?:\s|$)
+  - id: dockerfile-no-pipe-to-shell
+    message: >-
+      Don't pipe a download into a shell, which runs whatever the server sends;
+      use ADD --checksum, a package manager or a pinned image instead.
+    severity: ERROR
+    languages:
+      - dockerfile
+    pattern-regex: (?:curl|wget)\b(?:[^|;&\n]|\\\n)*\|\s*(?:sudo\s+)?\w*sh\b
+  - id: dockerfile-add-url-without-checksum
+    message: >-
+      Give every remote ADD a --checksum, so the build fails if the file
+      changes.
+    severity: ERROR
+    languages:
+      - dockerfile
+    pattern-regex: (?im)^ADD\s+(?![^\n]*--checksum)[^\n]*\bhttps?://
+  - id: dockerfile-heredoc-without-set-e
+    message: >-
+      Start a RUN heredoc with set -eu, or a failing line won't stop the
+      script and the build will succeed anyway.
+    severity: ERROR
+    languages:
+      - dockerfile
+    pattern-regex: (?m)^RUN\s.*<<-?["']?\w+["']?\s*\n(?!(?:#!.*\n)?set\s+-\w*e)

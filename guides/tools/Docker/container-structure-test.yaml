@@ -1,0 +1,23 @@
+---
+schemaVersion: 2.0.0
+
+metadataTest:
+  user: 65532:65532
+  exposedPorts:
+    - "8080"
+  entrypoint:
+    - /usr/local/bin/hello
+  labels:
+    - key: org.opencontainers.image.source
+      value: https://example.com/hello
+
+fileExistenceTests:
+  - name: The service can't change its own binary
+    path: /usr/local/bin/hello
+    shouldExist: true
+    permissions: -rwxr-xr-x
+    uid: 0
+    gid: 0
+  - name: The image has no shell
+    path: /bin/sh
+    shouldExist: false

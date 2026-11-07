@@ -3,13 +3,14 @@
 Guides and tooling for clean vibe coding: letting an AI agent write the code,
 while holding it to the standards of careful, experienced developers.
 
-- **`guides/`:** 55 guides, grouped by kind: `languages/` for 40
+- **`guides/`:** 56 guides, grouped by kind: `languages/` for 40
   programming languages, `web/` for HTML, CSS and Sass, `data/` for SQL,
-  database dialects, data formats and schema languages, and `build/` for
-  CMake, Make and linker scripts. Each has a `coding-style.md`, an
-  `idioms.md` and a `tools.md` listing FOSS linting, auditing and
-  code-quality tools, plus a `.editorconfig` and drop-in config files for
-  those tools.
+  database dialects, data formats and schema languages, `build/` for
+  CMake, Make and linker scripts, and `tools/` for Docker. Each has a
+  `coding-style.md`, an `idioms.md` and a `tools.md` listing FOSS linting,
+  auditing and code-quality tools, plus a `.editorconfig` and drop-in config
+  files for those tools. [guides/README.md](guides/README.md) says what
+  goes in a guide.
 - **`skills/`:** agent skills for the workflow, test-driven development,
   atomic commits and setting up the commit gate.
 - **`principles.md`:** the programming principles every change is held

@@ -1,0 +1,11 @@
+---
+# Fail on every finding, down to info and style.
+failure-threshold: style
+# Every image says what it is, where its source lives, its licence, and the
+# version and commit it was built from.
+label-schema:
+  org.opencontainers.image.title: text
+  org.opencontainers.image.source: url
+  org.opencontainers.image.licenses: spdx
+  org.opencontainers.image.version: text
+  org.opencontainers.image.revision: text

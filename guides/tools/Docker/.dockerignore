@@ -1,0 +1,8 @@
+# Template: an allowlist. Exclude everything, then re-include only what the
+# build reads, so a new file, such as a secret or a local build output,
+# never reaches the build context by accident. Replace the entries below
+# with the files your own build copies.
+*
+!go.mod
+!go.sum
+!**/*.go

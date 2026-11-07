@@ -1,0 +1,6 @@
+---
+# Fail the run on any finding.
+exit-code: 1
+vulnerability:
+  # Report only vulnerabilities that have a fixed version to upgrade to.
+  ignore-unfixed: true

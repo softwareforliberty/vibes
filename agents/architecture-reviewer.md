@@ -61,9 +61,10 @@ what each may depend on, and how much structure a task needs.
 
 The standards live in `${CLAUDE_PLUGIN_ROOT}/guides/`, one directory per
 language, format or tool, grouped by kind: `languages/`, `web/` (HTML, CSS),
-`data/` (SQL, YAML, schemas) and `build/` (CMake, Make, linker scripts).
-List them to find the right name, for example `languages/Python`,
-`web/CSS` or `data/YAML`. For every one in the change, read:
+`data/` (SQL, YAML, schemas), `build/` (CMake, Make, linker scripts) and
+`tools/` (Docker). List them to find the right name, for example
+`languages/Python`, `web/CSS` or `tools/Docker`. For every one in the
+change, read:
 
 - `idioms.md`: its principles and its sections on modules, interfaces and error
   handling. Where the guides disagree, follow the order in

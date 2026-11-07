@@ -36,9 +36,10 @@ review only what the change adds or modifies.
 
 The standards live in `${CLAUDE_PLUGIN_ROOT}/guides/`, one directory per
 language, format or tool, grouped by kind: `languages/`, `web/` (HTML, CSS),
-`data/` (SQL, YAML, schemas) and `build/` (CMake, Make, linker scripts).
-List them to find the right name, for example `languages/Python`,
-`web/CSS` or `data/YAML`. For every one in the change, read:
+`data/` (SQL, YAML, schemas), `build/` (CMake, Make, linker scripts) and
+`tools/` (Docker). List them to find the right name, for example
+`languages/Python`, `web/CSS` or `tools/Docker`. For every one in the
+change, read:
 
 - `coding-style.md`: the whole guide, including its language baseline.
 - `tools.md` and the config files next to it, so you know what the formatter
