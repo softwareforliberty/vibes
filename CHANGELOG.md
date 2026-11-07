@@ -8,6 +8,22 @@ guides behave, and says so under **Changed**.
 
 ## [Unreleased]
 
+### Changed
+
+- **The spike is reviewed once, and its code is never fixed.** Findings that
+  change behaviour or structure correct the spec and design, which are
+  approved again before the rebuild. An uncertain design change is tried in
+  the spike once more, and every other finding becomes a lesson for the
+  rebuild.
+- **The builder and the spiker run on Sonnet.**
+- **The rebuild plan has a section per batch,** with entries that each
+  drive one piece of code, and each builder reads only its own section and
+  the parts of the spec and design its entries need.
+- **A test that passes straight away is checked by reading the code,** not
+  by breaking it on purpose.
+- **The main agent keeps its records short:** a line per step in
+  `state.md`, and a line per reviewer and finding in each round.
+
 ## [0.1.0] - 2026-11-07
 
 The first versioned release.
