@@ -16,8 +16,12 @@ dependency inversion above all.
 | --- | --- |
 | Web applications, HTTP APIs and the services behind them | [Web applications](web-applications.md) |
 | Desktop and other GUI applications | [Desktop applications](desktop-applications.md) |
-| OS components: kernels, drivers, firmware, system services and system libraries | [OS components](os-components.md) |
-| Anything else, such as a library, a command-line tool or a script | This page alone |
+| Mobile applications for iOS and Android | [Mobile applications](mobile-applications.md) |
+| Command-line tools | [Command-line tools](command-line-tools.md) |
+| Libraries and SDKs | [Libraries](libraries.md) |
+| OS components: kernels, drivers, bootloaders, system services and system libraries | [OS components](os-components.md) |
+| Embedded systems: firmware on microcontrollers and small processors, with or without an RTOS | [Embedded systems](embedded-systems.md) |
+| Anything else, such as a script | This page alone |
 
 A task that spans kinds uses the guide for each part.
 

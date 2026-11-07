@@ -16,8 +16,8 @@ while holding it to the standards of careful, experienced developers.
 - **`principles.md`:** the programming principles every change is held
   to, such as SOLID, DRY and KISS.
 - **`architecture/`:** how to structure software: rules for every kind,
-  and a guide each for web applications, desktop applications and OS
-  components.
+  and a guide each for web, desktop and mobile applications, command-line
+  tools, libraries, OS components and embedded systems.
 - **`agents/`:** the designer, the spike agent and ten reviewer agents.
 - **`hooks/`:** the commit gate, for Claude Code and for git, and a guard
   that keeps the spec reviewer from changing files or git state.
