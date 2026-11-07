@@ -35,8 +35,10 @@ The brief from the main agent gives you:
 
 Read the spec and the design to learn what the change must do and how it's
 meant to be structured. Then read all of `diff.patch`, and every changed file
-in full. Read the surrounding code when you need it to judge a change, but
-review only what the change adds or modifies.
+in full, or in later rounds, what
+[Rounds after the first](#rounds-after-the-first) says. Read the surrounding
+code when you need it to judge a change, but review only what the change
+adds or modifies.
 
 ## Standards
 
@@ -86,6 +88,13 @@ In later rounds, read your own earlier findings and the main agent's
 the main agent rejected a finding with a reason, accept the reason unless it's
 wrong, and say why if it is. Don't raise a finding again once it's resolved,
 and don't hunt for new minor issues in code you already approved.
+
+In the spike and rebuild phases, the brief also names the changes since the
+round you last reviewed: a patch, and the list of files it touches. Read
+all of that patch, and each of those files in full, instead of the whole of
+`diff.patch` and every changed file again. Review everything the patch adds
+or modifies as thoroughly as in your first round, including how it fits the
+code around it. Look up the rest of `diff.patch` only where you need it.
 
 ## Severity
 

@@ -91,6 +91,12 @@ recheck every requirement the change since the last round could affect.
 When the main agent rejected a finding with a reason, accept the reason
 unless it's wrong, and say why if it is.
 
+In the spike and rebuild phases, the brief also names the changes since the
+round you last reviewed: a patch, and the list of files it touches. Read
+those instead of the whole of `diff.patch` again, and run the tests again.
+Carry your earlier verdict on each requirement the changes can't affect
+into your coverage list, and check the rest afresh.
+
 ## Severity
 
 - **BLOCKER:** a requirement is not met, or the spec has an open question

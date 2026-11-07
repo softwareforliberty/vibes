@@ -264,15 +264,27 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
 
 1. **Prepare the round directory,** `.vibes/<name>/review/<phase>-<round>/`
    (for example `.vibes/<name>/review/spike-1/`). In the spike and rebuild
-   phases, save the change in it:
+   phases, save the change in it, and the commit it reviews:
 
    ```sh
    git diff <base>...HEAD > .vibes/<name>/review/spike-1/diff.patch
    git diff --name-only <base>...HEAD > .vibes/<name>/review/spike-1/files.txt
+   git rev-parse HEAD > .vibes/<name>/review/spike-1/head.txt
    ```
 
    From round 2 on, copy the previous round's findings files and
-   `responses.md` into the new directory.
+   `responses.md` into the new directory. In the spike and rebuild phases,
+   later rounds review only what changed: for each round `<k>` that a
+   reviewer in this round last reviewed, save the changes since then, for
+   example in `spike-3/` for reviewers last run in round 2:
+
+   ```sh
+   since="$(cat .vibes/<name>/review/spike-2/head.txt)"
+   git diff "${since}" HEAD \
+     > .vibes/<name>/review/spike-3/changes-since-2.patch
+   git diff --name-only "${since}" HEAD \
+     > .vibes/<name>/review/spike-3/changed-files-since-2.txt
+   ```
 2. **Spawn every reviewer for the round in a single message**, so they run in
    parallel. In round 1 every reviewer for the phase runs. In later rounds,
    only the reviewers that requested changes run again. Give each one a
@@ -286,11 +298,15 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
    Phase: <spec, design, spike or rebuild>
    Guides: <guides>
    Round: <n>
+   Changes: <from round 2, in the spike and rebuild phases: the absolute
+     paths of changes-since-<k>.patch and changed-files-since-<k>.txt for
+     the round <k> this reviewer last reviewed>
    ```
 
 3. **Save each reply** to `findings-<reviewer>.md` in the round directory,
    for example `findings-security-reviewer.md`.
 4. **Work through the findings** of every reviewer whose verdict is
+   git rev-parse HEAD > .vibes/<name>/review/spike-1/head.txt
    `CHANGES REQUESTED`, most severe first:
    - Fix every BLOCKER and MAJOR finding.
    - Fix MINOR findings when they're cheap and in scope.
