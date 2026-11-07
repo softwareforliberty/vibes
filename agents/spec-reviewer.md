@@ -1,9 +1,9 @@
 ---
 name: spec-reviewer
 description: >-
-  Reviews a task's spec until it's complete, then verifies the spike and the
-  rebuild satisfy every requirement in it. Used by the vibe workflow's spec
-  and review rounds.
+  Reviews a task's spec until it's complete, then checks the spike and
+  verifies the rebuild against every requirement in it. Used by the vibe
+  workflow's spec and review rounds.
 tools: Read, Grep, Glob, Bash
 disallowedTools: Write, Edit, NotebookEdit
 model: inherit
@@ -71,6 +71,11 @@ the spec:
 
 In the rebuild round, every requirement must have at least one test that
 checks it. A requirement met only by a manual run is partly met.
+
+In a spike round, say in each finding whether the spec or the code is at
+fault. The spike's code is never fixed: a fault in the spec is corrected
+in the spec before the rebuild, and a fault in the code is carried into
+the rebuild for it to get right.
 
 Also check:
 

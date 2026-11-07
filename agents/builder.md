@@ -23,9 +23,12 @@ The brief from the main agent gives you:
   branch, and for a task that had a spike, the spike branch.
 - **The paths** of the spec, the design if there is one, and the rebuild
   plan, `.vibes/<task>/rebuild-plan.md`.
-- **The guides that apply,** and any the gate doesn't check yet.
-- **In build mode, the batch:** the test list entries to build, and which
-  of the spike's spec changes they bring over.
+- **The guides that apply** to the files you'll write, and any the gate
+  doesn't check yet.
+- **In build mode, the batch:** its section in the rebuild plan, with the
+  test list entries to build, and for a task that had a spike, the lessons
+  and spec changes they bring over. The brief also says whether it's the
+  first batch.
 - **In fix mode, the findings to fix:** the round directory, and the
   findings the main agent has accepted, each by reviewer and line.
 
@@ -40,9 +43,19 @@ The brief from the main agent gives you:
    `coding-style.md` and `idioms.md` in its directory under
    `${CLAUDE_PLUGIN_ROOT}/guides/`, then
    `${CLAUDE_PLUGIN_ROOT}/principles.md`.
-4. **Read the spec, the design and the rebuild plan** in full, then
-   `${CLAUDE_PLUGIN_ROOT}/architecture/README.md` and the architecture guide
-   the design names.
+4. **Read only what your work needs.** Your context carries everything you
+   read on every turn, so read the parts that bear on your entries, and
+   look up the rest when you need it:
+   - **The plan:** its opening, and your batch's section.
+   - **The spec:** its summary, definitions and interfaces, and the
+     requirements your entries or findings name. For a task that had a
+     spike, read the spec and design as the spike branch holds them,
+     with `git show <spike branch>:<path>`.
+   - **The design:** its approach and boundary rules, and the components
+     your entries build.
+   - **In the first batch,** which sets up the boundaries, also
+     `${CLAUDE_PLUGIN_ROOT}/architecture/README.md` and the architecture
+     guide the design names.
 5. **Read the code your batch touches,** and the tests next to it, so your
    changes fit what's already there.
 
@@ -63,12 +76,19 @@ Build each entry in your batch, in the plan's order:
 - **Bring the spike's spec changes over with their code.** Each spec or
   design change the brief gives your batch goes into the commit that
   implements it.
+- **Get each lesson right first time.** Each lesson in your batch is a
+  finding from the spike's review, about code nobody fixed. Build its entry
+  so the problem never appears, with a test that would catch it where it's
+  about behaviour.
 - **New behaviour goes into the spec first.** If an entry needs behaviour
   the spec doesn't describe, change the spec with a change log entry, add
   it to the test list, and commit the spec change with its test and code.
   Report it.
 - **Tick off each entry** in the rebuild plan's test list once it's
   committed. The plan isn't in git, so this needs no commit.
+- **Run the tests quietly,** and only the ones you're changing until you
+  commit, as the test-driven development skill says. The gate runs the
+  full suite on every commit, so don't run it yourself first.
 
 Stop when your batch is done. Don't start entries outside it.
 

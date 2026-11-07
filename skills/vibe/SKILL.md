@@ -17,10 +17,11 @@ Task: $ARGUMENTS
 Build the task from a complete spec. First the **spec** says everything the
 task must do, and the **design** says how the code will be structured, and
 each is reviewed until it's approved. Then a fast **spike** builds the design,
-and a panel of reviewers critiques it until every reviewer is satisfied and
-the spike is verified to meet the whole spec. Then the spike is set aside and
-the task is **rebuilt test-first**, one atomic, gated commit at a time, and
-reviewed and verified again.
+and a panel of reviewers critiques it once, to find where the spec, the
+design and the code fall short. The spec and design are corrected and
+approved again, and the spike is set aside. Then the task is **rebuilt
+test-first** from them, one atomic, gated commit at a time, and reviewed and
+verified against the spec.
 
 That's the full workflow, for large tasks. Smaller tasks skip the parts they
 don't need, as [Size the task](#size-the-task) describes, but every task gets
@@ -39,7 +40,7 @@ code and the guides for writing it belong in theirs.
 | Agent | Role |
 | --- | --- |
 | `vibes:designer` | Writes the spec, then the design |
-| `vibes:spiker` | Builds the spike to the spec and design, and fixes its findings |
+| `vibes:spiker` | Builds the spike to the spec and design, and tries out a design change the spike review makes |
 | `vibes:builder` | Builds the task test-first, a batch at a time, and fixes its findings |
 | `vibes:spec-reviewer` | The spec's completeness, then whether the code meets it |
 | `vibes:architecture-reviewer` | The design, then module boundaries, coupling, API design |
@@ -79,8 +80,12 @@ code.
   writing it into the spec.
 - **The spec reviewer checks every spec change** in the next review round,
   along with the code.
-- **The spike is accepted only when the spec reviewer verifies it meets
-  every requirement,** and so is the rebuild.
+- **The spike's review corrects the spec and design before the rebuild.**
+  Every finding that changes behaviour or structure goes into them, and
+  they're approved again, so the rebuild starts from a design the spike has
+  tested.
+- **The rebuild is accepted only when the spec reviewer verifies it meets
+  every requirement.**
 
 ## Size the task
 
@@ -127,7 +132,8 @@ code.
   resource-leak review, and a change to only docs gets only the spec and
   security reviewers. When you're unsure whether a file is in a
   reviewer's area, keep the reviewer. Write the panel to the round's
-  `panel.md`, with each reviewer left out and why. Check it again each
+  `panel.md`, one line per reviewer: the reviewers that run, then each one
+  left out and why, in a few words. Check it again each
   round: when the change gains a file in a left-out reviewer's area, that
   reviewer joins, with a full first round.
 
@@ -149,14 +155,8 @@ The user can ask for a run that never stops to ask them anything, such as
 - **Anything that could lose or overwrite the user's work,** such as
   uncommitted changes, an existing pre-commit hook or another task's
   unfinished run: never act on it. Stop, and report what needs a decision.
-- **The round limit in the spike review:** go on to the rebuild, which
-  writes the code again and is reviewed again. Fix outstanding findings
-  about the spec or design in them on the rebuild branch, through a `spec`
-  round, and write the rest into the rebuild plan's lessons, to be built
-  right test-first. Record it as an unattended decision, with the
-  findings.
-- **The round limit anywhere else:** stop, and report the outstanding
-  findings as the limit says.
+- **The round limit:** stop, and report the outstanding findings as the
+  limit says.
 - **The spike branch at the end:** keep it.
 
 The final report lists every unattended decision first, with the options
@@ -173,6 +173,10 @@ round, and after every commit. It holds:
 - the base branch, the spec directory and the guides that apply;
 - the current phase and round, and the last step finished;
 - `status: running` until Phase 8 ends, then `status: done`.
+
+Keep it short: one line for each finished step, naming the commits or the
+file that holds the details, such as a round's `responses.md` or a
+builder's report. The details live there, not in `state.md`.
 
 ## Keep the guides current
 
@@ -288,7 +292,10 @@ To resume:
 ## Review rounds
 
 Every review in the workflow runs in rounds, the same way. A round reviews
-one phase: `spec`, `design`, `spike` or `rebuild`.
+one phase: `spec`, `design`, `spike` or `rebuild`. The spike phase runs at
+most two rounds and fixes no code, as
+[Phase 4](#phase-4-review-the-spike) describes, so steps 5, 7, 8 and 9
+don't apply to it.
 
 1. **Prepare the round directory,** `.vibes/<name>/review/<phase>-<round>/`
    (for example `.vibes/<name>/review/spike-1/`). In the spike and rebuild
@@ -304,14 +311,14 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
    `responses.md` into the new directory. In the spike and rebuild phases,
    later rounds review only what changed: for each round `<k>` that a
    reviewer in this round last reviewed, save the changes since then, for
-   example in `spike-3/` for reviewers last run in round 2:
+   example in `rebuild-3/` for reviewers last run in round 2:
 
    ```sh
-   since="$(cat .vibes/<name>/review/spike-2/head.txt)"
+   since="$(cat .vibes/<name>/review/rebuild-2/head.txt)"
    git diff "${since}" HEAD \
-     > .vibes/<name>/review/spike-3/changes-since-2.patch
+     > .vibes/<name>/review/rebuild-3/changes-since-2.patch
    git diff --name-only "${since}" HEAD \
-     > .vibes/<name>/review/spike-3/changed-files-since-2.txt
+     > .vibes/<name>/review/rebuild-3/changed-files-since-2.txt
    ```
 2. **Spawn every reviewer for the round in a single message**, so they run in
    parallel. In round 1 every reviewer on the phase's panel runs, as
@@ -342,14 +349,16 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
    - A fix that changes behaviour goes into the spec first, as
      [The spec comes first](#the-spec-comes-first) says.
 5. **Fix the accepted findings.** In the spec and design phases, edit
-   `spec.md` and `design.md` yourself. In the spike phase, spawn
-   `vibes:spiker` in `fix` mode, and in the rebuild phase a fresh
-   `vibes:builder` in `fix` mode, with the round directory and the accepted
-   findings, each by reviewer and line. Check its commits are on the right
-   branch and the working tree is clean.
-6. **Record a response to every finding** in the round's `responses.md`:
-   `fixed`, `rejected: <reason>` or `deferred: <reason>` (MINOR only), from
-   your decisions and the fixer's report.
+   `spec.md` and `design.md` yourself. The spike phase fixes no code, as
+   [Phase 4](#phase-4-review-the-spike) describes. In the rebuild phase,
+   spawn a fresh `vibes:builder` in `fix` mode, with the round directory
+   and the accepted findings, each by reviewer and line. Check its commits
+   are on the right branch and the working tree is clean.
+6. **Record a response to every finding** in the round's `responses.md`,
+   one line each: the finding's id, then `fixed <commit>`,
+   `rejected: <reason>` or `deferred: <reason>` (MINOR only), from your
+   decisions and the fixer's report. The spike phase also has `spec`,
+   `design` and `lesson`, as Phase 4 describes.
 7. **Start the next round** with only the reviewers that requested changes.
    A reviewer that approved doesn't run again while others are still
    requesting changes, even when their fixes touch its area.
@@ -357,11 +366,11 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
    anything in a reviewer's area changed after it approved, run it once
    more, in one last round, to confirm the later changes didn't break its
    area. Its `Changes:` line covers everything since it last ran. The spec
-   reviewer always runs in the last round of the spike and rebuild phases,
-   so its final verdict covers the final code.
-9. **Stop at the round limit:** 3 rounds for the spec and design, and 5 for
-   the spike and rebuild. If any reviewer still requests changes, stop and
-   show the user the outstanding findings, your responses, and where the
+   reviewer always runs in the last round of the rebuild phase, so its
+   final verdict covers the final code.
+9. **Stop at the round limit:** 3 rounds for the spec and design, and 5
+   for the rebuild. If any reviewer still requests changes, stop and show
+   the user the outstanding findings, your responses, and where the
    reviewers and you disagree. Ask how to proceed.
 
 ## Phase 1: Spec
@@ -414,35 +423,89 @@ Large tasks only. Small and medium tasks go straight to
 
 Large tasks only.
 
-Run review rounds in the `spike` phase with the panel from
-[Size the task](#size-the-task), and with the spiker fixing findings on the
-spike branch, until every reviewer approves. The panel leaves out
-`vibes:test-reviewer`, `vibes:style-reviewer`, `vibes:idioms-reviewer` and
-`vibes:cleanliness-reviewer`: the rebuild writes every line again, so their
-findings on the spike's code would be fixed in code that's thrown away. The
-rebuild review runs them on the code that's kept. The spec reviewer's final verdict must be `APPROVED`, with every
-requirement met: that's the verification that the spike satisfies the
-spec.
+The spike exists to test the spec and design, and its code is thrown away.
+So its review finds where they fall short and corrects them, and fixes no
+code: the rebuild builds every finding right, test-first.
+
+1. **Review the spike once,** in round `spike-1`, with the panel from
+   [Size the task](#size-the-task). The panel leaves out
+   `vibes:test-reviewer`, `vibes:style-reviewer`, `vibes:idioms-reviewer`
+   and `vibes:cleanliness-reviewer`, whose findings would be about code
+   that's thrown away. The rebuild review runs them on the code that's
+   kept. The spec reviewer lists every requirement the spike doesn't meet.
+2. **Decide on the findings,** as step 4 of
+   [Review rounds](#review-rounds) says, and sort each one you accept:
+   - **`spec`:** the spec is wrong, incomplete or contradicts itself, such
+     as a case it doesn't cover or behaviour that can't be built as
+     written.
+   - **`design`:** the structure is wrong, such as a boundary that doesn't
+     hold, a component that can't do its job as designed, or a flaw that
+     only a different structure fixes, like a race that needs files opened
+     another way.
+   - **`lesson`:** everything else, about the spike's code, such as a
+     missed edge case, a leak or a slow loop. The rebuild gets it right.
+3. **Correct the spec and design** on the spike branch. Edit `spec.md` and
+   `design.md` yourself, with a change log entry for each change naming
+   its finding, and keep the traceability table complete. Ask the user
+   about a change that alters what they asked for. Commit the changes on
+   the spike branch.
+4. **Have the corrections approved,** before any rebuild starts: the spec
+   reviewer in `spec` rounds, then the architecture reviewer in `design`
+   rounds, as Phases 1 and 2 describe. Their findings are fixed in the spec
+   and design the same way, and committed on the spike branch.
+5. **Try out an uncertain design change,** when a change replaces how a
+   component works and the spike can't show it holds up, such as a new way
+   to walk a directory tree. Spawn `vibes:spiker` in `fix` mode, with the
+   design changes to build. Then run round `spike-2`, with the reviewers
+   whose findings led to the change and the spec reviewer, on the changes
+   since `spike-1`. Sort its findings the same way, and correct the spec
+   and design as steps 3 and 4 say. There's no third spike round: anything
+   left is a lesson.
+6. **Record a response to every finding** in each round's `responses.md`:
+   `spec`, `design` or `lesson`, with what changed, or `rejected:` or
+   `deferred:` with the reason.
 
 ## Phase 5: Set the spike aside
 
 Large tasks only.
 
-The approved spike is a reference implementation, never production code. It
-stays on `spike/<name>` and is never merged.
+The spike is a reference implementation, never production code. It stays on
+`spike/<name>` and is never merged. The corrected spec and design stay on
+the spike branch too, until the rebuild brings each change over with the
+commit that implements it. Builders read them there, with
+`git show spike/<name>:<path>`, so don't copy them anywhere else.
 
-1. Write `.vibes/<name>/rebuild-plan.md`:
-   - **Test list:** every requirement and quality id in the spec as the
-     spike phase left it, broken into behaviours to test, ordered from
-     simplest to hardest. Each entry names the ids it covers, and every id
-     appears at least once.
-   - **Lessons:** what the review rounds changed, so the rebuild gets it right
-     first time.
-   - **Spec changes:** each change log entry the spike phase added to the
-     spec or design, with the test list entry whose commit will bring it
-     over. List them from
-     `git diff vibe/<name> spike/<name> -- <spec directory>`.
+1. Write `.vibes/<name>/rebuild-plan.md`, as
+   [The rebuild plan](#the-rebuild-plan) describes, with the spike's
+   lessons and spec changes.
 2. Switch to the rebuild branch: `git switch vibe/<name>`.
+
+## The rebuild plan
+
+`.vibes/<name>/rebuild-plan.md` is what the builders work from. It opens
+with the task's name, the branches and the list of batches, then holds the
+batches in order, each in its own section, so a builder reads only the
+opening and its own batch. Each batch section holds:
+
+- **The test list entries,** in order from simplest to hardest. Each entry
+  is one red, green, refactor cycle ending in a commit: the tests that
+  drive one piece of code into being, such as a requirement's normal case
+  and its errors together. A test that would pass on code an earlier entry
+  wrote goes in that entry, not in one of its own. Each entry names the
+  ids it covers. Together, the entries cover every requirement and quality
+  id in the spec, and most tasks need no more entries than the spec has
+  ids.
+- **The guides** for the files the batch writes.
+- **For a large task, the lessons** for the batch: each `lesson` finding
+  from the spike review, by its id, with the entry that gets it right.
+- **For a large task, the spec changes** the batch brings over: each
+  change log entry the spike phase added to the spec or design, with the
+  entry whose commit brings it over. List them from
+  `git diff vibe/<name> spike/<name> -- <spec directory>`.
+
+A batch is a group of entries that belong together, such as one feature's,
+of a size one builder can finish in a fresh context. A small task is
+usually one batch.
 
 ## Phase 6: Rebuild test-first
 
@@ -453,32 +516,29 @@ split the work into batches, and give each batch to a fresh builder, so no
 context carries more than one batch of code.
 
 For a small or medium task, this is the first build, on the rebuild branch
-from Phase 1. Write `.vibes/<name>/rebuild-plan.md` first, with the test
-list from the spec as Phase 5 describes; there are no lessons or spec
-changes from a spike to list. Where there was no spike, the steps below that
-mention one don't apply.
+from Phase 1. Write `.vibes/<name>/rebuild-plan.md` first, as
+[The rebuild plan](#the-rebuild-plan) describes; there are no lessons or
+spec changes from a spike to list. Where there was no spike, the steps
+below that mention one don't apply.
 
-1. **Split the test list into batches** of entries that belong together,
-   such as one feature's entries, in the plan's order. A small task is
-   usually one batch.
-2. **The first batch enforces the boundaries.** Where the task has a
+1. **The first batch enforces the boundaries.** Where the task has a
    design, it starts by adding the design's boundary rules to
    `scripts/check`, as architecture tests or build structure from each
    guide's `tools.md`, so the gate holds every later commit to them. Where
    the spike needed guides the gate doesn't check yet, it extends the gate
    for them first too.
-3. **Spawn a fresh `vibes:builder` in `build` mode for each batch,** one
-   at a time, on the rebuild branch. Its brief gives the task, the branches,
-   the paths of the spec, design and rebuild plan, the guides and any the
-   gate doesn't check yet, the batch's entries, and for a large task, the
-   spike's spec changes those entries bring over. The spec and design are
-   the source of truth: for a large task, as the spike phase left them.
-4. **Check each batch** before the next: its commits are on the rebuild
+2. **Spawn a fresh `vibes:builder` in `build` mode for each batch,** one
+   at a time, on the rebuild branch. Its brief gives the task, the
+   branches, the paths of the spec, design and rebuild plan, the batch's
+   section in the plan, its guides and any the gate doesn't check yet, and
+   whether it's the first batch. The spec and design are the source of
+   truth: for a large task, as the spike phase left them.
+3. **Check each batch** before the next: its commits are on the rebuild
    branch, the working tree is clean, the plan's entries are ticked off,
    and `scripts/check` passes. Check the guides on the branch's changes, as
    [Keep the guides current](#keep-the-guides-current) describes. Save the
    report to `.vibes/<name>/build-<batch>.md`, and update `state.md`.
-5. **Decide what the builder couldn't,** such as a spec change that alters
+4. **Decide what the builder couldn't,** such as a spec change that alters
    what the user asked for, which you ask the user about. Then carry on
    with the next batch.
 

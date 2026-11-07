@@ -65,15 +65,16 @@ could lose your work.
    design on a `spike/<task>` branch.
 4. **Review.** Reviewer subagents critique the spike in parallel, one each
    for architecture, memory and resource leaks, performance, bugs and
-   security. The spec reviewer verifies it meets every requirement in the
-   spec. Style, idioms and cleanliness wait for the rebuild, since the
-   spike's code is thrown away.
-5. **Fix.** The main agent decides on the findings and the spike agent fixes
-   them, and the reviewers that asked for changes review what changed, until
-   every reviewer approves (at most five rounds before it asks you). A fix that
-   changes behaviour goes into the spec first, and so does every other change,
-   all the way through. Each spec change is committed together with the code
-   that implements it.
+   security, and the spec reviewer lists any requirement it doesn't meet.
+   Style, idioms and cleanliness wait for the rebuild, since the spike's
+   code is thrown away.
+5. **Correct.** The spike's code isn't fixed. Each finding that changes
+   behaviour goes into the spec, and each that changes the structure into
+   the design, and the spec and architecture reviewers approve them again
+   before anything is rebuilt. A design change the spike can't vouch for is
+   tried out in the spike once more. Every other finding becomes a lesson
+   for the rebuild. Each change to the spec, here and later, is committed
+   together with the code that implements it.
 6. **Rebuild.** The spike is set aside, never merged. Builder subagents
    rebuild the task on a `vibe/<task>` branch, test-first, one atomic
    commit at a time, each starting fresh on its own batch of the work. The
