@@ -5,7 +5,7 @@ description: >-
   I/O, unnecessary work and poor data structure choices. Used by the vibe
   workflow's review rounds.
 tools: Read, Grep, Glob
-model: inherit
+model: sonnet
 ---
 
 # Performance reviewer

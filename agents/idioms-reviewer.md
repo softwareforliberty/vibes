@@ -4,7 +4,7 @@ description: >-
   Reviews whether a change uses the most idiomatic approach in each language
   it uses. Used by the vibe workflow's review rounds.
 tools: Read, Grep, Glob
-model: inherit
+model: sonnet
 ---
 
 # Idioms reviewer

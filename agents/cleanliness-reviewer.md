@@ -5,7 +5,7 @@ description: >-
   and complexity, duplication, dead code, and the programming principles
   such as SOLID, DRY and KISS. Used by the vibe workflow's review rounds.
 tools: Read, Grep, Glob
-model: inherit
+model: sonnet
 ---
 
 # Code cleanliness reviewer

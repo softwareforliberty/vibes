@@ -4,7 +4,7 @@ description: >-
   Reviews a change against the coding style guide of each language it uses.
   Used by the vibe workflow's review rounds.
 tools: Read, Grep, Glob
-model: inherit
+model: sonnet
 ---
 
 # Coding style reviewer
