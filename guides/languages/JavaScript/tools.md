@@ -17,6 +17,7 @@ to run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [Knip](https://knip.dev/) | ISC | Code quality | Finding unused files, exports and dependencies |
 | [c8](https://github.com/bcoe/c8) | ISC | Code quality | Measuring test coverage |
+| [StrykerJS](https://stryker-mutator.io/docs/stryker-js/introduction/) | Apache-2.0 | Code quality | Mutation testing |
 | [dependency-cruiser](https://github.com/sverweij/dependency-cruiser) | MIT | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
@@ -33,6 +34,7 @@ settings on this page.
 | [`.npmrc`](.npmrc) | npm (`npm audit`) |
 | [`knip.json`](knip.json) | Knip |
 | [`.c8rc.json`](.c8rc.json) | c8 |
+| [`stryker.config.json`](stryker.config.json) | StrykerJS |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 | [`.opengrep/javascript.yaml`](.opengrep/javascript.yaml) | Opengrep |
 
@@ -252,6 +254,67 @@ npx c8 node --test
 }
 ```
 
+### Mutation testing
+
+StrykerJS makes small changes to the code, such as turning `>=` into `>`,
+and runs the tests against each one. A change the tests still pass, a
+surviving mutant, is behaviour no test pins down. A full run is slow, so
+`scripts/audit` mutates only the source files changed since the base
+branch, and skips the run when there are none:
+
+```sh
+files=$(git diff --name-only --diff-filter=d origin/main... \
+  -- 'src/*.js' ':!*.test.js' | paste -sd, -)
+[ -z "$files" ] || npx stryker run --mutate "$files"
+```
+
+Install it as development dependencies. This guide was checked with
+StrykerJS 10.1.1:
+
+```sh
+npm install --save-dev @stryker-mutator/core@10.1.1 \
+  @stryker-mutator/tap-runner@10.1.1
+```
+
+The TAP runner runs each test file under Node.js, so it works with
+`node --test` and needs no test framework. It records which test files
+reach each mutant, and runs only those. The settings are in
+[`stryker.config.json`](stryker.config.json):
+
+```json
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "tap",
+  "tap": {
+    "testFiles": ["src/**/*.test.js"]
+  },
+  "reporters": ["clear-text", "progress"],
+  "thresholds": { "high": 90, "low": 80, "break": 80 }
+}
+```
+
+`break` makes the run exit non-zero when the mutation score, the share of
+mutants the tests kill, is under 80%. That's the same bar as coverage.
+Some mutants can't be killed, because they don't change what the code
+does, so 100% is rarely reachable; 80% leaves room for them and still
+fails a change whose tests check little.
+
+The report prints each survivor with its file, line and a diff:
+
+```text
+[Survived] EqualityOperator
+src/price.js:7:7
+-     if (total >= 100) {
++     if (total > 100) {
+```
+
+Read it as a missing test: here, no test passes exactly 100, so the
+boundary isn't pinned down. Write the test that fails on the mutant, not
+one that just runs the line. `NoCoverage` means no test reaches the line at
+all. If a mutant can't change behaviour, disable it on that line with a
+`// Stryker disable next-line` comment naming the mutator and the reason,
+rather than writing a test that contorts the code.
+
 ### Architecture
 
 dependency-cruiser follows the imports between the project's own modules
@@ -295,3 +358,7 @@ export default {
 
 The edges may import the core, and the report names each broken rule with
 the import that breaks it.
+
+## Sources
+
+- [StrykerJS documentation](https://stryker-mutator.io/docs/stryker-js/introduction/)

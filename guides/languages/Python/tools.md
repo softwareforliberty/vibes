@@ -16,6 +16,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [Vulture](https://github.com/jendrikseipp/vulture) | MIT | Code quality | Finding unused code |
 | [Coverage.py](https://coverage.readthedocs.io/) | Apache-2.0 | Code quality | Measuring test coverage |
+| [mutmut](https://mutmut.readthedocs.io/) | BSD-3-Clause | Code quality | Mutation testing |
 | [import-linter](https://github.com/seddonym/import-linter) | BSD-2-Clause | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
@@ -26,7 +27,7 @@ settings on this page.
 | File | Read by |
 | --- | --- |
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
-| [`pyproject.toml`](pyproject.toml) | Ruff, mypy, Vulture and Coverage.py |
+| [`pyproject.toml`](pyproject.toml) | Ruff, mypy, Vulture, Coverage.py and mutmut |
 | [`vulture_whitelist.py`](vulture_whitelist.py) | Vulture |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 | [`.opengrep/python.yaml`](.opengrep/python.yaml) | Opengrep |
@@ -89,6 +90,10 @@ source = ["src"]
 [tool.coverage.report]
 fail_under = 80
 show_missing = true
+
+[tool.mutmut]
+source_paths = ["src/"]
+pytest_add_cli_args_test_selection = ["tests/"]
 ```
 
 - `ruff format` owns layout. Don't hand-format code it will rewrite, and
@@ -192,6 +197,78 @@ coverage report
 The settings are in `[tool.coverage]` in `pyproject.toml` (see
 [Configuration](#configuration)).
 
+### Mutation testing
+
+mutmut makes small changes to the code, such as turning `>=` into `>`, and
+runs the tests against each one. A change the tests still pass, a
+surviving mutant, is behaviour no test pins down. A full run is slow, so
+`scripts/audit` runs only the mutants in modules changed since the base
+branch. mutmut names each mutant after its module, such as
+`shop.price.x_discount__mutmut_2`, so the command turns each changed path
+under `src/` into a module pattern:
+
+```sh
+modules=$(git diff --name-only --diff-filter=d origin/main... -- 'src/*.py' |
+  sed -e 's|^src/||' -e 's|/__init__\.py$||' -e 's|\.py$||' \
+    -e 's|/|.|g' -e 's|$|.*|')
+if [ -n "$modules" ]; then
+  rm -rf mutants
+  mutmut run $modules > /dev/null
+  mutmut results
+  mutmut export-cicd-stats
+  python - <<'END'
+import json
+import sys
+from pathlib import Path
+
+stats = json.loads(Path("mutants/mutmut-cicd-stats.json").read_text())
+killed = stats["killed"] + stats["timeout"]
+tested = killed + stats["survived"] + stats["no_tests"]
+score = 100 * killed / tested if tested else 100
+print(f"Mutation score: {score:.1f}%")
+sys.exit(score < 80)
+END
+fi
+```
+
+- mutmut has no minimum of its own, so the script reads the counts mutmut
+  exports and fails when the mutation score, the share of mutants the
+  tests kill, is under 80%. That's the same bar as coverage. Some mutants
+  can't be killed, because they don't change what the code does, so 100%
+  is rarely reachable; 80% leaves room for them and still fails a change
+  whose tests check little.
+- `rm -rf mutants` clears results from earlier runs, which would otherwise
+  count towards the score. Add `mutants/` to `.gitignore`.
+- mutmut runs only on systems with `fork()`: Linux and macOS, or WSL on
+  Windows. It reads `source_paths` and the test directory from
+  `[tool.mutmut]` in `pyproject.toml` (see [Configuration](#configuration)).
+- Install it as a development dependency. This guide was checked with
+  mutmut 3.8.1.
+
+`mutmut results` lists each survivor by name, and `mutmut show` prints its
+diff:
+
+```text
+$ mutmut show shop.price.x_discount__mutmut_2
+# shop.price.x_discount__mutmut_2: survived
+--- src/shop/price.py
++++ src/shop/price.py
+@@ -1,5 +1,5 @@
+ def discount(total: float) -> float:
+     """Apply a 10% discount to totals of 100 or more."""
+-    if total >= 100:
++    if total >= 101:
+         return total * 0.9
+     return total
+```
+
+Read it as a missing test: here, no test passes exactly 100, so the
+boundary isn't pinned down. Write the test that fails on the mutant, not
+one that just runs the line. `no tests` means no test reaches the function
+at all. If a mutant can't change behaviour, mark the line
+`# pragma: no mutate` with the reason, rather than writing a test that
+contorts the code.
+
 ### Architecture
 
 import-linter checks the imports between the project's own packages against
@@ -232,3 +309,7 @@ The `forbidden` contract also catches indirect imports, such as `app.core`
 importing a module that imports `app.adapters`. The edges may import the
 core. The `acyclic_siblings` contract fails when the packages under `app`
 import each other in a cycle.
+
+## Sources
+
+- [mutmut documentation](https://mutmut.readthedocs.io/)

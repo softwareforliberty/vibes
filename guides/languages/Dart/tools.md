@@ -14,6 +14,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [dart_code_linter](https://pub.dev/packages/dart_code_linter) | MIT | Code quality | Measuring function complexity, length and nesting |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [coverage](https://pub.dev/packages/coverage) | BSD-3-Clause | Code quality | Measuring test coverage |
+| [mutation_test](https://pub.dev/packages/mutation_test) | BSD-3-Clause | Code quality | Mutation testing |
 | [import_lint](https://pub.dev/packages/import_lint) | MIT | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
@@ -27,6 +28,7 @@ guide describes.
 | [`analysis_options.yaml`](analysis_options.yaml) | `dart analyze` and dart_code_linter |
 | [`.opengrep/dart.yaml`](.opengrep/dart.yaml) | Opengrep: starter rules for the [security idioms](idioms.md#security) |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`mutation_test.xml`](mutation_test.xml) | mutation_test |
 
 ## Configuration
 
@@ -182,6 +184,70 @@ report as well:
 dart run coverage:test_with_coverage --branch-coverage --fail-under=80
 ```
 
+### Mutation testing
+
+mutation_test makes small changes to the code, such as turning `>=` into
+`>`, and runs `dart test` against each one. A change the tests still pass,
+a surviving mutant, is behaviour no test pins down. Each mutant runs the
+whole suite, so `scripts/audit` mutates only the files under `lib` changed
+since the base branch, and skips the run when there are none:
+
+```sh
+files=$(git diff --name-only --diff-filter=d origin/main... -- 'lib/*.dart')
+[ -z "$files" ] || dart run mutation_test --rules mutation_test.xml \
+  --builtin --format junit $files
+```
+
+Add it as a dev dependency. This guide was checked with mutation_test
+1.8.1, which runs on any Dart 3 SDK; dart_mutant and butcher need Dart 3.11
+or later, newer than the [baseline](coding-style.md#language-baseline):
+
+```sh
+dart pub add --dev mutation_test:1.8.1
+```
+
+[`mutation_test.xml`](mutation_test.xml) holds only the threshold.
+`--builtin` keeps the built-in mutation rules, which `--rules` would
+otherwise turn off:
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Read by mutation_test, with its builtin rules, through --rules. -->
+<mutations version="1.2">
+  <!-- Fail the run when the tests detect under 80% of the mutants. -->
+  <threshold failure="80">
+    <rating over="95" name="A"/>
+    <rating over="80" name="B"/>
+    <rating over="60" name="C"/>
+    <rating over="40" name="D"/>
+    <rating over="20" name="E"/>
+    <rating over="0" name="F"/>
+  </threshold>
+</mutations>
+```
+
+The run exits non-zero when the tests detect under 80% of the mutants.
+That's the same bar as coverage. Some mutants can't be killed, because
+they don't change what the code does, so 100% is rarely reachable; 80%
+leaves room for them and still fails a change whose tests check little.
+The rules are text patterns, not syntax-aware, so a mutant that doesn't
+compile fails the tests and counts as detected.
+
+The console prints only the totals. The JUnit report,
+`mutation-test-report/mutation-test.junit.xml`, lists each survivor as a
+failure with its file, line and change:
+
+```text
+File: lib/src/price.dart
+Line: 3
+Original line:   if (total >= 100) {
+Mutation:   if (total > 100) {
+```
+
+Read it as a missing test: here, no test passes exactly 100, so the
+boundary isn't pinned down. Write the test that fails on the mutant, not
+one that just runs the line. Add `mutation-test-report/` to `.gitignore`.
+
 ### Architecture
 
 import_lint enforces the layers as the
@@ -220,3 +286,7 @@ import_lint:
 
 - The `plugins` entry also runs the rules inside the analyzer, so
   `dart analyze --fatal-infos` and the IDE report the same breaches.
+
+## Sources
+
+- [mutation_test documentation](https://pub.dev/packages/mutation_test)

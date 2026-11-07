@@ -76,4 +76,4 @@ tools/GitHub-Actions	.github/workflows/*.yaml .github/workflows/*.yml action.yam
 tools/Nix	*.nix flake.lock
 tools/OpenTofu	*.tf *.tofu *.tfvars *.tftest.hcl .terraform.lock.hcl *policy/opentofu/*.rego
 
--	.* *.md *.txt *.rst LICENSE* COPYING* NOTICE* AUTHORS* CHANGELOG* *.json *.lock go.sum *.cfg *.ini *.conf *.patch *.diff *.csv *.tsv *.png *.jpg *.jpeg *.gif *.svg *.ico *.webp *.pdf *.ttf *.otf *.woff *.woff2
+-	.* *.md universalmutator.rules *.txt *.rst LICENSE* COPYING* NOTICE* AUTHORS* CHANGELOG* *.json *.json5 *.lock go.sum *.cfg *.ini *.conf *.patch *.diff *.csv *.tsv *.png *.jpg *.jpeg *.gif *.svg *.ico *.webp *.pdf *.ttf *.otf *.woff *.woff2

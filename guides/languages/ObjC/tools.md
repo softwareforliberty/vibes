@@ -249,6 +249,20 @@ llvm-profdata merge -sparse tests.profraw -o tests.profdata
 llvm-cov report ./tests -instr-profile=tests.profdata
 ```
 
+### Mutation testing
+
+No maintained free tool mutates Objective-C methods. Mull, the mutation
+tester for C and C++, is a Clang plugin and compiles `.m` files, but it
+mutates only the plain C functions in them: checked with Mull 0.37.0, a
+method gets no mutants. A tool that mutates only the C functions would
+report a high score for code it never tested, so `scripts/audit` runs no
+mutation testing.
+
+Rely instead on the test reviewer, which checks that the tests pin down
+the behaviour, and on [coverage](#coverage) to find code no test runs.
+Check a new test by hand the way a mutant would: flip the comparison it
+covers, and see it fail.
+
 ### Architecture
 
 The build enforces the layers, as the
@@ -299,3 +313,7 @@ compiler names the header it can't find:
 cmake -S . -B build
 cmake --build build
 ```
+
+## Sources
+
+- [Mull setup and configuration](https://mull-project.com/getting-started/setup/)

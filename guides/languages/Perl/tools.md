@@ -12,6 +12,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [Devel::Cover](https://metacpan.org/pod/Devel::Cover) | Artistic-1.0-Perl OR GPL-1.0-or-later | Code quality | Measuring test coverage |
+| [App::Test::Generator](https://metacpan.org/dist/App-Test-Generator) (`test-generator-mutate`) | GPL-2.0 | Code quality | Mutation testing |
 
 ## Config files
 
@@ -171,3 +172,62 @@ cover -report text
 
 Devel::Cover has no minimum of its own. Check the branch total in its
 summary in CI, and fail the build when it's under 80%.
+
+### Mutation testing
+
+`test-generator-mutate`, from App::Test::Generator, makes small changes to
+the modules, such as turning `>=` into `>`, and runs the tests against each
+one with `prove`. A change the tests still pass, a surviving mutant, is
+behaviour no test pins down. A full run is slow, so `scripts/audit`
+mutates only the modules changed since the base branch, and skips the run
+when the branch has no commits of its own:
+
+```sh
+base=$(git rev-list --reverse origin/main..HEAD | head -1)
+rm -f mutation.json
+[ -z "$base" ] || test-generator-mutate --changed_only --base_sha "$base" \
+  --min-score 80 --json mutation.json
+```
+
+- `--changed_only` compares the parent of `--base_sha` with `HEAD`, so
+  pass the branch's first commit, as here, not the base branch itself.
+  Without `--base_sha` it looks only at the last commit.
+- It mutates only `.pm` files under `lib/`, and only what's committed.
+- With `--changed_only`, an existing `mutation.json` is merged into the
+  new results, so delete it first, or old survivors are counted again.
+
+Install it with `cpanm App::Test::Generator@0.47`, the version this guide
+was checked with.
+
+`--min-score` makes the run exit non-zero when the mutation score, the
+share of mutants the tests kill, is under 80%. That's the same bar as
+coverage. Some mutants can't be killed, because they don't change what
+the code does, so 100% is rarely reachable; 80% leaves room for them and
+still fails a change whose tests check little.
+
+The terminal shows only the counts, and the output of every `prove` run.
+The survivors are in `mutation.json`; list them with:
+
+```sh
+perl -MJSON::PP -0777 -ne 'printf "%s:%d %s\n", @$_{qw(file line description)}
+  for @{ decode_json($_)->{survived} }' mutation.json
+```
+
+```text
+lib/My/Price.pm:8 Numeric boundary flip >= to >
+```
+
+Read it as a missing test: here, no test passes exactly 100, so the
+boundary isn't pinned down. Write the test that fails on the mutant, not
+one that just runs the line. Each entry's `hint` suggests the kind of test
+that's missing.
+
+The tool has no time limit per mutant, so a mutant that removes a loop's
+exit or a recursion's base case hangs the run. Wrap such lines, and lines
+whose mutants can't change behaviour, in `## MUTANT_SKIP_BEGIN` and
+`## MUTANT_SKIP_END` comments, rather than writing a test that contorts
+the code.
+
+## Sources
+
+- [`test-generator-mutate` documentation](https://metacpan.org/dist/App-Test-Generator/view/bin/test-generator-mutate)

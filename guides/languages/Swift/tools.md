@@ -15,6 +15,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [lizard](https://github.com/terryyin/lizard) | MIT | Code quality | Measuring function complexity and length |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
+| [swift-mutation-testing](https://github.com/ericodx/swift-mutation-testing) | MIT | Code quality | Mutation testing, on macOS |
 
 ## Config files
 
@@ -213,6 +214,45 @@ swift test --show-codecov-path
 
 The second command prints the path of the JSON coverage report.
 
+### Mutation testing
+
+swift-mutation-testing makes small changes to the code, such as negating
+an `if` condition, and runs the tests against each one. A change the tests
+still pass, a surviving mutant, is behaviour no test pins down. Muter, the
+older tool, has had no release since 2023, so it doesn't qualify.
+
+It runs only on macOS 15 or later: it doesn't build on Linux. This guide
+couldn't run it, because its checks run in Linux containers, so the
+command below comes from the tool's documentation for version 1.7.1, the
+version to pin. Run it from the package root:
+
+```sh
+swift-mutation-testing --min-score 80
+```
+
+- It exits non-zero (2) when the mutation score, the share of mutants the
+  tests kill, is under 80%. That's the same bar as coverage. Some mutants
+  can't be killed, because they don't change what the code does, so 100%
+  is rarely reachable; 80% leaves room for them and still fails code whose
+  tests check little. Code no test reaches counts against the score.
+- It can't limit a run to the files changed since the base branch; the
+  narrowest scope it takes is one directory or file. It caches each
+  verdict in `.swift-mutation-testing-cache/`, keyed by the contents of the
+  source and test files, so keep that directory between runs, and a run
+  tests only the mutants whose code or tests changed. Don't commit it.
+- An Xcode project needs a `.swift-mutation-testing.yml` with its scheme
+  and destination, which `swift-mutation-testing init` writes; a package
+  needs none.
+
+The report lists each survivor by file, line and the change it made, such
+as `NegateConditional`. Read it as a missing test: the code ran, but no
+test checked the result of that condition. Write the test that fails on
+the mutant, not one that just runs the line;
+`swift-mutation-testing reproduce` with the mutant's id reruns it and
+shows the mutated line. If a mutant can't change behaviour, put
+`// swift-mutation-testing:disable-next-line` above the line, with the
+reason, rather than writing a test that contorts the code.
+
 ### Architecture
 
 The build enforces the layers, as the
@@ -248,3 +288,9 @@ module left over from an earlier build.
 swift package clean
 swift build
 ```
+
+## Sources
+
+- [swift-mutation-testing: usage and configuration](https://github.com/ericodx/swift-mutation-testing/blob/v1.7.1/Docs/USAGE.MD)
+- [swift-mutation-testing: installation](https://github.com/ericodx/swift-mutation-testing/blob/v1.7.1/Docs/INSTALLATION.MD)
+- [Muter releases](https://github.com/muter-mutation-testing/muter/releases)

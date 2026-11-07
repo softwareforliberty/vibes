@@ -17,6 +17,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [Flay](https://github.com/seattlerb/flay) | MIT | Code quality | Finding structurally similar code |
 | [debride](https://github.com/seattlerb/debride) | MIT | Code quality | Finding unused methods |
 | [SimpleCov](https://github.com/simplecov-ruby/simplecov) | MIT | Code quality | Measuring test coverage |
+| [Evilution](https://github.com/marinazzio/evilution) | MIT | Code quality | Mutation testing |
 | [Packwerk](https://github.com/Shopify/packwerk) | MIT | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
@@ -208,6 +209,55 @@ SimpleCov.configure do
 end
 ```
 
+### Mutation testing
+
+Evilution makes small changes to the code, such as turning `>=` into `>`,
+and runs the tests against each one. A change the tests still pass, a
+surviving mutant, is behaviour no test pins down. A full run is slow, so
+`scripts/audit` mutates only the files under `lib/` changed since the base
+branch, and skips the run when there are none:
+
+```sh
+files=$(git diff --name-only --diff-filter=d origin/main... -- 'lib/*.rb')
+[ -z "$files" ] || bundle exec evilution run --min-score 0.8 $files
+```
+
+- `--min-score 0.8` makes the run exit non-zero when the mutation score,
+  the share of mutants the tests kill, is under 80%. That's the same bar
+  as coverage. Some mutants can't be killed, because they don't change
+  what the code does, so 100% is rarely reachable; 80% leaves room for
+  them and still fails a change whose tests check little.
+- It also fails when a changed file has no spec it can find, so an
+  untested file can't hide behind a passing score.
+- It runs RSpec by default. For Minitest, add `--integration minitest`.
+- Add it to the `development` and `test` groups of the `Gemfile`, pinned
+  with `gem 'evilution', '1.5.1', require: false`. This guide was checked
+  with Evilution 1.5.1. It needs Ruby 3.3 or later, so run the audit on a
+  newer Ruby than the 3.2 baseline.
+
+Use Evilution rather than mutant: mutant is better known, but it's under a
+proprietary licence, not a free/open source one.
+
+The report groups survivors by line, with a diff:
+
+```text
+Survived mutations (1 coverage gap):
+  lib/price.rb:7 (Price.discount) [3 mutations: comparison_replacement]
+    --- a/lib/price.rb
+    +++ b/lib/price.rb
+    @@ -7,1 +7,1 @@
+    -    return total * 0.9 if total >= 100
+    +    return total * 0.9 if total == 100
+```
+
+Read it as a missing test: here the tests pass 100 and 99, but no total
+above 100, so `==` passes as well as `>=`. Write the test that fails on the
+mutant, not one that just runs the line. A timeout counts as a survivor.
+If a mutant can't change behaviour, end the line with
+`# evilution:disable` and give the reason in a comment above it, rather
+than writing a test that contorts the code. The marker must end the line:
+any text after it turns it off.
+
 ### Architecture
 
 Packwerk splits a Rails application into packages and checks every constant
@@ -273,3 +323,7 @@ dependencies:
 `bin/packwerk update-todo` records existing violations in
 `package_todo.yml`, so `check` passes with them. Use it only when adopting
 Packwerk in existing code, never to let a new violation through.
+
+## Sources
+
+- [Evilution README](https://github.com/marinazzio/evilution#readme)

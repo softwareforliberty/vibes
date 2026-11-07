@@ -1,0 +1,7 @@
+# Mull settings, read by its compiler plugin. Mutate only the lines changed
+# since the base branch: replace origin/main with the project's own.
+gitDiffRef: origin/main
+gitProjectRoot: .
+# Don't mutate the tests themselves.
+excludePaths:
+  - tests

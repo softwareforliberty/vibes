@@ -7,6 +7,7 @@ plugins {
     kotlin("jvm") version "2.4.21"
     id("io.gitlab.arturbosch.detekt") version "1.23.8"
     id("org.jetbrains.kotlinx.kover") version "0.9.11"
+    id("info.solidsoft.pitest") version "1.19.0"
     id("org.owasp.dependencycheck") version "13.0.0"
 }
 
@@ -51,4 +52,20 @@ kover {
             }
         }
     }
+}
+
+// Mutation testing: fail when PIT's mutation score falls below 80%.
+// scripts/audit passes the code the branch changed in the pitestTargets
+// property; without it, PIT mutates every class in the project's group.
+pitest {
+    pitestVersion = "1.30.2"
+    junit5PluginVersion = "1.2.3"
+    targetClasses = providers.gradleProperty("pitestTargets")
+        .map { it.split(",") }
+        .orElse(provider { listOf("${project.group}.*") })
+    // A change with nothing to mutate, such as a new interface, isn't an error.
+    failWhenNoMutations = false
+    mutationThreshold = 80
+    timestampedReports = false
+    outputFormats = listOf("HTML", "CSV")
 }

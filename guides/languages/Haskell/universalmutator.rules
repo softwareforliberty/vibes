@@ -1,0 +1,39 @@
+# Mutation operators for Haskell, read by universalmutator's --only. Each
+# line is a regular expression, the arrow, and its replacement.
+
+# Leave comments, module headers, imports and type signatures alone:
+# changing them only breaks the build or changes nothing. The tool skips
+# lines with {- -} comments and pragmas itself.
+^\s*-- ==> DO_NOT_MUTATE
+^\s*(module|import)\b ==> DO_NOT_MUTATE
+\s::\s ==> DO_NOT_MUTATE
+\s--(\s|$) ==> SKIP_MUTATING_REST
+
+# Comparisons and logic: move each boundary and flip each test.
+(\s)>=(\s) ==> \1>\2
+(\s)>=(\s) ==> \1<\2
+(\s)>(\s) ==> \1>=\2
+(\s)>(\s) ==> \1<=\2
+(\s)<=(\s) ==> \1<\2
+(\s)<=(\s) ==> \1>\2
+(\s)<(\s) ==> \1<=\2
+(\s)<(\s) ==> \1>=\2
+(\s)==(\s) ==> \1/=\2
+(\s)/=(\s) ==> \1==\2
+(\s)&&(\s) ==> \1||\2
+(\s)\|\|(\s) ==> \1&&\2
+\bnot\s+ ==>
+\bTrue\b ==> False
+\bFalse\b ==> True
+\bmin\b ==> max
+\bmax\b ==> min
+
+# Arithmetic.
+(\s)\+(\s) ==> \1-\2
+(\s)-(\s) ==> \1+\2
+(\s)\*(\s) ==> \1+\2
+
+# Numbers: off by one, and zero.
+([\s(\[,])(\d+)([\s)\],]) ==> \g<1>0\3
+([\s(\[,])(\d+)([\s)\],]) ==> \1(\2 + 1)\3
+([\s(\[,])(\d+)([\s)\],]) ==> \1(\2 - 1)\3

@@ -14,6 +14,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [Opengrep](https://github.com/opengrep/opengrep) | LGPL-2.1 | Auditing | Security analysis with pattern and taint rules |
 | [OSV-Scanner](https://github.com/google/osv-scanner) | Apache-2.0 | Auditing | Checking dependencies against known vulnerabilities |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
+| [Muex](https://github.com/Oeditus/muex) | MIT | Code quality | Mutation testing |
 | [Boundary](https://github.com/sasa1977/boundary) | MIT | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
@@ -25,7 +26,7 @@ These files are drop-in templates: copy them into the project root.
 | [.editorconfig](.editorconfig) | Every editor and IDE, through EditorConfig |
 | [.formatter.exs](.formatter.exs) | `mix format` |
 | [.credo.exs](.credo.exs) | Credo |
-| [mix.exs](mix.exs) | Mix: Dialyxir flags, coverage minimum and tool dependencies (merge into the project's `mix.exs`) |
+| [mix.exs](mix.exs) | Mix: Dialyxir flags, coverage minimum and tool dependencies, including Muex (merge into the project's `mix.exs`) |
 | [.opengrep/elixir.yaml](.opengrep/elixir.yaml) | Opengrep |
 | [.jscpd.json](.jscpd.json) | jscpd |
 
@@ -98,7 +99,8 @@ defmodule MyApp.MixProject do
     [
       {:credo, "~> 1.7", only: [:dev, :test], runtime: false},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
-      {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false}
+      {:mix_audit, "~> 2.1", only: [:dev, :test], runtime: false},
+      {:muex, "~> 0.13.0", only: [:dev, :test], runtime: false}
     ]
   end
 end
@@ -206,6 +208,50 @@ is below it:
 mix test --cover
 ```
 
+### Mutation testing
+
+Muex makes small changes to the code, such as turning `>=` into `>`, and
+runs the tests against each one. A change the tests still pass, a
+surviving mutant, is behaviour no test pins down. A full run is slow, so
+`scripts/audit` mutates only the lines in `lib` changed since the base
+branch, and skips the run when there are none:
+
+```sh
+git diff --quiet origin/main... -- lib ||
+  mix muex --since origin/main --no-filter --no-optimize --fail-at 80
+```
+
+- The skip matters: Muex scores a run with no mutants as 0%, and fails it.
+- `--since` compares the commits on the branch with the base, so commit
+  the change before running it.
+- `--no-filter` and `--no-optimize` turn off the heuristics that skip
+  simple files and functions. With them on, a small change can get no
+  mutants at all.
+
+Muex is a dependency in the [`mix.exs`](mix.exs) template (see
+[Linting](#linting)). This guide was checked with Muex 0.13.0.
+
+`--fail-at 80` makes the run exit non-zero when the mutation score, the
+share of mutants the tests kill, is under 80%. That's the same bar as
+coverage. Some mutants can't be killed, because they don't change what the
+code does, so 100% is rarely reachable; 80% leaves room for them and still
+fails a change whose tests check little. Mutants that don't compile, and
+those Muex proves equivalent, don't count.
+
+The report lists each survivor with its file, line and change:
+
+```text
+lib/sample/price.ex:5
+  Comparison: >= to >
+    - total >= 100
+    + total > 100
+    Test files: test/price_test.exs
+```
+
+Read it as a missing test: here, no test passes exactly 100, so the
+boundary isn't pinned down. Write the test that fails on the mutant, not
+one that just runs the line.
+
 ### Architecture
 
 Boundary enforces the layers as the
@@ -263,3 +309,7 @@ end
 - Other boundaries may call only the modules listed in `exports`.
 - Boundary also warns about any module that belongs to no boundary, so every
   module in `lib` sits under one.
+
+## Sources
+
+- [Muex documentation](https://hexdocs.pm/muex/)

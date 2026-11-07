@@ -77,7 +77,17 @@ Every guide is a directory with the same files:
 4. **`## Auditing`,** with Security analysis, Dependency vulnerabilities and
    Secrets subsections, where they apply.
 5. **`## Code quality`,** with Complexity, Duplication, Dead code, Coverage,
-   Testing and Architecture subsections, where they apply.
+   Mutation testing, Testing and Architecture subsections, where they
+   apply.
+
+The Mutation testing subsection names a mutation testing tool: one that
+makes small changes to the code, such as flipping a comparison, and checks
+the tests fail for each. A change the tests don't catch shows a behaviour
+no test pins down. The subsection gives the command `scripts/audit` runs,
+limited to the files changed since the base branch where the tool allows
+it, because a whole run is slow; the minimum mutation score below which
+the command exits non-zero; and how to read a surviving mutant. Where no
+maintained free tool exists, it says so, and what to rely on instead.
 
 ## Tools and frameworks
 

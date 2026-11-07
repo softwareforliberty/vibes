@@ -1,0 +1,43 @@
+# Mutation operators for RISC-V assembly (GNU as), read by universalmutator's
+# --only. Each line is a regular expression, the arrow, and its
+# replacement.
+
+# Leave comments, preprocessor lines, directives and local labels alone:
+# changing them only breaks the build or changes nothing.
+^\s*(#|//|\.) ==> DO_NOT_MUTATE
+# ==> SKIP_MUTATING_REST
+// ==> SKIP_MUTATING_REST
+
+# Branches and set-if instructions: move each boundary and flip each test.
+\bbeq\b ==> bne
+\bbne\b ==> beq
+\bbeqz\b ==> bnez
+\bbnez\b ==> beqz
+\bblt(u?)\b ==> bge\1
+\bblt(u?)\b ==> ble\1
+\bbge(u?)\b ==> blt\1
+\bbge(u?)\b ==> bgt\1
+\bbgt(u?)\b ==> ble\1
+\bbgt(u?)\b ==> bge\1
+\bble(u?)\b ==> bgt\1
+\bble(u?)\b ==> blt\1
+\bbltz\b ==> bgez
+\bbgez\b ==> bltz
+\bblez\b ==> bgtz
+\bbgtz\b ==> blez
+\bslt(u?)\b ==> sgt\1
+\bsgt(u?)\b ==> slt\1
+\bseqz\b ==> snez
+\bsnez\b ==> seqz
+
+# Arithmetic.
+\badd(w?)\b ==> sub\1
+\bsub(w?)\b ==> add\1
+
+# Immediates: off by one, and zero.
+(,\s*)(-?\d+)\b ==> \g<1>0
+(,\s*)(-?\d+)\b ==> \1(\2 + 1)
+(,\s*)(-?\d+)\b ==> \1(\2 - 1)
+
+# Instructions: delete each one by commenting it out.
+^(\s+)([a-z].*)\n ==> \1# \2\n

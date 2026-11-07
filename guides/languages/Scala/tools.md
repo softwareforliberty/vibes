@@ -16,6 +16,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [lizard](https://github.com/terryyin/lizard) | MIT | Code quality | Measuring function complexity and length |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [scoverage](https://github.com/scoverage/sbt-scoverage) | Apache-2.0 | Code quality | Measuring statement and branch coverage |
+| [Stryker4s](https://stryker-mutator.io/docs/stryker4s/getting-started/) | Apache-2.0 | Code quality | Mutation testing |
 | [ArchUnit](https://www.archunit.org/) | Apache-2.0 | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
@@ -28,8 +29,8 @@ settings on this page.
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
 | [`.scalafmt.conf`](.scalafmt.conf) | scalafmt, and IntelliJ IDEA and Metals when set to use it |
 | [`.scalafix.conf`](.scalafix.conf) | scalafix |
-| [`build.sbt`](build.sbt) | sbt: compiler warnings, WartRemover, scoverage and sbt-dependency-check |
-| [`project/plugins.sbt`](project/plugins.sbt) | sbt: the scalafmt, scalafix, WartRemover, scoverage and sbt-dependency-check plugins |
+| [`build.sbt`](build.sbt) | sbt: compiler warnings, WartRemover, scoverage, sbt-dependency-check and Stryker4s |
+| [`project/plugins.sbt`](project/plugins.sbt) | sbt: the scalafmt, scalafix, WartRemover, scoverage, sbt-dependency-check and Stryker4s plugins |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 | [`.opengrep/scala.yaml`](.opengrep/scala.yaml) | Opengrep |
 
@@ -95,10 +96,12 @@ addSbtPlugin("ch.epfl.scala" % "sbt-scalafix" % "0.14.9")
 addSbtPlugin("org.wartremover" % "sbt-wartremover" % "3.6.3")
 addSbtPlugin("org.scoverage" % "sbt-scoverage" % "2.4.4")
 addSbtPlugin("net.nmoncho" % "sbt-dependency-check" % "2.0.0")
+addSbtPlugin("io.stryker-mutator" % "sbt-stryker4s" % "1.1.1")
 ```
 
-Turn on the compiler warnings, WartRemover, the coverage minimum and the
-dependency audit in [`build.sbt`](build.sbt):
+Turn on the compiler warnings, WartRemover, the coverage minimum, the
+dependency audit and the mutation score minimum in
+[`build.sbt`](build.sbt):
 
 ```scala
 // Template: merge these tool settings into the project's build.sbt.
@@ -137,6 +140,12 @@ coverageFailOnMinimum := true
 // can't see, so exclude it from that check.
 dependencyCheckFailBuildOnCVSS := 7
 Global / excludeLintKeys += dependencyCheckFailBuildOnCVSS
+
+// Fail the mutation run when the mutation score falls below 80%. Stryker4s
+// requires the low threshold to be above the break threshold.
+strykerThresholdsHigh := 90
+strykerThresholdsLow := 85
+strykerThresholdsBreak := 80
 ```
 
 - WartRemover's `Null`, `OptionPartial`, `Return`, `Var` and `AsInstanceOf`
@@ -228,6 +237,53 @@ branches with scoverage, and fails the build below it:
 sbt "clean; coverage; test; coverageReport"
 ```
 
+### Mutation testing
+
+Stryker4s makes small changes to the code, such as turning `>=` into `>`,
+and runs the tests against each one. A change the tests still pass, a
+surviving mutant, is behaviour no test pins down. A full run is slow, so
+`scripts/audit` mutates only the source files changed since the base
+branch, and skips the run when there are none:
+
+```sh
+args=$(git diff --name-only --diff-filter=d origin/main... \
+  -- 'src/main/scala/*.scala' | sed 's/^/--mutate /' | paste -sd' ' -)
+[ -z "$args" ] || sbt "stryker $args"
+```
+
+- Pass each file with its own `--mutate`. Stryker4s reads a
+  comma-separated list as one pattern, which matches nothing, and the run
+  then passes with no mutants.
+- [`project/plugins.sbt`](project/plugins.sbt) adds the plugin. This guide
+  was checked with Stryker4s 1.1.1 on sbt 1.13.1 and Scala 3.3.9. It runs
+  the tests through sbt, so any test framework sbt runs works.
+
+[`build.sbt`](build.sbt) sets the thresholds. `strykerThresholdsBreak`
+makes the run exit non-zero when the mutation score, the share of mutants
+the tests kill, is under 80%. That's the same bar as coverage. Some
+mutants can't be killed, because they don't change what the code does, so
+100% is rarely reachable; 80% leaves room for them and still fails a
+change whose tests check little. Stryker4s refuses to start unless the low
+threshold is above the break threshold, so the template sets it to 85.
+
+The report prints each survivor with its file, line and column, and the
+change:
+
+```text
+[info] 0. [Survived] [EqualityOperator]
+[info] src/main/scala/com/example/app/Pricing.scala:7:14
+[info] -	>=
+[info] +	>
+```
+
+Read it as a missing test: here, no test passes exactly 100, so the
+boundary isn't pinned down. Write the test that fails on the mutant, not
+one that just runs the line. `NoCoverage` means no test reaches the code
+at all. If a mutant can't change behaviour, disable its mutator on that
+definition with `@SuppressWarnings(Array("stryker4s.mutation.<Mutator>"))`
+and a comment saying why, rather than writing a test that contorts the
+code.
+
 ### Architecture
 
 Check the dependency rules between the project's layers, as the
@@ -301,3 +357,9 @@ and lists each dependency that breaks it, with its file and line:
 ```sh
 sbt test
 ```
+
+## Sources
+
+- [Stryker4s getting started](https://stryker-mutator.io/docs/stryker4s/getting-started/)
+- [Stryker4s configuration](https://stryker-mutator.io/docs/stryker4s/configuration/)
+- [Supported mutators](https://stryker-mutator.io/docs/mutation-testing-elements/supported-mutators/)

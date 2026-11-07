@@ -13,6 +13,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [Opengrep](https://github.com/opengrep/opengrep) | LGPL-2.1 | Auditing | Security analysis with pattern and taint rules |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [Coverage.jl](https://github.com/JuliaCI/Coverage.jl) | MIT | Code quality | Measuring test coverage |
+| [Gremlins.jl](https://github.com/SuperSeriousLab/Gremlins.jl) | MIT | Code quality | Mutation testing |
 
 ## Config files
 
@@ -143,6 +144,63 @@ julia -e 'using Coverage
     covered / total >= 0.8 || exit(1)'
 ```
 
+### Mutation testing
+
+Gremlins.jl makes small changes to the code in `src/`, such as turning `>=`
+into `>`, and runs `test/runtests.jl` against each one. A change the tests
+still pass, a surviving mutant, is behaviour no test pins down. A full run
+is slow, so `scripts/audit` mutates only the files changed since the base
+branch, and skips the run when there are none:
+
+```sh
+files=$(git diff --name-only --diff-filter=d origin/main... -- 'src/*.jl' |
+  paste -sd, -)
+cli=$(julia --project=@gremlins -e 'using Gremlins; print(pkgdir(Gremlins))')
+[ -z "$files" ] || julia --project=@gremlins "$cli/bin/gremlins-cli.jl" \
+  --pkg . --files "$files" --strong 0.9 --acceptable 0.8 --diff
+```
+
+Install it in its own shared environment, so it never becomes a
+dependency of the package. This guide was checked with Gremlins.jl 0.4.0
+on Julia 1.13:
+
+```sh
+julia --project=@gremlins \
+  -e 'using Pkg; Pkg.add(name="Gremlins", version="0.4.0")'
+```
+
+- Leave out `--warm`. It's faster, but in testing it reported mutants as
+  killed that the tests didn't catch, which inflates the score.
+- A changed file with nothing to mutate, such as one holding only
+  constants, fails the run with `No mutation sites found`. That isn't a
+  weak test; check the message before adding tests.
+
+`--acceptable` makes the run exit non-zero when the mutation score, the
+share of mutants the tests kill, is under 80%. That's the same bar as
+coverage. Some mutants can't be killed, because they don't change what
+the code does, so 100% is rarely reachable; 80% leaves room for them and
+still fails a change whose tests check little. `--strong` only labels the
+result, and must be at least `--acceptable`.
+
+`--diff` prints each survivor as a diff, and the last line, starting
+`BAND`, gives the score:
+
+```text
+--- a/src/Price.jl
++++ b/src/Price.jl
+@@ -11 +11 @@
+-    if total >= 100
++    if total > 100
+```
+
+Read it as a missing test: here, no test passes exactly 100, so the
+boundary isn't pinned down. Write the test that fails on the mutant, not
+one that just runs the line. `NoCov` in the summary counts mutants on lines
+no test runs; they don't count towards the score, so check
+[coverage](#coverage) too. Gremlins.jl has no way to skip a single mutant,
+so if one can't change behaviour, leave it to the margin under 80% rather
+than writing a test that contorts the code.
+
 ### Architecture
 
 No maintained FOSS tool checks the dependencies between a Julia project's
@@ -196,3 +254,7 @@ Pkg only warns about a cycle in the declared dependencies, with
 `Circular dependency detected`, and skips those packages. Keep every `[deps]`
 pointing towards the core, and review a change to a layer's `[deps]` as a
 change to the architecture.
+
+## Sources
+
+- [Gremlins.jl documentation](https://github.com/SuperSeriousLab/Gremlins.jl#readme)

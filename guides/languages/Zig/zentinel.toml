@@ -1,0 +1,15 @@
+# zentinel settings. scripts/audit narrows `include` to the files changed
+# since the base branch.
+[project]
+name = "app"
+include = ["src/**/*.zig"]
+exclude = [".zig-cache/**", "zig-out/**"]
+
+[zig]
+version = "0.16.0"
+
+[test]
+commands = ["zig build test"]
+# Each mutant builds from a cold cache, which takes minutes. At the
+# default of 30 seconds, a survivor can be reported as a timeout.
+timeout_ms = 600000

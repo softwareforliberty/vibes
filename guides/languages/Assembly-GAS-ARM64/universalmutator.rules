@@ -1,0 +1,45 @@
+# Mutation operators for ARM64 assembly (GNU as), read by universalmutator's
+# --only. Each line is a regular expression, the arrow, and its
+# replacement.
+
+# Leave comments, preprocessor lines, directives and local labels alone:
+# changing them only breaks the build or changes nothing.
+^\s*(//|#|\.) ==> DO_NOT_MUTATE
+// ==> SKIP_MUTATING_REST
+
+# Conditions, in branches and in csel, cset and ccmp: move each boundary
+# and flip each test.
+(\.|,\s*)eq\b ==> \1ne
+(\.|,\s*)ne\b ==> \1eq
+(\.|,\s*)ge\b ==> \1gt
+(\.|,\s*)ge\b ==> \1lt
+(\.|,\s*)gt\b ==> \1ge
+(\.|,\s*)gt\b ==> \1le
+(\.|,\s*)le\b ==> \1lt
+(\.|,\s*)le\b ==> \1gt
+(\.|,\s*)lt\b ==> \1le
+(\.|,\s*)lt\b ==> \1ge
+(\.|,\s*)hs\b ==> \1hi
+(\.|,\s*)hs\b ==> \1lo
+(\.|,\s*)hi\b ==> \1hs
+(\.|,\s*)hi\b ==> \1ls
+(\.|,\s*)ls\b ==> \1lo
+(\.|,\s*)ls\b ==> \1hi
+(\.|,\s*)lo\b ==> \1ls
+(\.|,\s*)lo\b ==> \1hs
+\bcbz\b ==> cbnz
+\bcbnz\b ==> cbz
+\btbz\b ==> tbnz
+\btbnz\b ==> tbz
+
+# Arithmetic.
+\badd(s?)\b ==> sub\1
+\bsub(s?)\b ==> add\1
+
+# Immediates: off by one, and zero.
+#(\d+)\b ==> #0
+#(\d+)\b ==> #(\1 + 1)
+#(\d+)\b ==> #(\1 - 1)
+
+# Instructions: delete each one by commenting it out.
+^(\s+)([a-z].*)\n ==> \1// \2\n

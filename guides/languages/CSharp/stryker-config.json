@@ -1,0 +1,14 @@
+{
+  "stryker-config": {
+    "test-runner": "mtp",
+    "since": {
+      "target": "origin/main"
+    },
+    "thresholds": {
+      "high": 90,
+      "low": 80,
+      "break": 80
+    },
+    "reporters": ["cleartexttree", "html"]
+  }
+}

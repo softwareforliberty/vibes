@@ -13,6 +13,7 @@ to run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [bats-core](https://github.com/bats-core/bats-core) | MIT | Code quality | Testing scripts |
 | [kcov](https://github.com/SimonKagstrom/kcov) | GPL-2.0 | Code quality | Measuring test coverage |
+| [universalmutator](https://github.com/agroce/universalmutator) | Apache-2.0 | Code quality | Mutation testing |
 
 ## Config files
 
@@ -24,6 +25,7 @@ These files are in this directory, ready to copy to the root of a project:
 | [.shellcheckrc](.shellcheckrc) | ShellCheck |
 | [.opengrep/sh.yaml](.opengrep/sh.yaml) | Opengrep |
 | [.jscpd.json](.jscpd.json) | jscpd |
+| [universalmutator.rules](universalmutator.rules) | universalmutator |
 
 ## Formatting
 
@@ -169,3 +171,92 @@ Coverage measured under Bash doesn't prove a script works under dash, so
 still [test scripts under dash](idioms.md#portability). kcov writes an HTML
 report to `coverage/`. It has no coverage threshold of its own, so review
 the report for untested branches.
+
+### Mutation testing
+
+universalmutator makes small changes to the code, such as turning `-ge` into
+`-gt`, and runs the tests against each one. A change the tests still pass, a
+surviving mutant, is behaviour no test pins down. No maintained mutation
+testing tool is written for POSIX sh. universalmutator works on any language,
+because it rewrites the source text with regular expressions, so it's only as
+good as its rules.
+
+[`universalmutator.rules`](universalmutator.rules) holds the rules for Bash and
+POSIX sh. They move each comparison's boundary, flip `=`, `!=`, `-z`, `-n`,
+`&&` and `||`, drop `!`, change arithmetic and standalone numbers by one, and
+delete commands. They leave comments and the `set` line alone, and never swap a
+redirection, so a mutant can't turn a read into a write that empties a file.
+Pass it with `--only`: the built-in rules are written for C-like languages, and
+add mutants that can't compile or can't change anything.
+
+A full run is slow, so `scripts/audit` mutates only the source files changed
+since the base branch. For each script, `mutate` writes the mutants that still
+parse, and `analyze_mutants` copies each one over the script in turn and runs
+the tests. The last line fails when the tests kill fewer than 80% of the
+mutants:
+
+```sh
+rm -rf .mutants
+mkdir .mutants
+files=$(git diff --name-only --diff-filter=d origin/main... \
+  -- bin '*.sh' ':!test/')
+for f in ${files}; do
+  d=.mutants/${f}
+  mkdir -p "${d}"
+  cp "${f}" "${d}/script.sh"
+  mutate "${d}/script.sh" --only universalmutator.rules --noFastCheck \
+    --mutantDir "${d}" --cmd "sh -n ${d}/script.sh"
+  analyze_mutants "${d}/script.sh" "cp MUTANT ${f} && bats test" \
+    --mutantDir "${d}" --prefix "${d}/run"
+  cp "${d}/script.sh" "${f}"
+done
+killed=$(find .mutants -name run.killed.txt -exec cat {} + | wc -l)
+total=$(find .mutants -name 'run.*killed.txt' -exec cat {} + | wc -l)
+echo "Mutation score: ${killed} of ${total} mutants killed"
+[ "$((killed * 100))" -ge "$((total * 80))" ]
+```
+
+Install it with pip, pinned to the version this guide was checked with:
+
+```sh
+pip install universalmutator==1.14.1
+```
+
+- universalmutator names mutants after the file's extension, and executables
+  have none. So the loop mutates a copy named `script.sh`, and puts the script
+  back when it's done. `cp` keeps the script's mode, so it stays executable.
+- `--cmd` drops the mutants that don't parse, so a syntax error isn't counted
+  as a kill. Without `--noFastCheck`, `mutate` skips every line that `sh -n`
+  still accepts when it's replaced by junk, which is most commands.
+- Each mutant runs the script, so run the tests somewhere a wrong command can't
+  do harm, such as a container.
+- A test run that takes longer than 30 seconds is stopped and counted as a
+  kill. If the build and tests take longer, give `analyze_mutants` a larger
+  `--timeout`.
+- Run it on a clean working tree, and add `.mutants/` to `.gitignore`. If a run
+  is interrupted, `git status` shows the script it left mutated.
+
+80% is the same bar as coverage. Some mutants can't change what the code does,
+so 100% is rarely reachable; 80% leaves room for them and still fails a change
+whose tests check little.
+
+`.mutants/<file>/run.notkilled.txt` lists the survivors of each file. Compare
+one with the source to see what changed:
+
+```text
+$ diff bin/grade .mutants/bin/grade/script.mutant.15.sh
+12c12
+< elif [ "${score}" -ge 50 ]; then # the pass mark, 50
+---
+> elif [ "${score}" -gt 50 ]; then # the pass mark, 50
+```
+
+Read it as a missing test: here, no test passes exactly 50, so the boundary
+isn't pinned down. Write the test that fails on the mutant, not one that just
+runs the line. A mutant that can't change behaviour needs no test; the
+threshold allows for it.
+
+## Sources
+
+- [universalmutator](https://github.com/agroce/universalmutator)
+- [universalmutator on PyPI](https://pypi.org/project/universalmutator/1.14.1/)

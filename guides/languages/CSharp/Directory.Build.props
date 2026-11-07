@@ -12,11 +12,8 @@
     <NuGetAuditLevel>low</NuGetAuditLevel>
   </PropertyGroup>
 
-  <!-- Coverage minimum for projects that reference coverlet.msbuild -->
+  <!-- Coverage minimum, for test projects that pass it to coverlet.MTP -->
   <PropertyGroup>
-    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
-    <Threshold>80</Threshold>
-    <ThresholdType>branch</ThresholdType>
-    <ThresholdStat>total</ThresholdStat>
+    <CoverletArguments>--coverlet --coverlet-threshold 80 --coverlet-threshold-type branch --coverlet-threshold-stat total</CoverletArguments>
   </PropertyGroup>
 </Project>

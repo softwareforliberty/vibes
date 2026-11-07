@@ -1,0 +1,39 @@
+# Mutation operators for COBOL in fixed reference format, read by
+# universalmutator's --only. Each line is a regular expression, the arrow,
+# and its replacement.
+
+# Leave comments and data layouts alone: changing them can't fail a test.
+^.{6}\* ==> DO_NOT_MUTATE
+\*> ==> SKIP_MUTATING_REST
+(?i)\bPIC\b ==> SKIP_MUTATING_REST
+
+# Comparisons and logic: move each boundary and flip each test.
+(\s)>=(\s) ==> \1>\2
+(\s)>=(\s) ==> \1<\2
+(\s)<=(\s) ==> \1<\2
+(\s)<=(\s) ==> \1>\2
+(\s)<(\s) ==> \1<=\2
+(\s)<(\s) ==> \1>=\2
+(\s)>(\s) ==> \1>=\2
+(\s)>(\s) ==> \1<=\2
+(?i)(?<!NOT)(\s)=(\s) ==> \1NOT =\2
+(?i)\bNOT =(\s) ==> =\1
+(?i)\bNOT\s ==>
+(?i)\bAND\b ==> OR
+(?i)\bOR\b ==> AND
+(?i)\bTRUE\b ==> FALSE
+
+# Arithmetic.
+(\s)\+(\s) ==> \1-\2
+(\s)-(\s) ==> \1+\2
+(\s)\*(\s) ==> \1/\2
+(\s)/(\s) ==> \1*\2
+
+# Numbers, but not those in names: off by one, and zero.
+([^\w-])(\d+)([^\w-]) ==> \g<1>0\3
+([^\w-])(\d+)([^\w-]) ==> \1(\2 + 1)\3
+([^\w-])(\d+)([^\w-]) ==> \1(\2 - 1)\3
+
+# Statements: delete each one, other than a scope terminator, by making it
+# a comment line.
+^(.{6}) ( {4,})(?!END-|ELSE\b)(\S.*)\n ==> \1*\2\3\n

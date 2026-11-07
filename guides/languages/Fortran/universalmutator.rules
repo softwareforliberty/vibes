@@ -1,0 +1,38 @@
+# Mutation operators for Fortran, read by universalmutator's --only.
+# Each line is a regular expression, the arrow, and its replacement.
+
+# Leave comments and declarations alone: changing them can't fail a test.
+^\s*! ==> DO_NOT_MUTATE
+(?i)^\s*(implicit|private|public)\b ==> DO_NOT_MUTATE
+! ==> SKIP_MUTATING_REST
+
+# Comparisons and logic: move each boundary and flip each test.
+>= ==> >
+>= ==> <
+<= ==> <
+<= ==> >
+<([^=]) ==> <=\1
+<([^=]) ==> >=\1
+([^=/])>([^=]) ==> \1>=\2
+([^=/])>([^=]) ==> \1<=\2
+== ==> /=
+/= ==> ==
+(?i)\.and\. ==> .or.
+(?i)\.or\. ==> .and.
+(?i)\.not\. ==>
+(?i)\.true\. ==> .false.
+(?i)\.false\. ==> .true.
+
+# Arithmetic.
+\+ ==> -
+-([^>]) ==> +\1
+\* ==> /
+([^/])/([^/=]) ==> \1*\2
+
+# Numbers: off by one, and zero.
+(\W)(\d+)(\W) ==> \g<1>0\3
+(\W)(\d+)(\W) ==> \1(\2+1)\3
+(\W)(\d+)(\W) ==> \1(\2-1)\3
+
+# Statements: delete each one by commenting it out.
+(^\s*)(\S.*)\n ==> \1! \2\n

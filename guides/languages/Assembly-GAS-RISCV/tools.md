@@ -13,6 +13,7 @@ code, and how to run them. They enforce the rules in
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [QEMU](https://www.qemu.org/) (`drcov` plugin) | GPL-2.0 | Code quality | Logging which code the tests execute, for coverage review |
+| [universalmutator](https://github.com/agroce/universalmutator) | Apache-2.0 | Code quality | Mutation testing |
 
 ## Config files
 
@@ -23,6 +24,7 @@ settings on this page.
 | --- | --- |
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`universalmutator.rules`](universalmutator.rules) | universalmutator |
 
 ## Assembler warnings
 
@@ -138,3 +140,88 @@ RISC-V port is still preliminary. The closest check is QEMU's `drcov`
 plugin, which logs the address of every block the tests execute under
 emulation. Compare those addresses with `objdump -d` to find routines and
 branches that no test reaches.
+
+### Mutation testing
+
+universalmutator makes small changes to the code, such as turning `bge` into
+`bgt`, and runs the tests against each one. A change the tests still pass, a
+surviving mutant, is behaviour no test pins down. No maintained mutation
+testing tool is written for RISC-V assembly. universalmutator works on any
+language, because it rewrites the source text with regular expressions, so it's
+only as good as its rules.
+
+[`universalmutator.rules`](universalmutator.rules) holds the rules for RISC-V.
+They move and flip the condition of each branch and set-if instruction, swap
+`add` and `sub`, change immediates by one, and delete instructions. They leave
+comments, directives and labels alone, since changing those only breaks the
+build or changes nothing. Pass it with `--only`: the built-in rules are written
+for C-like languages, and add mutants that can't compile or can't change
+anything.
+
+A full run is slow, so `scripts/audit` mutates only the source files changed
+since the base branch. For each file, `mutate` writes the mutants that still
+compile, and `analyze_mutants` copies each one over the file in turn, runs the
+tests, and puts the file back. The last line fails when the tests kill fewer
+than 80% of the mutants:
+
+```sh
+rm -rf .mutants
+mkdir .mutants
+cc='riscv64-linux-gnu-gcc -c -march=rv64gc -mabi=lp64d -Wa,--fatal-warnings'
+files=$(git diff --name-only --diff-filter=d origin/main... -- 'src/*.S')
+for f in $files; do
+  d=.mutants/$f
+  mkdir -p "$d"
+  mutate "$f" --only universalmutator.rules --mutantDir "$d" \
+    --cmd "$cc -o $d/check.o $f"
+  analyze_mutants "$f" 'make test' --mutantDir "$d" --prefix "$d/run"
+done
+killed=$(find .mutants -name run.killed.txt -exec cat {} + | wc -l)
+total=$(find .mutants -name 'run.*killed.txt' -exec cat {} + | wc -l)
+echo "Mutation score: $killed of $total mutants killed"
+[ "$((killed * 100))" -ge "$((total * 80))" ]
+```
+
+Install it with pip, pinned to the version this guide was checked with:
+
+```sh
+pip install universalmutator==1.14.1
+```
+
+- Replace `make test` with the project's test command that builds and runs the
+  C test harness, under `qemu-riscv64` when the machine isn't RISC-V. It must
+  rebuild from source, since each mutant replaces the file on disk.
+- `--cmd` drops the mutants that don't assemble, so a build failure isn't
+  counted as a kill. `cc` is the assembler command from
+  [Assembler warnings](#assembler-warnings). Name the file in `--cmd`, not the
+  `MUTANT` placeholder, which crashes version 1.14.1.
+- A test run that takes longer than 30 seconds is stopped and counted as a
+  kill. If the build and tests take longer, give `analyze_mutants` a larger
+  `--timeout`.
+- Run it on a clean working tree, and add `.mutants/` to `.gitignore`. If a run
+  is interrupted, `git status` shows a file it left mutated.
+
+80% is the same bar as coverage. Some mutants can't change what the code does,
+so 100% is rarely reachable; 80% leaves room for them and still fails a change
+whose tests check little.
+
+`.mutants/<file>/run.notkilled.txt` lists the survivors of each file. Compare
+one with the source to see what changed:
+
+```text
+$ diff src/grade.S .mutants/src/grade.S/grade.mutant.12.S
+11c11
+< 	bge	a0, t0, .Lgrade_p
+---
+> 	bgt	a0, t0, .Lgrade_p
+```
+
+Read it as a missing test: here, `t0` holds the pass mark, 50, and no test
+passes exactly 50, so the boundary isn't pinned down. Write the test that fails
+on the mutant, not one that just runs the line. A mutant that can't change
+behaviour needs no test; the threshold allows for it.
+
+## Sources
+
+- [universalmutator](https://github.com/agroce/universalmutator)
+- [universalmutator on PyPI](https://pypi.org/project/universalmutator/1.14.1/)

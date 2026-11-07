@@ -34,3 +34,9 @@ coverageFailOnMinimum := true
 // can't see, so exclude it from that check.
 dependencyCheckFailBuildOnCVSS := 7
 Global / excludeLintKeys += dependencyCheckFailBuildOnCVSS
+
+// Fail the mutation run when the mutation score falls below 80%. Stryker4s
+// requires the low threshold to be above the break threshold.
+strykerThresholdsHigh := 90
+strykerThresholdsLow := 85
+strykerThresholdsBreak := 80

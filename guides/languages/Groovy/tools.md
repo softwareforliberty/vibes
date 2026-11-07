@@ -13,6 +13,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [OWASP Dependency-Check](https://owasp.org/www-project-dependency-check/) | Apache-2.0 | Auditing | Checking the resolved build classpath against known vulnerabilities |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [JaCoCo](https://www.jacoco.org/jacoco/) | EPL-2.0 | Code quality | Measuring test coverage, and failing the build below a minimum |
+| [PIT](https://pitest.org/) | Apache-2.0 | Code quality | Mutation testing |
 | [ArchUnit](https://www.archunit.org/) | Apache-2.0 | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
@@ -25,7 +26,7 @@ settings on this page.
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig |
 | [`codenarc.xml`](codenarc.xml) | CodeNarc, through Gradle's `codenarc` plugin |
 | [`.groovylintrc.json`](.groovylintrc.json) | npm-groovy-lint |
-| [`build.gradle.kts`](build.gradle.kts) | Gradle: CodeNarc, dependency locking, OWASP Dependency-Check and JaCoCo |
+| [`build.gradle.kts`](build.gradle.kts) | Gradle: CodeNarc, dependency locking, OWASP Dependency-Check, JaCoCo and PIT |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 
 `build.gradle.kts` is a template: merge its settings into the project's own
@@ -170,6 +171,66 @@ enforces the minimum; the template sets 80% for both lines and branches and
 runs it as part of `check`. In Maven, run the `jacoco-maven-plugin` `check`
 goal with the same limits.
 
+### Mutation testing
+
+PIT makes small changes to the compiled code, such as turning `>=` into
+`>`, and runs the tests against each one. A change the tests still pass, a
+surviving mutant, is behaviour no test pins down. A full run is slow, so
+`scripts/audit` mutates only the code changed since the base branch, and
+skips the run when there is none.
+
+A Groovy file can hold several classes, so the command reads each changed
+file's `package` line and mutates that package, which takes in its other
+files and subpackages too:
+
+```sh
+packages=$(git diff --name-only --diff-filter=d origin/main... \
+  -- 'src/main/groovy/*.groovy' |
+  xargs -r sed -n 's/^package \(.*\)/\1.*/p' | sort -u | paste -sd, -)
+[ -z "$packages" ] || ./gradlew pitest -PpitestTargets="$packages"
+```
+
+The settings are in the `pitest` block of
+[`build.gradle.kts`](build.gradle.kts). This guide was checked with PIT
+1.30.2 and its Gradle plugin 1.19.0. Spock runs on the JUnit Platform, so
+PIT runs the specifications through its JUnit 5 plugin, which the template
+adds.
+
+By default PIT drops every mutant in a Groovy class, through its `FGROOVY`
+filter, because dynamic Groovy compiles to call sites whose mutants don't
+match the source. The template turns the filter off. In a `@CompileStatic`
+class, which [idioms.md](idioms.md) asks for, the mutants match the
+source. In dynamic code, operators such as `-` become method calls that
+PIT can't mutate, so the score covers less of the code.
+
+`mutationThreshold` makes the run fail when the mutation score, the share
+of mutants the tests kill, is under 80%. That's the same bar as coverage.
+Some mutants can't be killed, because they don't change what the code
+does, so 100% is rarely reachable; 80% leaves room for them and still
+fails a change whose tests check little. `failWhenNoMutations` is off, so
+a change with nothing to mutate, such as a new interface, passes. Run
+without `pitestTargets`, PIT mutates every class in the project's `group`.
+
+The CSV report lists every mutant with its class, mutator, method, line
+and status. Find the survivors with `grep`:
+
+```text
+$ grep SURVIVED build/reports/pitest/mutations.csv
+Pricing.groovy,com.example.app.Pricing,org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator,discounted,11,SURVIVED,none
+```
+
+Read it as a missing test: here, `ConditionalsBoundaryMutator` turned the
+`>=` on line 11 into `>`, and no test passes exactly 100, so the boundary
+isn't pinned down. Write the test that fails on the mutant, not one that
+just runs the line. `NO_COVERAGE` means no test reaches the line at all.
+`build/reports/pitest/index.html` shows each mutant on its source line.
+
+PIT can't suppress a single mutant, but it skips any class or method
+annotated with an annotation named `DoNotMutate`. If a method's mutants
+can't change behaviour, declare that annotation in the project, with
+`CLASS` retention, and put it on the method with a comment saying why,
+rather than writing a test that contorts the code.
+
 ### Architecture
 
 Check the dependency rules between the project's layers, as the
@@ -257,3 +318,10 @@ and lists each dependency that breaks it, with its file and line:
 ```sh
 ./gradlew test
 ```
+
+## Sources
+
+- [PIT quick start](https://pitest.org/quickstart/) and
+  [mutators](https://pitest.org/quickstart/mutators/)
+- [PIT FAQ](https://pitest.org/faq/)
+- [gradle-pitest-plugin](https://gradle-pitest-plugin.solidsoft.info/)

@@ -15,6 +15,7 @@ them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [OSV-Scanner](https://github.com/google/osv-scanner) | Apache-2.0 | Auditing | Checking dependencies against known vulnerabilities |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [covr](https://covr.r-lib.org/) | MIT | Code quality | Measuring test coverage |
+| [muttest](https://jakubsob.github.io/muttest/) | MIT | Code quality | Mutation testing |
 
 ## Config files
 
@@ -167,3 +168,62 @@ Rscript -e 'cov <- covr::package_coverage()
   print(cov)
   if (covr::percent_coverage(cov) < 80) quit(status = 1)'
 ```
+
+### Mutation testing
+
+muttest makes small changes to the package's code, such as turning `>=`
+into `>`, and runs the testthat tests against each one. A change the tests
+still pass, a surviving mutant, is behaviour no test pins down. A full run
+is slow, so `scripts/audit` mutates only the files in `R/` changed since
+the base branch, and skips the run when there are none:
+
+```sh
+files=$(git diff --name-only --diff-filter=d origin/main... -- 'R/*.R')
+[ -z "$files" ] || Rscript -e 'plan <- muttest::muttest_plan(
+    c(
+      muttest::arithmetic_operators(),
+      muttest::comparison_operators(),
+      muttest::logical_operators(),
+      muttest::condition_mutations()
+    ),
+    source_files = commandArgs(trailingOnly = TRUE)
+  )
+  if (nrow(plan) > 0) {
+    score <- muttest::muttest(plan)
+    if (is.na(score) || score < 0.8) quit(status = 1)
+  }' $files
+```
+
+- The mutators are operators and conditions, where a missing test most
+  often hides. Add others from the
+  [mutator reference](https://jakubsob.github.io/muttest/articles/mutators.html)
+  as the tests grow.
+- A changed file with nothing to mutate makes an empty plan, which passes.
+
+Install it as a development dependency, listed under `Suggests`. This
+guide was checked with muttest 0.3.0 and testthat 3.3.2.
+
+`muttest()` returns the mutation score, the share of mutants the tests
+kill, and the command exits non-zero when it's under 80%. That's the same
+bar as coverage. Some mutants can't be killed, because they don't change
+what the code does, so 100% is rarely reachable; 80% leaves room for them
+and still fails a change whose tests check little.
+
+Under `Survived Mutants`, the report prints each survivor with its file,
+mutator, line and a diff:
+
+```text
+price.R  >= → >
+  7-   if (total >= 100) {
+  7+   if (total > 100) {
+```
+
+Read it as a missing test: here, no test passes exactly 100, so the
+boundary isn't pinned down. Write the test that fails on the mutant, not
+one that just runs the line. muttest has no way to skip a single mutant,
+so if one can't change behaviour, leave it to the margin under 80% rather
+than writing a test that contorts the code.
+
+## Sources
+
+- [muttest documentation](https://jakubsob.github.io/muttest/)

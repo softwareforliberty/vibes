@@ -1,0 +1,45 @@
+# Mutation operators for x86 assembly (GNU as, AT&T syntax), read by
+# universalmutator's --only. Each line is a regular expression, the arrow,
+# and its replacement.
+
+# Leave comments, preprocessor lines, directives and local labels alone:
+# changing them only breaks the build or changes nothing.
+^\s*(//|#|\.) ==> DO_NOT_MUTATE
+// ==> SKIP_MUTATING_REST
+
+# Conditions, in jumps, setcc and cmovcc: move each boundary and flip each
+# test.
+\b(j|set|cmov)e\b ==> \1ne
+\b(j|set|cmov)ne\b ==> \1e
+\b(j|set|cmov)z\b ==> \1nz
+\b(j|set|cmov)nz\b ==> \1z
+\b(j|set|cmov)l\b ==> \1le
+\b(j|set|cmov)l\b ==> \1ge
+\b(j|set|cmov)le\b ==> \1l
+\b(j|set|cmov)le\b ==> \1g
+\b(j|set|cmov)g\b ==> \1ge
+\b(j|set|cmov)g\b ==> \1le
+\b(j|set|cmov)ge\b ==> \1g
+\b(j|set|cmov)ge\b ==> \1l
+\b(j|set|cmov)b\b ==> \1be
+\b(j|set|cmov)b\b ==> \1ae
+\b(j|set|cmov)be\b ==> \1b
+\b(j|set|cmov)be\b ==> \1a
+\b(j|set|cmov)a\b ==> \1ae
+\b(j|set|cmov)a\b ==> \1be
+\b(j|set|cmov)ae\b ==> \1a
+\b(j|set|cmov)ae\b ==> \1b
+
+# Arithmetic.
+\badd([bwlq]?)\b ==> sub\1
+\bsub([bwlq]?)\b ==> add\1
+\binc([bwlq]?)\b ==> dec\1
+\bdec([bwlq]?)\b ==> inc\1
+
+# Immediates: off by one, and zero.
+\$(\d+)\b ==> $0
+\$(\d+)\b ==> $(\1 + 1)
+\$(\d+)\b ==> $(\1 - 1)
+
+# Instructions: delete each one by commenting it out.
+^(\s+)([a-z].*)\n ==> \1// \2\n

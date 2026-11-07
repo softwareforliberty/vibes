@@ -19,6 +19,7 @@ and [idioms.md](idioms.md).
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [lizard](https://github.com/terryyin/lizard) | MIT | Code quality | Measuring function complexity and length |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
+| [Mull](https://mull-project.com/) | Apache-2.0 | Code quality | Mutation testing of the C++ code |
 
 ## Config files
 
@@ -33,6 +34,7 @@ below is the full contents of one of these files.
 | [.inferconfig](.inferconfig) | Infer |
 | [.jscpd.json](.jscpd.json) | jscpd |
 | [.opengrep/objcpp.yaml](.opengrep/objcpp.yaml) | Opengrep (pure C++ files) |
+| [mull.yml](mull.yml) | Mull |
 
 ## Formatting
 
@@ -301,6 +303,72 @@ llvm-profdata merge -sparse tests.profraw -o tests.profdata
 llvm-cov report ./tests -instr-profile=tests.profdata
 ```
 
+### Mutation testing
+
+Mull makes small changes to the code, such as turning `>` into `>=`, and
+runs the tests against each one. A change the tests still pass, a
+surviving mutant, is behaviour no test pins down. Mull mutates the C++
+functions in `.mm` files, but not Objective-C methods: checked with Mull
+0.37.0, a method in the change gets no mutants. For the methods, rely on
+the test reviewer and on [coverage](#coverage).
+
+A full run is slow, so [mull.yml](mull.yml) limits it to the lines changed
+since the base branch. Set `gitDiffRef` there to the project's base
+branch. Mull runs `git diff origin/main` as it compiles, which also counts
+changes made on the base branch since the branch began, so fetch and
+rebase first.
+
+Mull is a Clang plugin: install the plugin for the Clang you build with,
+such as `mull-19` for `clang++-19`. Compile every file with the plugin,
+the tests too, so that templates and inline functions in headers are
+mutated where the tests instantiate them; `mull.yml` keeps the tests
+themselves from being mutated. Compile one file per command, because
+`-grecord-command-line` breaks when one command compiles several. Then
+`mull-runner` runs the tests against every mutant. On Linux, with the GNU
+Objective-C runtime:
+
+```sh
+mkdir -p build-mull
+for f in src/*.mm tests.mm; do
+    clang++-19 -std=c++20 -fobjc-runtime=gcc -g -grecord-command-line \
+        -fpass-plugin=/usr/lib/mull-ir-frontend-19 \
+        -c "$f" -o "build-mull/$(basename "$f").o"
+done
+clang++-19 -o build-mull/tests build-mull/*.o -lobjc
+mull-runner --mutation-score-threshold 80 build-mull/tests
+```
+
+- `mull-runner` exits non-zero when the mutation score, the share of
+  mutants the tests kill, is under 80%. That's the same bar as coverage.
+  Some mutants can't be killed, because they don't change what the code
+  does, so Mull's default of 100% is rarely reachable; 80% leaves room for
+  them and still fails a change whose tests check little.
+- With no changed lines there are no mutants, and `mull-runner` exits
+  zero.
+- On macOS, install Mull with Homebrew (`mull-project/mull/mull@19`) and
+  build with that LLVM's `clang++`, using the project's `-fobjc-arc` and
+  `-framework Foundation` in place of `-fobjc-runtime=gcc` and `-lobjc`.
+  Apple's Clang can't load the plugin. This guide checked the Linux build
+  only.
+- This guide was checked with Mull 0.37.0, which has plugins for LLVM 16
+  to 23.
+
+Mull prints each survivor as a compiler warning at the code it changed:
+
+```text
+[info] Survived mutants (1/2):
+src/pricing.mm:15:16: warning: Survived: Replaced > with >= [cxx_gt_to_ge]
+    if (weight > 5) {
+               ^
+[info] Mutation score: 50%
+```
+
+Read it as a missing test: here, no test passes a weight of exactly 5, so
+the boundary isn't pinned down. Write the test that fails on the mutant,
+not one that just runs the line. If a mutant can't change behaviour, put
+`// mull-ignore-next: cxx_gt_to_ge` above the line, with the reason,
+rather than writing a test that contorts the code.
+
 ### Architecture
 
 The build enforces the layers, as the
@@ -351,3 +419,10 @@ compiler names the header it can't find:
 cmake -S . -B build
 cmake --build build
 ```
+
+## Sources
+
+- [Mull setup and configuration](https://mull-project.com/getting-started/setup/)
+- [Mull: diff-based mutations](https://mull-project.com/guides/diff-based-mutations/)
+- [Mull: disable mutants with annotations](https://mull-project.com/guides/annotations/)
+- [mull-runner reference](https://mull-project.com/reference/mull-runner/)

@@ -187,6 +187,20 @@ cloverage is the only FOSS coverage tool for Clojure. Its releases are
 infrequent, so check it still supports your Clojure version before relying
 on it.
 
+### Mutation testing
+
+No maintained FOSS mutation testing tool works for Clojure. mutant, the
+best known, last released in 2017 and is archived. Heretic is unreleased
+and says it isn't ready for use. clj-mutate has no licence. apophis has
+one 0.1 release and no runner or minimum score, and it makes few mutants:
+for a function with `>=` and `-`, only `if` turned into `if-not`.
+
+Rely on the [test reviewer](../../../agents/test-reviewer.md) instead,
+which checks that each test pins down the behaviour it covers, not just
+runs it, and on the coverage minimum in [Coverage](#coverage). When you
+write a test, ask what change to the code would still pass it, such as
+`>=` turned into `>`, and add the case that catches it.
+
 ### Architecture
 
 Check the dependency rules between the project's layers, as the
@@ -227,3 +241,10 @@ clojure -Sdeps \
   longer ones.
 - Without `.clj-depend/config.edn`, clj-depend has no layers to check and
   passes, so commit the file.
+
+## Sources
+
+- [mutant](https://github.com/jstepien/mutant)
+- [Heretic](https://github.com/parenstech/heretic)
+- [clj-mutate](https://github.com/unclebob/clj-mutate)
+- [apophis](https://github.com/thomascothran/apophis)

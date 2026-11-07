@@ -18,6 +18,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [cargo-machete](https://github.com/bnjbvr/cargo-machete) | MIT | Code quality | Finding unused dependencies |
 | [cargo-llvm-cov](https://github.com/taiki-e/cargo-llvm-cov) | Apache-2.0 OR MIT | Code quality | Measuring test coverage |
+| [cargo-mutants](https://mutants.rs/) | MIT | Code quality | Mutation testing |
 
 ## Config files
 
@@ -220,6 +221,54 @@ cargo llvm-cov --all-features --fail-under-lines 80
 Branch coverage needs the nightly toolchain, so line coverage is the gate on
 stable Rust.
 
+### Mutation testing
+
+cargo-mutants makes small changes to the code, such as turning `>` into
+`>=` or replacing a function's body with a default value, and runs the
+tests against each one. A change the tests still pass, a missed mutant, is
+behaviour no test pins down. A full run is slow, so `scripts/audit` tests
+only the mutants in code changed since the base branch:
+
+```sh
+mkdir -p target
+git diff --merge-base origin/main > target/mutants.diff
+cargo mutants --in-diff target/mutants.diff
+```
+
+- cargo-mutants has no minimum score: it exits non-zero when any mutant in
+  the change is missed or times out, so the bar is 100% of the changed
+  code. That's stricter than the 80% coverage bar, and workable because a
+  change has few mutants and a mutant that can't be caught can be
+  excluded by name (see below).
+- `--merge-base` diffs the working tree against the point the branch left
+  `origin/main`, so changes made on the base branch since don't count.
+  Replace `origin/main` with the project's base branch, and fetch it first.
+- Results go in `mutants.out/`; add `/mutants.out*` to `.gitignore`.
+- Install it with `cargo install --locked cargo-mutants@27.1.0`, the
+  version this guide was checked with.
+
+cargo-mutants prints each missed mutant with the change it made:
+
+```text
+MISSED   src/lib.rs:10:15: replace > with >= in shipping in 0s build + 0s test
+5 mutants tested in 3s: 1 missed, 4 caught
+```
+
+Read it as a missing test: here, no test passes a weight of exactly 5, so
+the boundary isn't pinned down. Write the test that fails on the mutant,
+not one that just runs the line. `mutants.out/diff/` holds each mutant's
+diff. If a mutant can't change behaviour, exclude it by name in the
+project's `.cargo/mutants.toml`, with the reason, rather than writing a
+test that contorts the code:
+
+```toml
+# Mutants that can't change behaviour, each with the reason.
+exclude_re = [
+  # Callers never pass a weight of exactly 5.
+  "replace > with >= in shipping",
+]
+```
+
 ### Architecture
 
 The build enforces the layers, as the
@@ -262,3 +311,10 @@ cargo build --workspace
 The binary crate that wires the parts lists every layer. With the rules in
 each crate's `[dependencies]`, a change there is the only way to break them,
 so review each one.
+
+## Sources
+
+- [cargo-mutants: testing code changed in a diff](https://mutants.rs/in-diff.html)
+- [cargo-mutants: exit codes](https://mutants.rs/exit-codes.html)
+- [cargo-mutants: filtering mutants by name](https://mutants.rs/filter_mutants.html)
+- [cargo-mutants: the mutants.out directory](https://mutants.rs/mutants-out.html)

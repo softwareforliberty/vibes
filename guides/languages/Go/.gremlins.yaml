@@ -1,0 +1,6 @@
+# Gremlins settings. Gremlins 0.6.0 ignores the threshold flags, so the
+# minimums are set here. A run fails unless both are above 80%.
+unleash:
+  threshold:
+    efficacy: 80
+    mutant-coverage: 80

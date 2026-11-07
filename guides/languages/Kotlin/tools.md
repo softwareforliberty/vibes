@@ -16,6 +16,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [lizard](https://github.com/terryyin/lizard) | MIT | Code quality | Measuring function complexity and length |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [Kover](https://github.com/Kotlin/kotlinx-kover) | Apache-2.0 | Code quality | Measuring test coverage, and failing the build below a minimum |
+| [PIT](https://pitest.org/) | Apache-2.0 | Code quality | Mutation testing |
 | [ArchUnit](https://www.archunit.org/) | Apache-2.0 | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
@@ -27,7 +28,7 @@ settings on this page.
 | --- | --- |
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, through EditorConfig; ktlint |
 | [`detekt.yml`](detekt.yml) | detekt |
-| [`build.gradle.kts`](build.gradle.kts) | Gradle: compiler warnings, explicit API mode, detekt, dependency locking, OWASP Dependency-Check and Kover |
+| [`build.gradle.kts`](build.gradle.kts) | Gradle: compiler warnings, explicit API mode, detekt, dependency locking, OWASP Dependency-Check, Kover and PIT |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 | [`.opengrep/kotlin.yaml`](.opengrep/kotlin.yaml) | Opengrep |
 
@@ -197,6 +198,65 @@ build pass.
 Kover enforces the minimum: the template sets `minBound` to 80% for both
 lines and branches in a `verify` rule. Run `./gradlew koverVerify`.
 
+### Mutation testing
+
+PIT makes small changes to the compiled code, such as turning `>=` into
+`>`, and runs the tests against each one. A change the tests still pass, a
+surviving mutant, is behaviour no test pins down. A full run is slow, so
+`scripts/audit` mutates only the code changed since the base branch, and
+skips the run when there is none.
+
+A Kotlin file can declare several classes under any names, and its
+top-level functions compile to a class named after the file, such as
+`PricingKt`. So the command reads each changed file's `package` line and
+mutates that package, which takes in its other files and subpackages too:
+
+```sh
+packages=$(git diff --name-only --diff-filter=d origin/main... \
+  -- 'src/main/kotlin/*.kt' |
+  xargs -r sed -n 's/^package \(.*\)/\1.*/p' | sort -u | paste -sd, -)
+[ -z "$packages" ] || ./gradlew pitest -PpitestTargets="$packages"
+```
+
+The settings are in the `pitest` block of
+[`build.gradle.kts`](build.gradle.kts). This guide was checked with PIT
+1.30.2 and its Gradle plugin 1.19.0. PIT runs JUnit 5 and 6 tests,
+`kotlin.test` ones included, through its JUnit 5 plugin, which the
+template adds.
+
+PIT mutates bytecode, so it sees what the Kotlin compiler generates. It
+skips the compiler's null checks and a data class's generated methods,
+but it mutates property getters: a property no test reads shows up as
+`NO_COVERAGE`.
+
+`mutationThreshold` makes the run fail when the mutation score, the share
+of mutants the tests kill, is under 80%. That's the same bar as coverage.
+Some mutants can't be killed, because they don't change what the code
+does, so 100% is rarely reachable; 80% leaves room for them and still
+fails a change whose tests check little. `failWhenNoMutations` is off, so
+a change with nothing to mutate, such as a new interface, passes. Run
+without `pitestTargets`, PIT mutates every class in the project's `group`.
+
+The CSV report lists every mutant with its class, mutator, method, line
+and status. Find the survivors with `grep`:
+
+```text
+$ grep SURVIVED build/reports/pitest/mutations.csv
+Pricing.kt,com.example.app.PricingKt,org.pitest.mutationtest.engine.gregor.mutators.ConditionalsBoundaryMutator,discounted,4,SURVIVED,none
+```
+
+Read it as a missing test: here, `ConditionalsBoundaryMutator` turned the
+`>=` on line 4 into `>`, and no test passes exactly 100, so the boundary
+isn't pinned down. Write the test that fails on the mutant, not one that
+just runs the line. `NO_COVERAGE` means no test reaches the line at all.
+`build/reports/pitest/index.html` shows each mutant on its source line.
+
+PIT can't suppress a single mutant, but it skips any class or method
+annotated with an annotation named `DoNotMutate`. If a method's mutants
+can't change behaviour, declare that annotation in the project, with
+`BINARY` retention, and put it on the method with a comment saying why,
+rather than writing a test that contorts the code.
+
 ### Architecture
 
 Check the dependency rules between the project's layers, as the
@@ -271,3 +331,10 @@ and lists each dependency that breaks it, with its file and line:
 ```sh
 ./gradlew test
 ```
+
+## Sources
+
+- [PIT quick start](https://pitest.org/quickstart/) and
+  [mutators](https://pitest.org/quickstart/mutators/)
+- [PIT FAQ](https://pitest.org/faq/)
+- [gradle-pitest-plugin](https://gradle-pitest-plugin.solidsoft.info/)

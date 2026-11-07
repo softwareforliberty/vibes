@@ -18,6 +18,7 @@ them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [dead-code-detector](https://github.com/shipmonk-rnd/dead-code-detector) | MIT | Code quality | Finding unused classes, methods and constants (PHPStan extension) |
 | [PHPUnit](https://phpunit.de/) | BSD-3-Clause | Code quality | Running tests and reporting coverage |
 | [PCOV](https://github.com/krakjoe/pcov) | PHP-3.01 | Code quality | Collecting coverage data for PHPUnit |
+| [Infection](https://infection.github.io/) | BSD-3-Clause | Code quality | Mutation testing |
 | [Deptrac](https://github.com/deptrac/deptrac) | MIT | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
@@ -33,6 +34,7 @@ settings on this page.
 | [`psalm.xml`](psalm.xml) | Psalm |
 | [`phpunit.xml.dist`](phpunit.xml.dist) | PHPUnit |
 | [`bin/check-coverage.php`](bin/check-coverage.php) | The coverage check in CI |
+| [`infection.json5`](infection.json5) | Infection |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
 | [`.opengrep/php.yaml`](.opengrep/php.yaml) | Opengrep |
 
@@ -235,6 +237,75 @@ if ($percent < (float) $minimum) {
 }
 ```
 
+### Mutation testing
+
+Infection makes small changes to the code, such as turning `>=` into `>`,
+and runs the tests against each one. A change the tests still pass, an
+escaped mutant, is behaviour no test pins down. A full run is slow, so
+`scripts/audit` mutates only the lines added or changed since the base
+branch:
+
+```sh
+vendor/bin/infection --git-diff-lines --git-diff-base=origin/main \
+  --with-uncovered --show-mutations=max --no-progress
+```
+
+Install it as a development dependency, and allow its
+`infection/extension-installer` Composer plugin when asked. This guide
+was checked with Infection 0.35.9:
+
+```sh
+composer require --dev infection/infection:0.35.9
+```
+
+It uses PCOV to find the tests that reach each mutant, and runs only
+those. It won't run without a config file, so copy
+[`infection.json5`](infection.json5) into the project root:
+
+```json5
+{
+    "$schema": "vendor/infection/infection/resources/schema.json",
+    "source": {
+        "directories": ["src"]
+    },
+    "minMsi": 80,
+    "ignoreMsiWithNoMutations": true
+}
+```
+
+- `minMsi` makes the run exit non-zero when the mutation score indicator,
+  the share of mutants the tests kill, is under 80%. That's the same bar
+  as coverage. Some mutants can't be killed, because they don't change
+  what the code does, so 100% is rarely reachable; 80% leaves room for
+  them and still fails a change whose tests check little.
+- `--with-uncovered` also mutates lines no test runs, and counts them
+  against the score. Without it, Infection skips them, so a change with
+  no tests at all would pass.
+- `ignoreMsiWithNoMutations` lets a change with nothing to mutate, such
+  as one that only edits comments, pass. Without it, the score is 0% and
+  the run fails.
+
+The report lists each escaped mutant under a heading with its file, line
+and mutator, such as `src/Price.php:12 [M] GreaterThanOrEqualTo`, then a
+diff:
+
+```text
+@@ @@
+     /** Applies a 10% discount to totals of 100 or more. */
+     public static function discount(float $total): float
+     {
+-        if ($total >= 100) {
++        if ($total > 100) {
+             return $total * 0.9;
+         }
+```
+
+Read it as a missing test: here, no test passes exactly 100, so the
+boundary isn't pinned down. Write the test that fails on the mutant, not
+one that just runs the line. If a mutant can't change behaviour, ignore
+that mutator for the method in `infection.json5`, with the reason in a
+comment, rather than writing a test that contorts the code.
+
 ### Architecture
 
 Deptrac sorts the project's classes into layers and checks every dependency
@@ -288,3 +359,7 @@ dependencies in one direction keeps the layers from forming a cycle. Cycles
 between classes in the same layer aren't checked.
 
 Deptrac caches its results in `.deptrac.cache`; add it to `.gitignore`.
+
+## Sources
+
+- [Infection documentation](https://infection.github.io/guide/)

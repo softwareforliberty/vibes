@@ -1,0 +1,47 @@
+# Mutation operators for x86 assembly (MASM), read by universalmutator's
+# --only. Each line is a regular expression, the arrow, and its
+# replacement.
+
+# Leave comments, directives and procedure boundaries alone: changing them
+# only breaks the build or changes nothing.
+(?i)^\s*(;|\.) ==> DO_NOT_MUTATE
+(?i)^\s*(option|public|extern\w*|include\w*|align|end)\b ==> DO_NOT_MUTATE
+(?i)\b(proc|endp|struct|ends|macro|endm)\b ==> DO_NOT_MUTATE
+; ==> SKIP_MUTATING_REST
+
+# Conditions, in jumps, setcc and cmovcc: move each boundary and flip each
+# test.
+(?i)\b(j|set|cmov)e\b ==> \1ne
+(?i)\b(j|set|cmov)ne\b ==> \1e
+(?i)\b(j|set|cmov)z\b ==> \1nz
+(?i)\b(j|set|cmov)nz\b ==> \1z
+(?i)\b(j|set|cmov)l\b ==> \1le
+(?i)\b(j|set|cmov)l\b ==> \1ge
+(?i)\b(j|set|cmov)le\b ==> \1l
+(?i)\b(j|set|cmov)le\b ==> \1g
+(?i)\b(j|set|cmov)g\b ==> \1ge
+(?i)\b(j|set|cmov)g\b ==> \1le
+(?i)\b(j|set|cmov)ge\b ==> \1g
+(?i)\b(j|set|cmov)ge\b ==> \1l
+(?i)\b(j|set|cmov)b\b ==> \1be
+(?i)\b(j|set|cmov)b\b ==> \1ae
+(?i)\b(j|set|cmov)be\b ==> \1b
+(?i)\b(j|set|cmov)be\b ==> \1a
+(?i)\b(j|set|cmov)a\b ==> \1ae
+(?i)\b(j|set|cmov)a\b ==> \1be
+(?i)\b(j|set|cmov)ae\b ==> \1a
+(?i)\b(j|set|cmov)ae\b ==> \1b
+
+# Arithmetic.
+(?i)\badd\b ==> sub
+(?i)\bsub\b ==> add
+(?i)\binc\b ==> dec
+(?i)\bdec\b ==> inc
+
+# Immediates: off by one, and zero.
+(,\s*)(\d+)\b ==> \g<1>0
+(,\s*)(\d+)\b ==> \1(\2 + 1)
+(,\s*)(\d+)\b ==> \1(\2 - 1)
+
+# Instructions: delete each one by commenting it out.
+^(\s+)([a-zA-Z].*)\n ==> \1; \2\n

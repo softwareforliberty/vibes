@@ -1,5 +1,5 @@
 ; Template: the env stanza goes in the project's root dune file, and the
-; instrumentation field in every library's own dune file.
+; instrumentation fields in every library's own dune file.
 
 (env
  (dev
@@ -9,4 +9,6 @@
 (library
  (name app)
  (instrumentation
-  (backend bisect_ppx)))
+  (backend bisect_ppx))
+ (instrumentation
+  (backend mutaml -mut-rate 100)))

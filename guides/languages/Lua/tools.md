@@ -260,3 +260,26 @@ return {
   exclude = { 'spec/' },
 }
 ```
+
+### Mutation testing
+
+No maintained free mutation testing tool supports Lua, so there's no
+mutation check in `scripts/audit`. luamut, the only one written for Lua,
+has never had a release: LuaRocks has only a development version from
+2023. Generic tools such as universalmutator change text with rules for
+C-like languages; they don't know `~=`, `and`, `or` or `--` comments, so
+most of their mutants are broken code rather than changed behaviour.
+
+Rely on two checks instead:
+
+- The test reviewer asks of each changed comparison, branch and return
+  value whether a test would fail if it changed, such as `>=` turned into
+  `>`, and asks for a test at each boundary.
+- [Coverage](#coverage) shows the code no test runs at all. It can't show
+  a line that runs but whose result no test checks, which is why the
+  review matters.
+
+## Sources
+
+- [luamut on LuaRocks](https://luarocks.org/modules/ligurio/luamut)
+- [universalmutator](https://github.com/agroce/universalmutator)

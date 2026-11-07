@@ -10,6 +10,7 @@ and [idioms.md](idioms.md).
 | [Pester](https://github.com/pester/Pester) | Apache-2.0 | Code quality | Running tests and measuring coverage |
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
+| [PSMutant](https://github.com/Fortigi/PSMutant) | MIT | Code quality | Mutation testing |
 
 ## Config files
 
@@ -22,6 +23,7 @@ settings on this page.
 | [`PSScriptAnalyzerSettings.psd1`](PSScriptAnalyzerSettings.psd1) | PSScriptAnalyzer and `Invoke-Formatter` |
 | [`PesterConfiguration.psd1`](PesterConfiguration.psd1) | Pester |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`psmutant.config.json`](psmutant.config.json) | PSMutant |
 
 ## Formatting
 
@@ -207,3 +209,88 @@ if ($result.CodeCoverage.CoveragePercent -lt 80) {
     exit 1
 }
 ```
+
+### Mutation testing
+
+PSMutant makes small changes to the code, such as turning `-ge` into `-gt`, and
+runs the Pester tests against each one. A change the tests still pass, a
+surviving mutant, is behaviour no test pins down. It reads the code with
+PowerShell's own parser, and runs each mutant in a copy of `src` and `tests`,
+so the source files are never changed.
+
+A full run is slow, so `scripts/audit` mutates only the source files changed
+since the base branch, and skips the run when there are none. `ExitCode` is
+non-zero when the mutation score is below the minimum:
+
+```powershell
+$changed = @(git diff --name-only --diff-filter=d origin/main... -- 'src/*.ps1')
+if ($changed.Count -gt 0) {
+    $result = Invoke-PSMutation -ConfigFile ./psmutant.config.json -ChangedFile $changed
+    exit $result.ExitCode
+}
+```
+
+Install it from the PowerShell Gallery. It's young, first released in 2026, so
+pin the version this guide was checked with, PSMutant 0.9.1 with Pester 5.7.1,
+and recheck this page when you upgrade:
+
+```powershell
+Install-Module PSMutant -RequiredVersion 0.9.1 -Scope CurrentUser
+```
+
+The settings are in [`psmutant.config.json`](psmutant.config.json):
+
+```json
+{
+  "mutate": ["src/**/*.ps1"],
+  "tests": {},
+  "testsByConvention": true,
+  "operators": [
+    "BinaryOperator",
+    "BooleanLiteral",
+    "NumberLiteral",
+    "NegationRemoval",
+    "ConditionalBoundary",
+    "ConditionForcing",
+    "ReturnValue"
+  ],
+  "thresholds": { "high": 90, "low": 80, "break": 80 },
+  "reportPath": "reports/ps-mutation.json"
+}
+```
+
+- `testsByConvention` runs `tests/Name.Tests.ps1` against `src/Name.ps1`, so
+  the map in `tests` can stay empty.
+- `operators` adds `ConditionalBoundary`, `ConditionForcing` and `ReturnValue`
+  to the four defaults. A boundary mutant, such as `-ge` into `-gt`, finds the
+  off-by-one cases tests miss most often, and forcing a condition finds an `if`
+  with no comparison in it that no test checks.
+- `break` fails the run when the score is under 80%. The `high` and `low` bands
+  only colour the score.
+- Add `reports/` to `.gitignore`.
+
+80% is the same bar as coverage. Some mutants can't change what the code does,
+so 100% is rarely reachable; 80% leaves room for them and still fails a change
+whose tests check little.
+
+The summary lists each survivor with its line and the change:
+
+```text
+  Mutation score: 69.2%  (9 killed / 13)
+  Survivors (add assertions to kill these):
+    src/Grade.ps1:13  -ge -> -gt
+    src/Grade.ps1:13  90 -> 91
+    src/Grade.ps1:16  -ge -> -gt
+    src/Grade.ps1:16  50 -> 51
+```
+
+Read it as a missing test: here, no test passes exactly 90 or 50, so neither
+boundary is pinned down. Write the test that fails on the mutant, not one that
+just runs the line. If a mutant can't change behaviour, declare it in
+`equivalents` with the reason, rather than writing a test that contorts the
+code; the run fails when a declaration goes stale.
+
+## Sources
+
+- [PSMutant](https://github.com/Fortigi/PSMutant/blob/v0.9.1/README.md)
+- [PSMutant on the PowerShell Gallery](https://www.powershellgallery.com/packages/PSMutant/0.9.1)

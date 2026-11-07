@@ -151,11 +151,14 @@ main "$@"
 
 `scripts/audit` holds the checks that are **slow or need the network**, such
 as dependency vulnerability scans (OSV-Scanner and the guide's own audit
-tool), gitleaks over the full history, and the complexity and duplication
-reports (lizard, jscpd). It also runs `scripts/check-requirements --all`,
-which fails when any requirement in a spec has no test that names it. It
-follows the same rules as `scripts/check`. The vibe workflow runs it before
-finishing a task, and CI should run it too.
+tool), gitleaks over the full history, the complexity and duplication
+reports (lizard, jscpd), and mutation testing from the Mutation testing
+section of each guide's `tools.md`, which shows whether the tests would
+catch small changes to the code. It also runs
+`scripts/check-requirements --all`, which fails when any requirement in a
+spec has no test that names it. It follows the same rules as
+`scripts/check`. The vibe workflow runs it before finishing a task, and CI
+should run it too.
 
 ## Step 4: install the hooks
 

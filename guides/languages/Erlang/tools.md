@@ -14,6 +14,7 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [lizard](https://github.com/terryyin/lizard) | MIT | Code quality | Measuring function complexity and length |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
+| [rebar3_mutate](https://github.com/Taure/rebar3_mutate) | MIT | Code quality | Mutation testing |
 
 ## Config files
 
@@ -22,7 +23,7 @@ These files are drop-in templates: copy them into the project root.
 | File | Read by |
 | --- | --- |
 | [.editorconfig](.editorconfig) | Every editor and IDE, through EditorConfig |
-| [rebar.config](rebar.config) | rebar3: plugins, compiler warnings, erlfmt, Dialyzer, xref and cover (merge into the project's `rebar.config`) |
+| [rebar.config](rebar.config) | rebar3: plugins, compiler warnings, erlfmt, Dialyzer, xref, cover and rebar3_mutate (merge into the project's `rebar.config`) |
 | [elvis.config](elvis.config) | Elvis, through `rebar3 lint` |
 | [.jscpd.json](.jscpd.json) | jscpd |
 
@@ -31,7 +32,7 @@ The `rebar.config` excerpts below are copied from that file.
 Add the rebar3 plugins to `rebar.config`:
 
 ```erlang
-{project_plugins, [erlfmt, rebar3_lint, rebar3_audit]}.
+{project_plugins, [erlfmt, rebar3_lint, rebar3_audit, {rebar3_mutate, "0.6.1"}]}.
 ```
 
 ## Formatting
@@ -210,6 +211,48 @@ rebar3 do eunit, ct
 rebar3 cover
 ```
 
+### Mutation testing
+
+rebar3_mutate makes small changes to the code, such as turning `>=` into
+`=<`, and runs the module's tests against each one. A change the tests
+still pass, a surviving mutant, is behaviour no test pins down. A full run
+is slow, so `scripts/audit` mutates only the lines changed since the base
+branch:
+
+```sh
+rebar3 mutate --diff origin/main --min-score 80
+```
+
+The plugin is in `project_plugins` in the [template](rebar.config). This
+guide was checked with rebar3_mutate 0.6.1.
+
+- `--min-score 80` makes the run exit non-zero when the mutation score,
+  the share of mutants the tests kill, is under 80%. That's the same bar
+  as coverage. Some mutants can't be killed, because they don't change
+  what the code does, so 100% is rarely reachable; 80% leaves room for
+  them and still fails a change whose tests check little.
+- With nothing to mutate in the diff, the run passes without a score.
+- Each module is scored against its own EUnit tests, `<module>_tests`.
+  A module tested from another test module is skipped, not scored, until
+  you map it under `eunit_tests` in a `mutate` section of `rebar.config`.
+
+The report lists each survivor with its file, line, operator and change:
+
+```text
+===> Module: price (12 mutants: 9 killed, 3 survived, 0 timed out)
+===> Score:  75.0% (9 killed of 12 testable)
+===> 
+Surviving mutants:
+===>   price.erl:line 5 [op_constant] 100 -> 101
+===>   price.erl:line 5 [op_constant] 100 -> 99
+```
+
+Read it as a missing test: here, the guard `Total >= 100` can move to 101
+or 99 and every test still passes, so no test checks the boundary at 100.
+Write the test that fails on the mutant, not one that just runs the line.
+A mutant that times out counts against the score, so raise `--timeout`
+for slow tests rather than letting them fail.
+
 ### Architecture
 
 xref queries enforce the layers as the
@@ -246,3 +289,7 @@ rebar3 xref
   must find none. Edges may call the core.
 - The second lists the groups of modules that call each other, directly or
   through others, and must find none.
+
+## Sources
+
+- [rebar3_mutate documentation](https://hexdocs.pm/rebar3_mutate/)

@@ -14,7 +14,8 @@ run them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [OSV-Scanner](https://github.com/google/osv-scanner) | Apache-2.0 | Auditing | Checking dependencies against known vulnerabilities |
 | [lizard](https://github.com/terryyin/lizard) | MIT | Code quality | Measuring function complexity and length |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
-| [coverlet](https://github.com/coverlet-coverage/coverlet) | MIT | Code quality | Measuring test coverage, and failing the build below a minimum |
+| [coverlet](https://github.com/coverlet-coverage/coverlet) (coverlet.MTP) | MIT | Code quality | Measuring test coverage, and failing the build below a minimum |
+| [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/) | Apache-2.0 | Code quality | Mutation testing |
 | [ArchUnitNET](https://github.com/TNG/ArchUnitNET) | Apache-2.0 | Code quality | Enforcing the dependency rules between the project's layers |
 
 ## Config files
@@ -26,8 +27,10 @@ settings on this page.
 | --- | --- |
 | [`.editorconfig`](.editorconfig) | Editors and IDEs, `dotnet format` and the .NET analyzers |
 | [`Directory.Build.props`](Directory.Build.props) | MSBuild, for every project in the repository |
+| [`global.json`](global.json) | `dotnet test`, which it runs on Microsoft.Testing.Platform |
 | [`.opengrep/csharp.yaml`](.opengrep/csharp.yaml) | Opengrep: starter rules for the [security idioms](idioms.md#security) |
 | [`.jscpd.json`](.jscpd.json) | jscpd |
+| [`stryker-config.json`](stryker-config.json) | Stryker.NET |
 
 ## Configuration
 
@@ -57,12 +60,9 @@ root, so every project gets them:
     <NuGetAuditLevel>low</NuGetAuditLevel>
   </PropertyGroup>
 
-  <!-- Coverage minimum for projects that reference coverlet.msbuild -->
+  <!-- Coverage minimum, for test projects that pass it to coverlet.MTP -->
   <PropertyGroup>
-    <CoverletOutputFormat>cobertura</CoverletOutputFormat>
-    <Threshold>80</Threshold>
-    <ThresholdType>branch</ThresholdType>
-    <ThresholdStat>total</ThresholdStat>
+    <CoverletArguments>--coverlet --coverlet-threshold 80 --coverlet-threshold-type branch --coverlet-threshold-stat total</CoverletArguments>
   </PropertyGroup>
 </Project>
 ```
@@ -75,8 +75,8 @@ root, so every project gets them:
   the build, not just in the editor.
 - `GenerateDocumentationFile` makes the compiler report public members with
   no XML documentation, and lets `IDE0005` find unused `using` directives.
-- The second group sets coverlet's coverage minimum for every test project
-  (see [Coverage](#coverage)).
+- The second group holds coverlet's coverage minimum, which each test
+  project that measures coverage passes on (see [Coverage](#coverage)).
 
 Put the formatting and code-style rules in `.editorconfig`, which both
 `dotnet format` and the build read:
@@ -359,13 +359,130 @@ Measure branch coverage on every test run, and fail the build when it falls
 below 80%. Raise the minimum as coverage grows; never lower it to make a
 build pass.
 
-Add the `coverlet.msbuild` package to each test project.
-`Directory.Build.props` sets the 80% branch minimum on the combined total, so
-the test run only has to turn coverage on:
+The tests run on Microsoft.Testing.Platform (MTP), not VSTest: Stryker.NET
+needs it (see [Mutation testing](#mutation-testing)), and xUnit v3 is built
+for it. [`global.json`](global.json) opts `dotnet test` into MTP:
+
+```json
+{
+  "test": {
+    "runner": "Microsoft.Testing.Platform"
+  }
+}
+```
+
+Each test project is an executable that references `xunit.v3`, and
+`coverlet.MTP` for coverage. It needs no `Microsoft.NET.Test.Sdk` or
+`xunit.runner.visualstudio`, which only VSTest uses.
+`TestingPlatformCommandLineArguments` makes `dotnet test` pass the
+coverage minimum from `Directory.Build.props` to the project:
+
+```xml
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <OutputType>Exe</OutputType>
+    <TestingPlatformCommandLineArguments>$(CoverletArguments)</TestingPlatformCommandLineArguments>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="xunit.v3" Version="4.0.2" />
+    <PackageReference Include="coverlet.MTP" Version="10.1.0" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="../../src/Example/Example.csproj" />
+  </ItemGroup>
+</Project>
+```
+
+So the test run checks coverage too, and exits non-zero below the
+minimum:
 
 ```sh
-dotnet test /p:CollectCoverage=true
+dotnet test
 ```
+
+- `total` checks the branch coverage of all the code each test project
+  covers, taken together. Each project writes its report, as JSON and
+  Cobertura XML, to `TestResults/`.
+- Leave `coverlet.MTP` and the property out of a test project that runs
+  no product code, such as the [architecture](#architecture) tests, or
+  it fails the minimum. Don't pass the `--coverlet` options to
+  `dotnet test` itself either, since a test project without coverlet.MTP
+  rejects them.
+
+### Mutation testing
+
+Stryker.NET makes small changes to the code, such as turning `>=` into
+`>`, and runs the tests against each one. A change the tests still pass, a
+surviving mutant, is behaviour no test pins down. A full run is slow, so
+`scripts/audit` tests only the mutants in code changed since the base
+branch, and skips the run when no C# file changed:
+
+```sh
+dotnet tool restore
+git diff --quiet origin/main... -- '*.cs' || dotnet stryker
+```
+
+Install it as a local tool, and commit the tool manifest. This guide was
+checked with Stryker.NET 5.0.0:
+
+```sh
+dotnet new tool-manifest
+dotnet tool install dotnet-stryker --version 5.0.0
+```
+
+Run it from the directory that holds the solution file: Stryker builds
+the solution and finds the test projects in it. It reads
+[`stryker-config.json`](stryker-config.json) from the same directory:
+
+```json
+{
+  "stryker-config": {
+    "test-runner": "mtp",
+    "since": {
+      "target": "origin/main"
+    },
+    "thresholds": {
+      "high": 90,
+      "low": 80,
+      "break": 80
+    },
+    "reporters": ["cleartexttree", "html"]
+  }
+}
+```
+
+- `since` tests only the mutants in files changed since `origin/main`,
+  and those that changed tests cover. A change to any other file in a test
+  project, such as its `.csproj` or `packages.lock.json`, makes it test
+  every mutant.
+- `break` makes the run exit non-zero when the mutation score, the share
+  of mutants the tests kill, is under 80%. That's the same bar as
+  coverage. Some mutants can't be killed, because they don't change what
+  the code does, so 100% is rarely reachable; 80% leaves room for them
+  and still fails a change whose tests check little.
+
+Stryker.NET's default VSTest runner doesn't work with xUnit v3: it
+reports every mutant as surviving. Its MTP runner, still in preview, works
+with the test projects set up as in [Coverage](#coverage), so the config
+selects it.
+
+The `cleartexttree` reporter prints every mutant under its file, with the
+change:
+
+```text
+├── Pricing.cs [3/6 (75.00 %)]
+│   ├── [Survived] Equality mutation on line 11
+│   │   ├── [-] total >= 100
+│   │   └── [+] total > 100
+```
+
+Read it as a missing test: here, no test passes exactly 100, so the
+boundary isn't pinned down. Write the test that fails on the mutant, not
+one that just runs the line. `NoCoverage` means no test reaches the code
+at all. If a mutant can't change behaviour, put a
+`// Stryker disable once <Mutator> : <reason>` comment on the line above,
+rather than writing a test that contorts the code.
 
 ### Architecture
 
@@ -453,6 +570,18 @@ public sealed class ArchitectureTests
 - Run the tests in the Debug configuration, `dotnet test`'s default. A
   Release build can optimise away some dependencies, such as `typeof()`
   uses, so the tests would miss them.
-- `dotnet test` here uses the VSTest runner, as the coverage run does. With
-  xUnit v3 4.x, reference `xunit.v3.mtp-off` instead of `xunit.v3`, or the
-  .NET 10 SDK refuses to run the tests that way.
+- Set the test project up for MTP, as in [Coverage](#coverage), but
+  without coverlet.MTP or `TestingPlatformCommandLineArguments`: these
+  tests run no product code. `TngTech.ArchUnitNET.xUnitV3` depends only on
+  xUnit's assertions, so it works under MTP.
+
+## Sources
+
+- [Stryker.NET getting started](https://stryker-mutator.io/docs/stryker-net/getting-started/)
+- [Stryker.NET configuration](https://stryker-mutator.io/docs/stryker-net/configuration/)
+- [Stryker.NET: ignoring mutations](https://stryker-mutator.io/docs/stryker-net/ignore-mutations/)
+- [Stryker.NET and xUnit v3](https://github.com/stryker-mutator/stryker-net/issues/3117)
+- [Testing with dotnet test](https://learn.microsoft.com/dotnet/core/testing/unit-testing-with-dotnet-test)
+- [Microsoft.Testing.Platform overview](https://learn.microsoft.com/dotnet/core/testing/microsoft-testing-platform-intro)
+- [xUnit.net v3 and Microsoft.Testing.Platform](https://xunit.net/docs/getting-started/v3/microsoft-testing-platform)
+- [coverlet with Microsoft.Testing.Platform](https://github.com/coverlet-coverage/coverlet/blob/master/Documentation/Coverlet.MTP.Integration.md)

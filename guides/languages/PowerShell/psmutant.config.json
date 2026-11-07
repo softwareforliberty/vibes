@@ -1,0 +1,16 @@
+{
+  "mutate": ["src/**/*.ps1"],
+  "tests": {},
+  "testsByConvention": true,
+  "operators": [
+    "BinaryOperator",
+    "BooleanLiteral",
+    "NumberLiteral",
+    "NegationRemoval",
+    "ConditionalBoundary",
+    "ConditionForcing",
+    "ReturnValue"
+  ],
+  "thresholds": { "high": 90, "low": 80, "break": 80 },
+  "reportPath": "reports/ps-mutation.json"
+}

@@ -15,6 +15,7 @@ them. They enforce the rules in [coding-style.md](coding-style.md) and
 | [lizard](https://github.com/terryyin/lizard) | MIT | Code quality | Measuring function complexity and length |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [gcovr](https://gcovr.com/) | BSD-3-Clause | Code quality | Summarising gcov coverage |
+| [Mull](https://mull-project.com/) | Apache-2.0 | Code quality | Mutation testing |
 
 ## Config files
 
@@ -27,6 +28,7 @@ below is the full contents of one of these files.
 | [.jscpd.json](.jscpd.json) | jscpd |
 | [.opengrep/c.yaml](.opengrep/c.yaml) | Opengrep |
 | [gcovr.cfg](gcovr.cfg) | gcovr |
+| [mull.yml](mull.yml) | Mull |
 
 ## Compiler warnings
 
@@ -165,6 +167,65 @@ gcc -std=c99 --coverage -o tests tests.c
 gcovr
 ```
 
+### Mutation testing
+
+Mull makes small changes to the code, such as turning `>` into `>=`, and
+runs the tests against each one. A change the tests still pass, a
+surviving mutant, is behaviour no test pins down. A full run is slow, so
+[mull.yml](mull.yml) limits it to the lines changed since the base branch.
+Set `gitDiffRef` there to the project's base branch. Mull runs
+`git diff origin/main` as it compiles, which also counts changes made on
+the base branch since the branch began, so fetch and rebase first.
+
+Mull is a Clang plugin, so this build uses Clang, not GCC. Install the
+plugin for the Clang you build with, such as `mull-19` for `clang-19`.
+Compile every file with the plugin, the tests too, so that `static inline`
+functions in headers are mutated where the tests use them; `mull.yml`
+keeps the tests themselves from being mutated. Compile one file per
+command, because `-grecord-command-line` breaks when one command compiles
+several. Then `mull-runner` runs the tests against every mutant:
+
+```sh
+mkdir -p build-mull
+for f in src/*.c tests.c; do
+    clang-19 -std=c99 -g -grecord-command-line \
+        -fpass-plugin=/usr/lib/mull-ir-frontend-19 \
+        -c "$f" -o "build-mull/$(basename "$f" .c).o"
+done
+clang-19 -o build-mull/tests build-mull/*.o
+mull-runner --mutation-score-threshold 80 build-mull/tests
+```
+
+- `mull-runner` exits non-zero when the mutation score, the share of
+  mutants the tests kill, is under 80%. That's the same bar as coverage.
+  Some mutants can't be killed, because they don't change what the code
+  does, so Mull's default of 100% is rarely reachable; 80% leaves room for
+  them and still fails a change whose tests check little.
+- With no changed lines there are no mutants, and `mull-runner` exits
+  zero.
+- A test fails by exiting non-zero, so any test framework works.
+- On macOS, install Mull with Homebrew (`mull-project/mull/mull@19`) and
+  build with that LLVM's `clang`: Apple's Clang can't load the plugin,
+  which is in `/opt/homebrew/lib`.
+- This guide was checked with Mull 0.37.0, which has plugins for LLVM 16
+  to 23.
+
+Mull prints each survivor as a compiler warning at the code it changed:
+
+```text
+[info] Survived mutants (1/2):
+src/price.c:13:16: warning: Survived: Replaced > with >= [cxx_gt_to_ge]
+    if (weight > 5) {
+               ^
+[info] Mutation score: 50%
+```
+
+Read it as a missing test: here, no test passes a weight of exactly 5, so
+the boundary isn't pinned down. Write the test that fails on the mutant,
+not one that just runs the line. If a mutant can't change behaviour, put
+`// mull-ignore-next: cxx_gt_to_ge` above the line, with the reason,
+rather than writing a test that contorts the code.
+
 ### Architecture
 
 The build enforces the layers, as the
@@ -212,3 +273,10 @@ compiler names the header it can't find:
 cmake -S . -B build
 cmake --build build
 ```
+
+## Sources
+
+- [Mull setup and configuration](https://mull-project.com/getting-started/setup/)
+- [Mull: diff-based mutations](https://mull-project.com/guides/diff-based-mutations/)
+- [Mull: disable mutants with annotations](https://mull-project.com/guides/annotations/)
+- [mull-runner reference](https://mull-project.com/reference/mull-runner/)

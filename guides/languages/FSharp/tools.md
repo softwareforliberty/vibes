@@ -284,6 +284,19 @@ the test run only has to turn coverage on:
 dotnet test /p:CollectCoverage=true
 ```
 
+### Mutation testing
+
+No maintained FOSS mutation testing tool supports F#. Stryker.NET, the
+.NET mutation tester, mutates only C#: it removed its experimental F#
+support in 2024, and 5.0.0 stops with `Language not supported: Fsharp` on
+an F# project.
+
+Rely on the [test reviewer](../../../agents/test-reviewer.md) instead,
+which checks that each test pins down the behaviour it covers, not just
+runs it, and on the coverage minimum in [Coverage](#coverage). When you
+write a test, ask what change to the code would still pass it, such as
+`>=` turned into `>`, and add the case that catches it.
+
 ### Architecture
 
 Make the build and ArchUnitNET enforce the layers, as the
@@ -359,3 +372,8 @@ let ``namespaces have no cycles`` () =
 - `dotnet test` here uses the VSTest runner, as the coverage run does. With
   xUnit v3 4.x, reference `xunit.v3.mtp-off` instead of `xunit.v3`, or the
   .NET 10 SDK refuses to run the tests that way.
+
+## Sources
+
+- [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/)
+- [Stryker.NET: removal of F# support](https://github.com/stryker-mutator/stryker-net/pull/3121)
