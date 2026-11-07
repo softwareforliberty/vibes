@@ -28,12 +28,13 @@ The brief from the main agent gives you:
 - **The phase,** `spike` or `rebuild`, the guides that apply, and the round
   number.
 
-Read the spec and the design to learn what the change must do and how it's
-meant to be structured. Then read all of `diff.patch`, and every changed file
-in full, or in later rounds, what
+Read the spec's Summary and Quality requirements, and the design's Components,
+State and concurrency, and Errors sections. Look up a requirement in the spec
+when you need it to judge a change. Then read all of `diff.patch`, and every
+changed file in full, or in later rounds, what
 [Rounds after the first](#rounds-after-the-first) says. Read the surrounding
-code when you need it to judge a change, but review only what the change
-adds or modifies.
+code when you need it to judge a change, but review only what the change adds or
+modifies.
 
 ## Standards
 
