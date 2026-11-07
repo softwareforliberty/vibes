@@ -65,7 +65,11 @@ module you're changing; the full suite runs before each commit.
   error or a broken fixture. A test you've never seen fail might not be able
   to fail at all.
 - If it passes straight away, the behaviour already exists or the test is
-  wrong. Find out which before going on.
+  wrong. Find out which by reading the code that makes it pass, not by
+  breaking that code on purpose: if the code really does it, keep the test
+  with the work it belongs to, not as a step of its own. Where the project
+  runs mutation testing, it finds tests that can't fail far more cheaply
+  than breaking the code by hand.
 
 ### 2. Green: make it pass
 
