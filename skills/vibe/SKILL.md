@@ -107,14 +107,39 @@ code.
   - `vibes:resource-leak-reviewer` when it acquires memory, files,
     connections, locks or threads.
 
+## Unattended runs
+
+The user can ask for a run that never stops to ask them anything, such as
+`/vibes:vibe unattended: <task>` or by saying so in the task. Record it in
+`state.md`. Then, wherever this skill says to ask the user:
+
+- **Open questions in the spec:** decide each one yourself. Choose the
+  option that does the least the user didn't ask for, and is easiest to
+  change later. Record it in the spec's assumptions, marked
+  `Unattended decision:`, with the options you didn't choose.
+- **A spec change that would alter what the user asked for:** make the
+  narrower choice the same way, and record it the same way.
+- **An unclear task:** take the narrowest reading that still does something
+  useful, and record it as an unattended decision. If no reading makes
+  sense, stop and report why.
+- **Anything that could lose or overwrite the user's work,** such as
+  uncommitted changes, an existing pre-commit hook or another task's
+  unfinished run: never act on it. Stop, and report what needs a decision.
+- **The round limit:** stop, and report the outstanding findings as the
+  limit says.
+- **The spike branch at the end:** keep it.
+
+The final report lists every unattended decision first, with the options
+not chosen, so the user can check them before anything else.
+
 ## Keep the state current
 
 Keep `.vibes/<name>/state.md` current, so an interrupted run can carry on
 where it stopped. Update it when a phase starts or ends, after every review
 round, and after every commit. It holds:
 
-- the task as the user gave it, their answers to open questions, and the
-  task's name and size;
+- the task as the user gave it, their answers to open questions, the
+  task's name and size, and whether the run is unattended;
 - the base branch, the spec directory and the languages;
 - the current phase and round, and the last step finished;
 - `status: running` until Phase 8 ends, then `status: done`.
@@ -366,6 +391,8 @@ and tested.
    way.
 2. Check `git status` is clean and `scripts/check` passes.
 3. Report to the user:
+   - for an unattended run, every unattended decision first, with the
+     options not chosen
    - the task's size, and any move to a larger size, with why
    - the rebuild branch and its commits (`git log --oneline <base>..HEAD`)
    - the spec and design in the spec directory, every change made to the

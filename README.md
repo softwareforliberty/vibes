@@ -35,6 +35,12 @@ can name one yourself, such as `/vibes:vibe small: fix the date parsing`:
   review panel.
 - **Large,** new or uncertain work: everything below.
 
+Add `unattended` to run it without stopping to ask you anything, such as
+`/vibes:vibe unattended: <task>`. The main agent then makes the narrowest
+choice for each open question, records it, and lists every such decision
+first in its final report. It still stops rather than touch anything that
+could lose your work.
+
 1. **Spec.** A designer subagent writes a complete spec: every requirement,
    error and edge case, each testable. You answer any open questions, and a
    spec reviewer checks it until it's complete.
