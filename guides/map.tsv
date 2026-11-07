@@ -1,0 +1,79 @@
+# Which guide each kind of file needs. bin/guides-for and the commit gate
+# read this file.
+#
+# Each line is a guide, a tab, then the patterns of the files that need it,
+# separated by spaces:
+#
+# - "a|b" in the guide column means either guide will do, such as for a .h
+#   file, which may be C or C++. The project's own choice decides which.
+# - "-" means the files need no guide. They're listed so they're known, not
+#   reported as having no guide.
+# - A pattern with a / matches the path from the repository root, and one
+#   without matches the file name. * matches any characters, including /.
+# - A pattern starting with #! matches the interpreter on a script's first
+#   line, and is only tried for files that no other pattern matches.
+#
+# A file can match several lines, such as a workflow, which is YAML and
+# GitHub Actions, and needs every guide it matches.
+
+languages/Assembly-GAS-ARM64|languages/Assembly-GAS-RISCV|languages/Assembly-GAS-x86|languages/Assembly-MASM-x86|languages/Assembly-NASM-x86	*.s *.S
+languages/Assembly-MASM-x86|languages/Assembly-NASM-x86	*.asm
+languages/BASH	*.bash #!bash
+languages/BASH|languages/SH	*.sh
+languages/SH	#!sh #!dash
+languages/C	*.c
+languages/C|languages/C++|languages/ObjC|languages/ObjC++	*.h
+languages/C++	*.cc *.cpp *.cxx *.c++ *.hh *.hpp *.hxx *.h++ *.ipp *.tpp *.cppm *.ixx
+languages/Clojure	*.clj *.cljs *.cljc *.edn
+languages/COBOL	*.cob *.cbl *.cpy
+languages/CSharp	*.cs *.csx
+languages/Dart	*.dart
+languages/Elixir	*.ex *.exs
+languages/Erlang	*.erl *.hrl rebar.config elvis.config #!escript
+languages/Fortran	*.f *.F *.f90 *.F90 *.f95 *.f03 *.f08 *.for
+languages/FSharp	*.fs *.fsi *.fsx
+languages/Go	*.go go.mod
+languages/Groovy	*.groovy *.gradle
+languages/Haskell	*.hs *.lhs *.cabal
+languages/Java	*.java
+languages/JavaScript	*.js *.mjs *.cjs *.jsx #!node
+languages/Julia	*.jl #!julia
+languages/Kotlin	*.kt *.kts
+languages/Lua	*.lua #!lua*
+languages/ObjC	*.m
+languages/ObjC++	*.mm
+languages/OCaml	*.ml *.mli dune dune-project
+languages/Perl	*.pl *.pm *.t #!perl*
+languages/PHP	*.php *.neon #!php*
+languages/PowerShell	*.ps1 *.psm1 *.psd1 #!pwsh
+languages/Python	*.py *.pyi #!python*
+languages/R	*.r *.R #!Rscript
+languages/Ruby	*.rb *.rake *.gemspec Gemfile Rakefile #!ruby*
+languages/Rust	*.rs
+languages/Scala	*.scala *.sc *.sbt
+languages/Swift	*.swift
+languages/TypeScript	*.ts *.mts *.cts *.tsx
+languages/VB.NET	*.vb
+languages/Zig	*.zig *.zon
+
+web/CSS	*.css
+web/HTML	*.html *.htm
+web/Sass-SCSS	*.scss *.sass
+
+data/GraphQL	*.graphql *.gql
+data/ProtocolBuffers	*.proto
+data/SQL|data/MySQL|data/PostGreSQL|data/SQLite	*.sql
+data/TOML	*.toml
+data/XML	*.xml *.xml.dist *.xsd *.xsl *.xslt *.props *.targets *.csproj *.fsproj *.vbproj
+data/YAML	*.yaml *.yml
+
+build/CMake	CMakeLists.txt *.cmake
+build/Linker-GNU-ld	*.ld *.lds
+build/Make	Makefile makefile GNUmakefile *.mk
+
+tools/Docker	Dockerfile Dockerfile.* *.Dockerfile Containerfile .dockerignore compose.yaml compose.yml docker-compose.yaml docker-compose.yml
+tools/GitHub-Actions	.github/workflows/*.yaml .github/workflows/*.yml action.yaml action.yml
+tools/Nix	*.nix flake.lock
+tools/OpenTofu	*.tf *.tofu *.tfvars *.tftest.hcl .terraform.lock.hcl *policy/opentofu/*.rego
+
+-	.* *.md *.txt *.rst LICENSE* COPYING* NOTICE* AUTHORS* CHANGELOG* *.json *.lock go.sum *.cfg *.ini *.conf *.patch *.diff *.csv *.tsv *.png *.jpg *.jpeg *.gif *.svg *.ico *.webp *.pdf *.ttf *.otf *.woff *.woff2

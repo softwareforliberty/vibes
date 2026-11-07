@@ -17,6 +17,11 @@ the change to it.
 A framework guide, such as one for a web framework, would go in a
 `frameworks/` directory, following the rules for tools below.
 
+[`map.tsv`](map.tsv) says which guide each kind of file needs, by file
+name, path or a script's interpreter. The workflow, the guide check hook
+and the commit gate all find guides through it, so a guide with no
+line in it is never picked up. Its header says how to write a line.
+
 ## What a guide holds
 
 Every guide is a directory with the same files:
@@ -109,3 +114,7 @@ the real tool, preferably in a container so nothing is installed on the
 host. Each config loads with no warnings, compliant examples pass, an
 example of each trap the tool can catch is caught, and formatters leave the
 examples unchanged.
+
+A new guide also gets its line in `map.tsv`. Check it with
+`bin/guides-for` on the file names the guide covers, and on the config
+files it ships, which must not be reported as having no guide.

@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+#
+# Prints the guides that files need, from guides/map.tsv. Give it paths from
+# the repository root as arguments, or one per line on standard input:
+#
+#   git diff --name-only main... | guides-for
+#   git ls-files | guides-for
+#
+# Each guide is printed once, and "a|b" means either will do. A file that no
+# guide covers is printed as "no guide: <path>". Deleted files are skipped.
+
+set -euo pipefail
+
+LIB="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/../hooks/lib"
+readonly LIB
+# shellcheck source=hooks/lib/guides.sh
+source "${LIB}/guides.sh"
+
+# Prints the guides and the uncovered files for the paths on standard input.
+report() {
+  local path entries
+  local guides="" unknown=""
+  while IFS= read -r path; do
+    [[ -n "${path}" && -e "${path}" ]] || continue
+    entries="$(guides::for_file "${path}")"
+    if [[ -z "${entries}" ]]; then
+      unknown+="no guide: ${path}"$'\n'
+    else
+      guides+="${entries}"$'\n'
+    fi
+  done
+  printf '%s' "${guides}" | grep -vx -- '-' | sort -u || true
+  printf '%s' "${unknown}"
+}
+
+main() {
+  if (($# > 0)); then
+    printf '%s\n' "$@" | report
+  else
+    report
+  fi
+}
+
+main "$@"

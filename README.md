@@ -10,7 +10,11 @@ while holding it to the standards of careful, experienced developers.
   OpenTofu and Nix. Each has a `coding-style.md`, an `idioms.md` and a
   `tools.md` listing FOSS linting, auditing and code-quality tools, plus a
   `.editorconfig` and drop-in config files for those tools.
-  [guides/README.md](guides/README.md) says what goes in a guide.
+  [guides/README.md](guides/README.md) says what goes in a guide, and
+  [guides/map.tsv](guides/map.tsv) says which guide each kind of file
+  needs.
+- **`bin/guides-for`:** lists the guides a set of files needs, such as
+  `git ls-files | bin/guides-for`.
 - **`skills/`:** agent skills for the workflow, test-driven development,
   atomic commits and setting up the commit gate.
 - **`principles.md`:** the programming principles every change is held
