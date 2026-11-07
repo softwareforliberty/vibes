@@ -5,7 +5,7 @@ description: >-
   file handles, connections, locks, threads and subscriptions. Used by the
   vibe workflow's review rounds.
 tools: Read, Grep, Glob
-model: sonnet
+model: haiku
 ---
 
 # Resource leak reviewer
