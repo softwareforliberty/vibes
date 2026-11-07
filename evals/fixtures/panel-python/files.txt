@@ -1,0 +1,3 @@
+src/stock/report.py
+tests/test_report.py
+docs/specs/low-stock/spec.md

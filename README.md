@@ -29,7 +29,8 @@ while holding it to the standards of careful, experienced developers.
   writing it; and a guard that keeps the spec reviewer from changing files
   or git state.
 - **`evals/`:** evals that check each reviewer agent finds the defects in
-  its area and approves clean code, run with `claude plugin eval`.
+  its area and approves clean code, and that the workflow picks the right
+  reviewers for a change, run with `claude plugin eval`.
 
 ## The workflow
 
@@ -42,6 +43,10 @@ can name one yourself, such as `/vibes:vibe small: fix the date parsing`:
 - **Medium,** a feature whose design is clear: adds the design, and the full
   review panel.
 - **Large,** new or uncertain work: everything below.
+
+At every size, a reviewer whose area the change can't touch is left out,
+such as the performance and resource-leak reviewers for a change to only
+config files.
 
 Add `unattended` to run it without stopping to ask you anything, such as
 `/vibes:vibe unattended: <task>`. The main agent then makes the narrowest

@@ -1,8 +1,10 @@
 # Reviewer evals
 
 These evals check that each reviewer agent finds the problems in its area
-and doesn't invent problems in clean code. Run them after changing an
-agent's instructions, to see whether the change made it better or worse.
+and doesn't invent problems in clean code, and that the workflow picks the
+right reviewers for a change. Run them after changing an agent's
+instructions or the workflow's panel rules, to see whether the change made
+it better or worse.
 
 ## What's here
 
@@ -15,6 +17,10 @@ report, with its spec and design. There are two cases per reviewer:
   changes, and reports the defect, as an LLM judge decides.
 - **`<reviewer>-approves-clean`** reviews the clean version of the change. It
   passes when the reviewer approves it with no BLOCKER or MAJOR findings.
+
+The **`panel-<change>`** cases give the main agent the vibe skill and a list
+of changed files, such as only config or only docs, and pass when it picks
+exactly the reviewers the skill's panel rules call for.
 
 | Path | What it holds |
 | --- | --- |
@@ -36,8 +42,8 @@ claude plugin eval . --scaffold --ablation none
   working directory. The scripts only copy files from `fixtures/`.
 - `--ablation none` skips the run without the plugin, which can't dispatch
   the reviewers and would only add cost.
-- `--case 'security-reviewer-*'` or `--tag recall` runs a subset, and
-  `--runs 1` runs each case once instead of three times.
+- `--case 'security-reviewer-*'`, `--tag recall` or `--tag panel` runs a
+  subset, and `--runs 1` runs each case once instead of three times.
 - `--max-cost-usd 30` sets a hard limit on the cost.
 
 Results and an HTML report go to `evals/results/`, which git ignores.

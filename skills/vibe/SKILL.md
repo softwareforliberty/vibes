@@ -110,6 +110,26 @@ code.
     data;
   - `vibes:resource-leak-reviewer` when it acquires memory, files,
     connections, locks or threads.
+- **Then leave out reviewers whose area the change can't touch,** at every
+  size, in the spike and rebuild reviews. Run `guides-for` on the round's
+  `files.txt`, and keep each reviewer only when the change has:
+
+  | Reviewer | Kept when the change has |
+  | --- | --- |
+  | `vibes:spec-reviewer`, `vibes:security-reviewer` | Anything |
+  | `vibes:bug-reviewer`, `vibes:cleanliness-reviewer`, `vibes:style-reviewer`, `vibes:idioms-reviewer` | A file that needs a guide |
+  | `vibes:test-reviewer` | A file that needs a guide, in a rebuild review |
+  | `vibes:architecture-reviewer` | A design, and a file that needs a guide |
+  | `vibes:performance-reviewer` | A file that needs a guide in `languages/`, `web/`, `build/` or `tools/`, or a query or schema guide in `data/`: SQL and its dialects, GraphQL or Protocol Buffers |
+  | `vibes:resource-leak-reviewer` | A file that needs a guide in `languages/` |
+
+  So a change to only YAML, TOML or XML config gets no performance or
+  resource-leak review, and a change to only docs gets only the spec and
+  security reviewers. When you're unsure whether a file is in a
+  reviewer's area, keep the reviewer. Write the panel to the round's
+  `panel.md`, with each reviewer left out and why. Check it again each
+  round: when the change gains a file in a left-out reviewer's area, that
+  reviewer joins, with a full first round.
 
 ## Unattended runs
 
@@ -288,9 +308,9 @@ one phase: `spec`, `design`, `spike` or `rebuild`.
      > .vibes/<name>/review/spike-3/changed-files-since-2.txt
    ```
 2. **Spawn every reviewer for the round in a single message**, so they run in
-   parallel. In round 1 every reviewer for the phase runs. In later rounds,
-   only the reviewers that requested changes run again. Give each one a
-   brief:
+   parallel. In round 1 every reviewer on the phase's panel runs, as
+   [Size the task](#size-the-task) describes. In later rounds, only the
+   reviewers that requested changes run again. Give each one a brief:
 
    ```text
    Task: <the task, and the user's answers to any questions>
@@ -385,11 +405,12 @@ Large tasks only. Small and medium tasks go straight to
 
 Large tasks only.
 
-Run review rounds in the `spike` phase with every reviewer except
-`vibes:test-reviewer`, fixing findings on the spike branch, until every
-reviewer approves. The spec reviewer's final verdict must be `APPROVED`,
-with every requirement met: that's the verification that the spike
-satisfies the spec.
+Run review rounds in the `spike` phase with the panel from
+[Size the task](#size-the-task), without `vibes:test-reviewer`, and with
+the spiker fixing findings on the spike branch, until every reviewer
+approves. The spec reviewer's final verdict must be `APPROVED`, with every
+requirement met: that's the verification that the spike satisfies the
+spec.
 
 ## Phase 5: Set the spike aside
 
@@ -455,10 +476,11 @@ hold every change from the spike phase.
 ## Phase 7: Review the rebuild
 
 Run review rounds in the `rebuild` phase on the rebuild branch, with the
-panel for the task's size from [Size the task](#size-the-task), including
-`vibes:test-reviewer`. Fix findings the same way as the
-rebuild: the spec first for any change in behaviour, then a failing test,
-then the fix, committed together as atomic commits through the gate. The
+panel from [Size the task](#size-the-task), including
+`vibes:test-reviewer`. A fresh builder in `fix` mode fixes the findings
+the same way as the build: the spec first for any change in behaviour, then
+a failing test, then the fix, committed together as atomic commits through
+the gate. The
 spec reviewer's final verdict must be `APPROVED`, with every requirement met
 and tested.
 
@@ -475,7 +497,8 @@ and tested.
    - the rebuild branch and its commits (`git log --oneline <base>..HEAD`)
    - the spec and design in the spec directory, every change made to the
      spec after it was approved, and the spec reviewer's final coverage
-   - every reviewer's final verdict, and any deferred MINOR findings
+   - every reviewer's final verdict, any reviewer left out of a phase's
+     reviews and why, and any deferred MINOR findings
    - for a large task, the spike branch, kept for reference: ask whether to
      delete it
 4. Set `status: done` in `state.md`.
