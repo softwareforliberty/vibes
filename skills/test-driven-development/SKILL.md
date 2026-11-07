@@ -50,6 +50,11 @@ it test-first.
 Work through the test list one entry at a time. Each pass through the cycle
 should take minutes, not hours.
 
+Run tests with the runner's quiet option, such as `pytest -q` or
+`cargo test -q`, so a passing run prints a line, not a page, and a failing
+one still shows each failure in full. While you work, run the one test or
+module you're changing; the full suite runs before each commit.
+
 ### 1. Red: write one failing test
 
 - Write a single test for the next behaviour on the list, and nothing else.

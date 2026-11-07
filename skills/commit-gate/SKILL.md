@@ -86,7 +86,10 @@ Rules for the script:
   the repository root, and exits non-zero when any check fails.
 - It runs every check even after one fails, then reports them all, so one
   commit attempt shows every problem.
-- Each check prints its name, and only prints details when it fails.
+- **Each check prints one line when it passes,** and its full output only
+  when it fails. Agents read every line the gate prints, on every commit,
+  so a passing check's output is wasted. The skeleton's `check` function
+  holds each check's output back until it knows the result.
 - It needs no network access, and nothing outside the project's own
   development dependencies.
 - **Name the guides it checks** on a `# Guides:` line, and the files no
@@ -114,11 +117,14 @@ set -euo pipefail
 
 failed=()
 
+# Runs one check, printing its output only when it fails.
 check() {
-  local name="$1"
+  local name="$1" output
   shift
-  printf '==> %s\n' "${name}"
-  if ! "$@"; then
+  if output="$("$@" 2>&1)"; then
+    printf 'ok: %s\n' "${name}"
+  else
+    printf '==> %s failed:\n%s\n' "${name}" "${output}"
     failed+=("${name}")
   fi
 }
