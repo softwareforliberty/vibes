@@ -1,0 +1,10 @@
+# Template: vulnix findings that have been triaged. Each entry names one
+# package version and the CVEs it hides, says why, and expires, so a new CVE
+# or the date brings the finding back. Replace the example below with your
+# own entries, or delete it.
+#
+# ["glibc-2.42-103"]
+# cve = ["CVE-2026-5450"]
+# until = "2026-12-01"
+# issue_url = "https://example.com/issues/42"
+# comment = "Fixed by a patch in Nixpkgs that vulnix can't see"

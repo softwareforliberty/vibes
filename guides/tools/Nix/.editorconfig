@@ -1,0 +1,33 @@
+# EditorConfig: https://editorconfig.org
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# Nix files: nixfmt's defaults, 2-space indents and 100 columns.
+[*.nix]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+# JetBrains IDEs
+ij_visual_guides = 100
+ij_wrap_on_typing = false
+
+# statix.toml and vulnix-whitelist.toml.
+[*.toml]
+indent_style = space
+indent_size = 2
+max_line_length = 80
+# JetBrains IDEs
+ij_toml_keep_indents_on_empty_lines = false
+
+# flake.lock is written by Nix. Never edit it by hand.
+[flake.lock]
+indent_style = space
+indent_size = 2
+
+# VS Code, Visual Studio, Vim, Emacs and Neovim read only the standard
+# properties above.

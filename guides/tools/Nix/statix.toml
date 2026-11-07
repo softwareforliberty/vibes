@@ -1,0 +1,4 @@
+# Every lint is on. To turn one off, add its name with a comment saying why.
+disabled = []
+# direnv's cache holds generated Nix files that aren't ours to lint.
+ignore = [".direnv"]
