@@ -12,18 +12,94 @@ source "${LIB}/commit_gate.sh"
 # shellcheck source=hooks/lib/hook_input.sh
 source "${LIB}/hook_input.sh"
 
-readonly COMMIT_RE='(^|[;&|[:space:]])git[[:space:]]+commit([[:space:]]|$)'
+readonly COMMIT_WORD_RE='(^|[;&|[:space:]])commit([;&|[:space:]]|$)'
 # git commit's short options that take a value, which may be joined to them.
 readonly VALUE_OPTIONS='CcFmStu'
+# Characters that group commands, which don't change the words in them.
+readonly GROUPING='[(){}]'
 
-# Prints the arguments of each git commit in a command, one commit per line:
-# the words after "git commit", up to the next ;, & or |.
-commit_args() {
-  local rest="$1"
-  while [[ "${rest}" =~ ${COMMIT_RE} ]]; do
-    rest="${rest#*"${BASH_REMATCH[0]}"}"
-    printf '%s\n' "${rest%%[;&|]*}"
-  done
+# Prints a path resolved against a directory, or nothing when either is
+# unknown.
+resolve() {
+  local dir="$1" path="$2"
+  if [[ -z "${dir}" || -z "${path}" ]]; then
+    return 0
+  fi
+  case "${path}" in
+    /*) printf '%s\n' "${path}" ;;
+    \~ | \~/*) printf '%s\n' "${HOME}${path#\~}" ;;
+    *) printf '%s\n' "${dir}/${path}" ;;
+  esac
+}
+
+# Prints one line for each git commit in a command: "d:", the directory it
+# runs in, a tab, and its arguments. The directory follows cd and git -C,
+# and is left empty when quoted text or an option such as --git-dir hides
+# which repository the commit is in.
+commits() {
+  local dir="$2" segment word target args i n
+  local -a words
+  while IFS= read -r segment; do
+    segment="${segment//${GROUPING}/ }"
+    [[ -n "${segment//[[:space:]]/}" ]] || continue
+    read -r -a words <<<"${segment}"
+    n="${#words[@]}"
+    i=0
+    while ((i < n)) && [[ "${words[i]}" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; do
+      ((i += 1))
+    done
+    ((i < n)) || continue
+    word="${words[i]}"
+    if [[ "${word}" == cd ]]; then
+      target=""
+      if ((i + 1 < n)); then
+        target="${words[i + 1]}"
+      fi
+      dir="$(resolve "${dir}" "${target}")"
+      continue
+    fi
+    [[ "${word}" == git || "${word}" == */git ]] || continue
+    target="${dir}"
+    ((i += 1))
+    while ((i < n)); do
+      word="${words[i]}"
+      case "${word}" in
+        -C | -c | --git-dir | --work-tree | --namespace | --exec-path | \
+          --config-env | --super-prefix)
+          # A quoted value is stripped, which leaves the next option or the
+          # subcommand in its place.
+          if ((i + 1 >= n)) || [[ "${words[i + 1]}" == commit ]] \
+            || [[ "${words[i + 1]}" == -* ]]; then
+            case "${word}" in
+              -C | --git-dir | --work-tree) target="" ;;
+              *) ;;
+            esac
+            ((i += 1))
+            continue
+          fi
+          case "${word}" in
+            -C) target="$(resolve "${target}" "${words[i + 1]}")" ;;
+            --git-dir | --work-tree) target="" ;;
+            *) ;;
+          esac
+          ((i += 2))
+          ;;
+        --git-dir=* | --work-tree=*)
+          target=""
+          ((i += 1))
+          ;;
+        -*) ((i += 1)) ;;
+        *) break ;;
+      esac
+    done
+    if ((i < n)) && [[ "${words[i]}" == commit ]]; then
+      args=""
+      if ((i + 1 < n)); then
+        args="${words[*]:i+1}"
+      fi
+      printf 'd:%s\t%s\n' "${target}" "${args}"
+    fi
+  done <<<"${1//[;&|]/$'\n'}"
 }
 
 # Prints "no-verify" or "all" for each such option in one commit's
@@ -63,45 +139,64 @@ git_hook_is_gate() {
   [[ -f "${hook}" ]] && grep -q 'vibes-commit-gate' -- "${hook}"
 }
 
+# Returns 0 when a directory is in a repository with the commit gate.
+gated() {
+  local root
+  root="$(cd -- "$1" 2>/dev/null && git rev-parse --show-toplevel 2>/dev/null)" \
+    || return 1
+  [[ -x "${root}/scripts/check" ]]
+}
+
+# Checks one commit in a directory, and returns 1 when it must be blocked.
+check_commit() {
+  local dir="$1" options
+  gated "${dir}" || return 0
+  options="$(bypass_options "$2")"
+  if [[ "${options}" == *no-verify* ]]; then
+    gate::err "don't bypass the commit gate with --no-verify or -n."
+    return 1
+  fi
+  if [[ "${options}" == *all* ]]; then
+    gate::err "don't commit with -a or --all. Stage each change explicitly."
+    return 1
+  fi
+  (
+    cd -- "${dir}" || exit 1
+    # Git runs the gate itself when its hook is installed, so don't run twice.
+    git_hook_is_gate || gate::run
+  )
+}
+
 main() {
-  local input command cwd options root
+  local input command cwd dir args
   input="$(cat)"
   command="$(hook::json_field "${input}" '.tool_input.command' \
     | hook::strip_text)"
   cwd="$(hook::json_field "${input}" '.cwd')"
+  cwd="${cwd:-${PWD}}"
 
-  if [[ -n "${cwd}" ]]; then
-    cd -- "${cwd}" || exit 0
-  fi
-
-  if [[ -n "${command}" ]] && ! [[ "${command}" =~ ${COMMIT_RE} ]]; then
+  # Without a parser there's no command to read, so check as if it commits.
+  if [[ -z "${command}" ]]; then
+    check_commit "${cwd}" "" || exit 2
     exit 0
   fi
-  root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
-  if [[ ! -x "${root}/scripts/check" ]]; then
-    exit 0
-  fi
-
-  options="$(commit_args "${command}" | while IFS= read -r args; do
-    bypass_options "${args}"
-  done)"
-  if [[ "${options}" == *no-verify* ]]; then
-    gate::err "don't bypass the commit gate with --no-verify or -n."
-    exit 2
-  fi
-  if [[ "${options}" == *all* ]]; then
-    gate::err "don't commit with -a or --all. Stage each change explicitly."
-    exit 2
-  fi
-
-  # Git runs the gate itself when its hook is installed, so don't run twice.
-  if git_hook_is_gate; then
+  if ! [[ "${command}" =~ ${COMMIT_WORD_RE} ]]; then
     exit 0
   fi
 
-  if ! gate::run; then
-    exit 2
-  fi
+  while IFS=$'\t' read -r dir args; do
+    dir="${dir#d:}"
+    if [[ -z "${dir}" ]]; then
+      if gated "${cwd}"; then
+        gate::err "can't tell which repository this commit is in, so it"
+        gate::err "can't be checked. Commit from inside the repository, with"
+        gate::err "no quoted path, --git-dir or --work-tree."
+        exit 2
+      fi
+      continue
+    fi
+    check_commit "${dir}" "${args}" || exit 2
+  done < <(commits "${command}" "${cwd}")
 }
 
 main "$@"
