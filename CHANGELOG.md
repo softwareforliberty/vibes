@@ -8,6 +8,11 @@ guides behave, and says so under **Changed**.
 
 ## [Unreleased]
 
+### Changed
+
+- **The designer fixes the review findings in the spec and design,** in a
+  new `revise` mode, so the main agent no longer edits them itself.
+
 ## [0.2.0] - 2026-11-08
 
 ### Fixed

@@ -30,16 +30,17 @@ verifies it against the spec.
 
 You are the main agent. You coordinate, resolve open questions with the
 user, set up the gate and decide what to do with review findings.
-Subagents write the spec and design, build the spike and the task, fix the
-findings in code, and do the reviews. Leave all code to them, so your
-context stays small for the whole run: it carries every phase, and the
-code and the guides for writing it belong in theirs.
+Subagents write the spec and design and revise them, build the spike and
+the task, fix the findings in code, and do the reviews. Leave all code and
+the documents' text to them, so your context stays small for the whole
+run: it carries every phase, and the code, the documents and the guides
+for writing them belong in theirs.
 
 ## The agents
 
 | Agent | Role |
 | --- | --- |
-| `vibes:designer` | Writes the spec, then the design |
+| `vibes:designer` | Writes the spec, then the design, and revises them to review findings |
 | `vibes:spiker` | Builds the spike to the spec and design, and tries out a design change the spike review makes |
 | `vibes:builder` | Builds the task test-first, a batch at a time, and fixes its findings |
 | `vibes:spec-reviewer` | The spec's completeness, then whether the code meets it |
@@ -348,17 +349,23 @@ don't apply to it.
      code or the standards.
    - A fix that changes behaviour goes into the spec first, as
      [The spec comes first](#the-spec-comes-first) says.
-5. **Fix the accepted findings.** In the spec and design phases, edit
-   `spec.md` and `design.md` yourself. The spike phase fixes no code, as
+5. **Fix the accepted findings.** In the spec and design phases, spawn a
+   fresh `vibes:designer` in `revise` mode, with the round directory, the
+   spec directory, the guides and the accepted findings, each by reviewer
+   and id, with a note on any you decided how to fix. Ask it for change log
+   entries when it changes a document that was already approved. Ask the
+   user each open question it reports. For a small task's spec, which you
+   wrote, fix the findings yourself. The spike phase fixes no code, as
    [Phase 4](#phase-4-review-the-spike) describes. In the rebuild phase,
    spawn a fresh `vibes:builder` in `fix` mode, with the round directory
    and the accepted findings, each by reviewer and line. Check its commits
    are on the right branch and the working tree is clean.
 6. **Record a response to every finding** in the round's `responses.md`,
-   one line each: the finding's id, then `fixed <commit>`,
-   `rejected: <reason>` or `deferred: <reason>` (MINOR only), from your
-   decisions and the fixer's report. The spike phase also has `spec`,
-   `design` and `lesson`, as Phase 4 describes.
+   one line each: the finding's id, then `fixed <commit>` (in the spec and
+   design phases, `fixed: <what changed>`), `rejected: <reason>` or
+   `deferred: <reason>` (MINOR only), from your decisions and the fixer's
+   report. The spike phase also has `spec`, `design` and `lesson`, as
+   Phase 4 describes.
 7. **Start the next round** with only the reviewers that requested changes.
    A reviewer that approved doesn't run again while others are still
    requesting changes, even when their fixes touch its area.
@@ -384,8 +391,8 @@ don't apply to it.
 3. **Resolve every open question.** Ask the user each one in the spec's
    open questions section, then write their answers into the spec as
    requirements, and empty the section.
-4. **Review the spec** in rounds with `vibes:spec-reviewer`, fixing its
-   findings in `spec.md`, until it approves.
+4. **Review the spec** in rounds with `vibes:spec-reviewer`, with the
+   designer fixing its findings in `spec.md`, until it approves.
 5. **Commit the approved spec** on its own, through the gate.
 
 ## Phase 2: Design
@@ -393,11 +400,11 @@ don't apply to it.
 Medium and large tasks only.
 
 1. Spawn `vibes:designer` in `design` mode, with the same brief.
-2. **Review the design** in rounds with `vibes:architecture-reviewer`,
-   fixing its findings in `design.md`, until it approves. A finding that
-   shows the spec is wrong or incomplete goes back into the spec first, and
-   the spec reviewer approves the changed spec in a `spec` round before the
-   design rounds go on.
+2. **Review the design** in rounds with `vibes:architecture-reviewer`, with
+   the designer fixing its findings in `design.md`, until it approves. A
+   finding that shows the spec is wrong or incomplete goes back into the
+   spec first, and the spec reviewer approves the changed spec in a `spec`
+   round before the design rounds go on.
 3. **Commit the approved design,** together with any spec changes the
    design review made.
 
@@ -444,11 +451,11 @@ code: the rebuild builds every finding right, test-first.
      another way.
    - **`lesson`:** everything else, about the spike's code, such as a
      missed edge case, a leak or a slow loop. The rebuild gets it right.
-3. **Correct the spec and design** on the spike branch. Edit `spec.md` and
-   `design.md` yourself, with a change log entry for each change naming
-   its finding, and keep the traceability table complete. Ask the user
-   about a change that alters what they asked for. Commit the changes on
-   the spike branch.
+3. **Correct the spec and design** on the spike branch. Spawn a fresh
+   `vibes:designer` in `revise` mode, as step 5 of
+   [Review rounds](#review-rounds) says, with the `spec` and `design`
+   findings, asking for change log entries. Ask the user each open
+   question it reports. Commit the changes on the spike branch.
 4. **Have the corrections approved,** before any rebuild starts: the spec
    reviewer in `spec` rounds, then the architecture reviewer in `design`
    rounds, as Phases 1 and 2 describe. Their findings are fixed in the spec
