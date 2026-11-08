@@ -8,6 +8,12 @@ guides behave, and says so under **Changed**.
 
 ## [Unreleased]
 
+### Fixed
+
+- **pip-audit no longer fails on the project itself.** The Python guide's
+  command skips editable packages, so the project, installed with
+  `pip install -e .` and never published, isn't looked up on PyPI.
+
 ### Changed
 
 - **The designer fixes the review findings in the spec and design,** in a

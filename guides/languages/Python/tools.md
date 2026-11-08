@@ -128,10 +128,13 @@ osv-scanner scan source -r .
 ```
 
 pip-audit checks the packages actually installed in the environment, which
-catches anything installed outside the lockfile:
+catches anything installed outside the lockfile. `--strict` fails on any
+package it can't look up, and the project itself isn't published, so
+install the project editable (`pip install -e .`) and skip editable
+packages:
 
 ```sh
-pip-audit --strict
+pip-audit --strict --skip-editable
 ```
 
 ### Secrets
