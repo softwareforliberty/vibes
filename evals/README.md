@@ -35,11 +35,15 @@ exactly the reviewers the skill's panel rules call for.
 You need Claude Code 2.1.269 or later. From the repository root:
 
 ```sh
-claude plugin eval . --scaffold --ablation none
+claude plugin eval . --scaffold --ablation none --allow-tools Write "Bash(cat:*)"
 ```
 
 - `--scaffold` lets each case's setup script copy its fixture into the run's
   working directory. The scripts only copy files from `fixtures/`.
+- `--allow-tools` lets each reviewer write its findings file, which the
+  case then reads. The spec reviewer, which Claude Code gives no Write
+  tool because it has Bash, writes it with `cat`. The plugin's hook keeps
+  every reviewer to its own findings file.
 - `--ablation none` skips the run without the plugin, which can't dispatch
   the reviewers and would only add cost.
 - `--case 'security-reviewer-*'`, `--tag recall` or `--tag panel` runs a
