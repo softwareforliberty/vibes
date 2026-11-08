@@ -31,11 +31,25 @@ readonly FILE_WRITERS
 # A redirection and its target: > file, >> file, 2> file or &> file.
 readonly REDIRECT_RE='[0-9&]?>>?[[:space:]]*([^[:space:];&|<>()]+)'
 
-# Prints why a redirection in the command writes to a file, or nothing.
+# Succeeds when the path is the reviewer's own findings file in a round's
+# directory, .vibes/<name>/review/<round>/<reviewer>.md. It's named after the
+# reviewer alone because Claude Code refuses a subagent's write to a Markdown
+# file whose name starts with findings or report.
+is_findings_file() {
+  local path="$1" reviewer="$2"
+  [[ "${path}" == /* && "${path}" != *"/../"* ]] \
+    && [[ "${path}" == */.vibes/*/review/*/"${reviewer}.md" ]] \
+    && [[ "${path#*/.vibes/*/review/}" != */*/* ]]
+}
+
+# Prints why a redirection in the command writes to a file, or nothing. The
+# reviewer may redirect into its own findings file: Claude Code gives an agent
+# with Bash no Write tool.
 redirect_reason() {
-  local rest="$1"
+  local rest="$1" reviewer="$2"
   while [[ "${rest}" =~ ${REDIRECT_RE} ]]; do
-    if [[ "${BASH_REMATCH[1]}" != "/dev/null" ]]; then
+    if [[ "${BASH_REMATCH[1]}" != "/dev/null" ]] \
+      && ! is_findings_file "${BASH_REMATCH[1]}" "${reviewer}"; then
       printf 'it redirects output to %s\n' "${BASH_REMATCH[1]}"
       return 0
     fi
@@ -107,10 +121,11 @@ command_reason() {
   fi
 }
 
-# Prints the first reason the command changes files or git state, or nothing.
+# Prints the first reason the reviewer's command changes files or git state,
+# or nothing.
 reason() {
-  local command="$1" part found
-  found="$(redirect_reason "${command}")"
+  local command="$1" reviewer="$2" part found
+  found="$(redirect_reason "${command}" "${reviewer}")"
   if [[ -n "${found}" ]]; then
     printf '%s\n' "${found}"
     return 0
@@ -123,17 +138,6 @@ reason() {
       return 0
     fi
   done <<<"${command//[;&|()\`]/$'\n'}"
-}
-
-# Succeeds when the path is the reviewer's own findings file in a round's
-# directory, .vibes/<name>/review/<round>/<reviewer>.md. It's named after the
-# reviewer alone because Claude Code refuses a subagent's write to a Markdown
-# file whose name starts with findings or report.
-is_findings_file() {
-  local path="$1" reviewer="$2"
-  [[ "${path}" == /* && "${path}" != *"/../"* ]] \
-    && [[ "${path}" == */.vibes/*/review/*/"${reviewer}.md" ]] \
-    && [[ "${path#*/.vibes/*/review/}" != */*/* ]]
 }
 
 main() {
@@ -157,7 +161,7 @@ main() {
   [[ "${READ_ONLY_SHELL}" == *" ${agent} "* ]] || exit 0
   command="$(hook::json_field "${input}" '.tool_input.command' \
     | hook::strip_text)"
-  found="$(reason "${command}")"
+  found="$(reason "${command}" "${agent}")"
   if [[ -n "${found}" ]]; then
     printf 'vibes: %s is read-only, and %s. ' "${agent}" "${found}" >&2
     printf 'It can build, test and run code, but not change files or git.\n' >&2

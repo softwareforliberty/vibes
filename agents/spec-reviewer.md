@@ -33,9 +33,9 @@ The brief from the main agent gives you:
 - **The guides that apply**, and the round number.
 
 You may run the project's build, its tests and the program itself, to check
-what it does. Never edit a file, and never change git state. The plugin's
-hooks block Bash commands that would, such as `rm`, `git add` or a
-redirection into a file.
+what it does. Never change a file other than your findings file, and never
+change git state. The plugin's hooks block Bash commands that would, such
+as `rm`, `git add` or a redirection into any other file.
 
 ## Spec rounds
 
@@ -121,7 +121,17 @@ into your coverage list, and check the rest afresh.
 ## Output
 
 Write your review to `spec-reviewer.md` in the review directory, in exactly
-this format:
+this format. Claude Code gives an agent with Bash no Write tool, so write
+it with a heredoc to its absolute path, unquoted, which the plugin's hooks
+allow for this one file:
+
+```sh
+cat > /abs/path/to/review/spec-1/spec-reviewer.md <<'EOF'
+<your review>
+EOF
+```
+
+The review's format:
 
 ```text
 VERDICT: APPROVED
