@@ -57,6 +57,13 @@ user, and list a pattern for it on the `# No guide:` line in Step 2.
 For each guide, read its `tools.md` in `${CLAUDE_PLUGIN_ROOT}/guides/`. Its
 tool table, config files and commands are what the scripts will run.
 
+Install each tool from the source its project publishes, which the tool
+table links to, such as its own package registry or releases page. A
+package elsewhere under the same name, such as a Python package for a tool
+published on npm, may be a stranger's: don't install it unless the tool's
+own project links to it. When a tool can't be installed from its own
+source, leave it out of the scripts and tell the user.
+
 ## Step 2: write scripts/check
 
 `scripts/check` is the gate. It runs on every commit, so it holds everything
