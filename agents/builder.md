@@ -68,6 +68,13 @@ Build each entry in your batch, in the plan's order:
 - **Red, green, refactor, commit,** as the test-driven development skill
   says: a failing test for one behaviour, the least code that passes it,
   then a clean-up with the tests still passing, then an atomic commit.
+- **See every new test fail before writing its code.** Write the entry's
+  tests, run them, and check each fails for the reason you expect, before
+  you write or change any code for the entry. Never write an entry's tests
+  and its code in the same step. Keep the line that shows each failure,
+  such as `FAILED tests/test_parse.py::test_bad_status - assert 0 == 1`,
+  for your report. A test that passes at once is checked as the skill
+  says.
 - **Name the requirements each test covers,** in a comment with the spec's
   directory name, such as `# Covers: order-export R1, R4`, as that skill
   says. The gate checks every id named is in the spec.
@@ -146,7 +153,9 @@ Don't push, merge or change any branch other than the rebuild branch.
 In build mode, write your report to the path in the brief:
 
 - **Commits:** `git log --oneline <the commit you started from>..HEAD`.
-- **Entries:** each entry you finished, and any you couldn't, with why.
+- **Entries:** each entry you finished, with its red run's failure lines,
+  or for a test that passed at once, why, and any entry you couldn't
+  finish, with why.
 - **Spec and design changes:** each change log entry you added, and why.
 - **Guides:** each guide you added to the gate, and each file no guide
   covers.

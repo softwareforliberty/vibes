@@ -63,7 +63,8 @@ module you're changing; the full suite runs before each commit.
 - **Run it and watch it fail.** Check that it fails for the expected reason,
   for example an assertion about the missing behaviour, not a typo, an import
   error or a broken fixture. A test you've never seen fail might not be able
-  to fail at all.
+  to fail at all. So run it before writing any of the code it tests, never
+  after writing the two together.
 - If it passes straight away, the behaviour already exists or the test is
   wrong. Find out which by reading the code that makes it pass, not by
   breaking that code on purpose: if the code really does it, keep the test

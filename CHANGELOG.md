@@ -36,6 +36,9 @@ guides behave, and says so under **Changed**.
   committed.
 - **A small new program whose design is clear is a medium task,** with no
   spike.
+- **The builder shows every new test failing before writing its code,**
+  with each red run's failure line in its report, since builders in
+  trials 3 and 8 wrote some tests and code together.
 - **The rebuild plan has fewer entries and batches:** about half as many
   entries as the spec has ids, and two or three batches of eight to twelve
   entries for one tool or feature, since each new builder reads the
