@@ -8,8 +8,21 @@ guides behave, and says so under **Changed**.
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-11-08
+
+### Fixed
+
+- **The commit gate missed some of the agent's commits.** A commit made
+  with `git -C <dir> commit`, a bare `git commit`, or a commit after `cd`
+  into another repository skipped the gate. The hook now runs on every
+  Bash command, finds the repository each commit is in and checks it
+  there, and blocks a commit whose repository it can't work out when the
+  session's own repository is gated.
+
 ### Changed
 
+- **The gate's tools are installed only from their own projects'
+  sources,** never from a package of the same name in another registry.
 - **The spike is reviewed once, and its code is never fixed.** Findings that
   change behaviour or structure correct the spec and design, which are
   approved again before the rebuild. An uncertain design change is tried in
@@ -54,5 +67,6 @@ The first versioned release.
 - **A worked example** of a large, unattended run, in
   [`docs/example/`](docs/example/README.md).
 
-[Unreleased]: https://github.com/softwareforliberty/vibes/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/softwareforliberty/vibes/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/softwareforliberty/vibes/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/softwareforliberty/vibes/releases/tag/v0.1.0
