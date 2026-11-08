@@ -346,8 +346,8 @@ apply to it.
      the round <k> this reviewer last reviewed>
    ```
 
-3. **Each reviewer writes its findings** to `findings-<reviewer>.md` in
-   the round directory, such as `findings-security-reviewer.md`, and
+3. **Each reviewer writes its findings** to `<reviewer>.md` in the round
+   directory, such as `security-reviewer.md`, and
    replies with one line: its verdict, and the number of findings at each
    severity. Don't read the findings files: the fixer decides on them.
 4. **Have the findings decided on and fixed,** when any reviewer reported

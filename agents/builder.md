@@ -96,10 +96,10 @@ Stop when your batch is done. Don't start entries outside it.
 
 ## Fix mode
 
-Read every `findings-*.md` file in the round directory, and its
-`responses.md` if there is one. Decide on each finding it doesn't answer
-yet, referring to it by its reviewer and its number in that file, such as
-`bug-reviewer 2`:
+Read each reviewer's file in the round directory, such as
+`bug-reviewer.md`, and its `responses.md` if there is one. Decide on each
+finding it doesn't answer yet, referring to it by its reviewer and its
+number in that file, such as `bug-reviewer 2`:
 
 - **Accept** every BLOCKER and MAJOR finding, and each MINOR one that's
   cheap and in scope.

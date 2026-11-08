@@ -126,11 +126,13 @@ reason() {
 }
 
 # Succeeds when the path is the reviewer's own findings file in a round's
-# directory, .vibes/<name>/review/<round>/findings-<reviewer>.md.
+# directory, .vibes/<name>/review/<round>/<reviewer>.md. It's named after the
+# reviewer alone because Claude Code refuses a subagent's write to a Markdown
+# file whose name starts with findings or report.
 is_findings_file() {
   local path="$1" reviewer="$2"
   [[ "${path}" == /* && "${path}" != *"/../"* ]] \
-    && [[ "${path}" == */.vibes/*/review/*/"findings-${reviewer}.md" ]] \
+    && [[ "${path}" == */.vibes/*/review/*/"${reviewer}.md" ]] \
     && [[ "${path#*/.vibes/*/review/}" != */*/* ]]
 }
 
@@ -147,7 +149,7 @@ main() {
     path="$(hook::json_field "${input}" '.tool_input.file_path')"
     if ! is_findings_file "${path}" "${agent}"; then
       printf 'vibes: %s is read-only. It may write only ' "${agent}" >&2
-      printf 'findings-%s.md in the review directory.\n' "${agent}" >&2
+      printf '%s.md in the review directory.\n' "${agent}" >&2
       exit 2
     fi
     exit 0

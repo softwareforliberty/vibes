@@ -22,7 +22,7 @@ Don't review the change yourself. When the agent is done, read the file it
 writes its review to:
 
 ```text
-<cwd>/.vibes/stock/review/round-1/findings-style-reviewer.md
+<cwd>/.vibes/stock/review/round-1/style-reviewer.md
 ```
 
 Reply with the agent's reply, then the file's contents, both complete and

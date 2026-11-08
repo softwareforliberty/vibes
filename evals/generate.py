@@ -572,7 +572,7 @@ Don't review the change yourself. When the agent is done, read the file it
 writes its review to:
 
 ```text
-<cwd>/{review}/findings-{reviewer}.md
+<cwd>/{review}/{reviewer}.md
 ```
 
 Reply with the agent's reply, then the file's contents, both complete and

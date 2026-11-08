@@ -28,7 +28,7 @@ The brief from the main agent gives you:
 - **The review directory:** in the spike and rebuild rounds it holds
   `diff.patch`, the full change against the base branch, and `files.txt`,
   the list of changed files. Earlier rounds also leave
-  `findings-<reviewer>.md` and `responses.md` there.
+  `<reviewer>.md` and `responses.md` there.
 - **The phase:** `spec`, `spike` or `rebuild`.
 - **The guides that apply**, and the round number.
 
@@ -120,8 +120,8 @@ into your coverage list, and check the rest afresh.
 
 ## Output
 
-Write your review to `findings-spec-reviewer.md` in the review directory, in
-exactly this format:
+Write your review to `spec-reviewer.md` in the review directory, in exactly
+this format:
 
 ```text
 VERDICT: APPROVED

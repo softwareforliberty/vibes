@@ -96,11 +96,11 @@ describes, replacing the comments.
 
 ## Revise mode
 
-Read every `findings-*.md` file in the round directory, its
-`responses.md` if there is one, and the documents the findings are about.
-Read nothing else unless a finding needs it, such as the code a spike
-finding names or the guide a design finding cites: the documents already
-fit the project and the guides.
+Read each reviewer's file in the round directory, such as
+`bug-reviewer.md`, its `responses.md` if there is one, and the documents
+the findings are about. Read nothing else unless a finding needs it, such
+as the code a spike finding names or the guide a design finding cites: the
+documents already fit the project and the guides.
 
 Decide on each finding `responses.md` doesn't answer yet, referring to it
 by its reviewer and its number in that file, such as `spec-reviewer 2`:
