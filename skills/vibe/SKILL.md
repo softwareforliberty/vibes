@@ -509,7 +509,8 @@ opening and its own batch. Each batch section holds:
   and its errors together. A test that would pass on code an earlier entry
   wrote goes in that entry, not in one of its own. Each entry names the
   ids it covers. Together, the entries cover every requirement and quality
-  id in the spec, and most tasks need no more entries than the spec has
+  id in the spec. An entry covers every requirement its piece of code
+  serves, so a plan usually has about half as many entries as the spec has
   ids.
 - **The guides** for the files the batch writes.
 - **For a large task, the lessons** for the batch: each `lesson` finding
@@ -518,9 +519,12 @@ opening and its own batch. Each batch section holds:
   change log entry the spike phase added to the spec or design, with the
   entry whose commit brings it over.
 
-A batch is a group of entries that belong together, such as one feature's,
-of a size one builder can finish in a fresh context. A small task is
-usually one batch.
+A batch is a group of entries that belong together, such as one
+feature's. Make the batches as few and as large as one builder can finish
+in a fresh context, because each new builder reads the skills, the guides,
+the spec and the design again before it starts: about eight to twelve
+entries each. One command-line tool or one library feature is usually two
+or three batches, and a small task is one.
 
 ## Phase 6: Rebuild test-first
 

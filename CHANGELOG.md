@@ -36,6 +36,10 @@ guides behave, and says so under **Changed**.
   committed.
 - **A small new program whose design is clear is a medium task,** with no
   spike.
+- **The rebuild plan has fewer entries and batches:** about half as many
+  entries as the spec has ids, and two or three batches of eight to twelve
+  entries for one tool or feature, since each new builder reads the
+  skills, guides, spec and design again.
 
 ## [0.2.0] - 2026-11-08
 

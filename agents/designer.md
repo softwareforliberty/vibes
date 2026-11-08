@@ -146,9 +146,9 @@ Read the section **The rebuild plan** in
 `${CLAUDE_PLUGIN_ROOT}/skills/vibe/SKILL.md`, then the spec and design, and
 write the plan as it describes. For a task that had a spike, the lessons
 are the findings marked `lesson` in the spike rounds' `responses.md`, and
-the spec changes are the change log entries in the patch. Size each batch
-so one builder can finish it in a fresh context, and give each entry the
-ids it covers.
+the spec changes are the change log entries in the patch. Keep the entries
+and batches as few as that section says, and give each entry the ids it
+covers.
 
 ## Report
 
