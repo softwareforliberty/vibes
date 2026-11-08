@@ -23,7 +23,8 @@ guides behave, and says so under **Changed**.
   or the builder, decides on each finding and records the response. The
   builder and the spiker write their own reports, and the designer writes
   the rebuild plan. A hook lets a reviewer write only its own findings
-  file.
+  file, and the reviewers write it even when they approve with no
+  findings.
 - **The spec and design stay in proportion to the task:** they specify
   what users would notice, follow the platform's conventions instead of
   restating them, and the reviewers don't hold them up over details that

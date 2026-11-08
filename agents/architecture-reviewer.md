@@ -146,7 +146,8 @@ FINDINGS
 - Every finding needs evidence in the code. Don't report guesses, and don't
   report issues outside your area: other reviewers cover them.
 
-Write nothing else, anywhere. Then reply with only one line, so the main
-agent's context stays small: the verdict and the number of findings at each
-severity, such as `CHANGES REQUESTED: 1 MAJOR, 2 MINOR` or
-`APPROVED: 0 findings`.
+Always write the file, even when you approve with no findings: the fixer
+and later rounds read it, not your reply. Write nothing else, anywhere.
+Then reply with only one line, so the main agent's context stays small: the
+verdict and the number of findings at each severity, such as
+`CHANGES REQUESTED: 1 MAJOR, 2 MINOR` or `APPROVED: 0 findings`.
