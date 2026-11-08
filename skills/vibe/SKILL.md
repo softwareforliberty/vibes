@@ -286,12 +286,13 @@ To resume:
 7. **Start the commit gate setup.** If the project has no executable
    `scripts/check`, or its `# Guides:` line doesn't name every guide the
    project already needs, spawn a `general-purpose` subagent in the
-   background to follow the
+   background, with `medium` effort, to follow the
    `${CLAUDE_PLUGIN_ROOT}/skills/commit-gate/SKILL.md` skill on the base
    branch, with the guides and any rules the user gave about installing
    tools. It commits the gate setup on the base branch as one commit of its
    own, so the spike and rebuild branches both start with it, and replies
-   with the commit and any tool it left out. Don't wait for it: go on with
+   with the commit and any tool it left out. The setup mostly follows that
+   skill's steps, so it needs no more effort. Don't wait for it: go on with
    Phase 1, which drafts the spec where git ignores it, and stay on the
    base branch until the gate is committed. List the gate commit in the
    final report.

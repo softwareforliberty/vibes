@@ -25,8 +25,9 @@ guides behave, and says so under **Changed**.
 - **A fix to a MINOR finding isn't reviewed again,** and the rebuild's last
   round brings back only the reviewers whose area a BLOCKER or MAJOR fix
   changed.
-- **The commit gate is set up while the spec is written,** with the spec
-  drafted where git ignores it until the gate is committed.
+- **The commit gate is set up while the spec is written,** at medium
+  effort, with the spec drafted where git ignores it until the gate is
+  committed.
 - **A small new program whose design is clear is a medium task,** with no
   spike.
 
