@@ -29,8 +29,10 @@ The brief from the main agent gives you:
   test list entries to build, and for a task that had a spike, the lessons
   and spec changes they bring over. The brief also says whether it's the
   first batch.
-- **In fix mode, the findings to fix:** the round directory, and the
-  findings the main agent has accepted, each by reviewer and line.
+- **In build mode, the report's path,** `.vibes/<task>/build-<batch>.md`.
+- **In fix mode, the round directory,** whose findings you decide on and
+  fix, or the failures to fix, such as the audit's, and any decisions the
+  main agent has made about them.
 
 ## Before you start
 
@@ -94,12 +96,29 @@ Stop when your batch is done. Don't start entries outside it.
 
 ## Fix mode
 
-Fix each finding in the brief, most severe first, the same way as a build:
-the spec first if the fix changes behaviour, then a failing test that shows
-the problem, then the fix, committed together. A finding that's only about
-style or structure needs no new test, but the tests must still pass. If a
-finding turns out to be wrong, or its fix would break the spec, don't change
-anything for it: report why.
+Read every `findings-*.md` file in the round directory, and its
+`responses.md` if there is one. Decide on each finding it doesn't answer
+yet, referring to it by its reviewer and its number in that file, such as
+`bug-reviewer 2`:
+
+- **Accept** every BLOCKER and MAJOR finding, and each MINOR one that's
+  cheap and in scope.
+- **Defer** any other MINOR finding, with the reason.
+- **Reject** a finding that's wrong, with a reason based on the spec, the
+  code or the standards. The reviewer reads it next round, so make it one
+  they can check.
+- **Leave to the main agent** a finding whose fix would change what the
+  user asked for: don't change anything for it, and report it.
+
+Fix the accepted findings, most severe first, the same way as a build: the
+spec first if the fix changes behaviour, then a failing test that shows the
+problem, then the fix, committed together. A finding that's only about
+style or structure needs no new test, but the tests must still pass.
+
+Write one line per finding to the round's `responses.md`: its reviewer and
+number, then `fixed <commit>`, `deferred: <reason>`, `rejected: <reason>`
+or `left to the main agent: <why>`. For failures given in the brief, such
+as the audit's, fix each one the same way.
 
 ## Every commit
 
@@ -124,15 +143,19 @@ Don't push, merge or change any branch other than the rebuild branch.
 
 ## Report
 
-When you're done, reply with:
+In build mode, write your report to the path in the brief:
 
 - **Commits:** `git log --oneline <the commit you started from>..HEAD`.
-- **Entries:** in build mode, each entry you finished, and any you
-  couldn't, with why.
-- **Findings:** in fix mode, each finding with `fixed` and its commit, or
-  why you didn't fix it.
+- **Entries:** each entry you finished, and any you couldn't, with why.
 - **Spec and design changes:** each change log entry you added, and why.
 - **Guides:** each guide you added to the gate, and each file no guide
   covers.
-- **Problems:** anything that blocked you, and anything the main agent
-  should decide.
+- **Problems:** anything that blocked you, and anything you did
+  differently from the plan or the skills you follow.
+
+Then reply in a few lines, since the main agent carries your reply for the
+rest of the run: the range of your commits, how many entries you finished,
+and only what the main agent must act on, such as an entry you couldn't
+finish, a guide you added, or a decision you couldn't make. In fix mode,
+reply the same way: your commits, how many findings you fixed, deferred
+and rejected, and each one you left to the main agent.

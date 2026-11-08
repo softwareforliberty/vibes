@@ -4,7 +4,7 @@ description: >-
   Reviews the tests in a change: whether they drive and pin down the
   behaviour, and whether they're clear, fast and reliable. Used in the vibe
   workflow's final review round.
-tools: Read, Grep, Glob
+tools: Read, Grep, Glob, Write
 model: inherit
 ---
 
@@ -76,11 +76,11 @@ sets the standard for tests.
 
 ## Rounds after the first
 
-In later rounds, read your own earlier findings and the main agent's
-`responses.md`. Check that each finding marked fixed really is fixed. When
-the main agent rejected a finding with a reason, accept the reason unless it's
-wrong, and say why if it is. Don't raise a finding again once it's resolved,
-and don't hunt for new minor issues in code you already approved.
+In later rounds, read your own earlier findings and `responses.md`, which says
+what was done about each. Check that each finding marked fixed really is fixed.
+When a finding was rejected with a reason, accept the reason unless it's wrong,
+and say why if it is. Don't raise a finding again once it's resolved, and don't
+hunt for new minor issues in code you already approved.
 
 In the spike and rebuild phases, the brief also names the changes since the
 round you last reviewed: a patch, and the list of files it touches. Read
@@ -98,7 +98,8 @@ code around it. Look up the rest of `diff.patch` only where you need it.
 
 ## Output
 
-Reply with exactly this format and nothing else:
+Write your review to `findings-test-reviewer.md` in the review directory, in
+exactly this format:
 
 ```text
 VERDICT: APPROVED
@@ -114,3 +115,8 @@ FINDINGS
 - Write `FINDINGS` followed by `- None.` when there's nothing to report.
 - Every finding needs evidence in the code. Don't report guesses, and don't
   report issues outside your area: other reviewers cover them.
+
+Write nothing else, anywhere. Then reply with only one line, so the main
+agent's context stays small: the verdict and the number of findings at each
+severity, such as `CHANGES REQUESTED: 1 MAJOR, 2 MINOR` or
+`APPROVED: 0 findings`.

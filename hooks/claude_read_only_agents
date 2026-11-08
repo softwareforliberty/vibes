@@ -1,18 +1,25 @@
 #!/usr/bin/env bash
 #
-# Claude Code PreToolUse hook that keeps read-only agents read-only. The spec
-# reviewer may build, test and run the program, but must never change files
-# or git state, so this blocks (exit 2) any Bash command of its that would.
-# It guards against mistakes, not a determined attacker: a program the
-# reviewer runs can still write files.
+# Claude Code PreToolUse hook that keeps the reviewers read-only. A reviewer
+# may write only its own findings file in a review round's directory, so this
+# blocks (exit 2) any other file it would write or edit. The spec reviewer may
+# also build, test and run the program, but must never change files or git
+# state, so this blocks any Bash command of its that would. It guards against
+# mistakes, not a determined attacker: a program the reviewer runs can still
+# write files.
 
 set -euo pipefail
 
 # shellcheck source=hooks/lib/hook_input.sh
 source "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/lib/hook_input.sh"
 
-# Agents this hook applies to, as plugin agents and as plain agents.
-readonly READ_ONLY_AGENTS=" vibes:spec-reviewer spec-reviewer "
+# Reviewers, which may write only their own findings file.
+REVIEWERS=" architecture-reviewer bug-reviewer cleanliness-reviewer"
+REVIEWERS+=" idioms-reviewer performance-reviewer resource-leak-reviewer"
+REVIEWERS+=" security-reviewer spec-reviewer style-reviewer test-reviewer "
+readonly REVIEWERS
+# Agents whose Bash commands may not change files or git state.
+readonly READ_ONLY_SHELL=" spec-reviewer "
 # git subcommands that only read.
 GIT_READERS=" blame cat-file describe diff grep log ls-files ls-tree"
 GIT_READERS+=" merge-base rev-parse shortlog show status "
@@ -118,13 +125,34 @@ reason() {
   done <<<"${command//[;&|()\`]/$'\n'}"
 }
 
+# Succeeds when the path is the reviewer's own findings file in a round's
+# directory, .vibes/<name>/review/<round>/findings-<reviewer>.md.
+is_findings_file() {
+  local path="$1" reviewer="$2"
+  [[ "${path}" == /* && "${path}" != *"/../"* ]] \
+    && [[ "${path}" == */.vibes/*/review/*/"findings-${reviewer}.md" ]] \
+    && [[ "${path#*/.vibes/*/review/}" != */*/* ]]
+}
+
 main() {
-  local input agent command found
+  local input agent tool path command found
   input="$(cat)"
   agent="$(hook::json_field "${input}" '.agent_type')"
-  if [[ -z "${agent}" || "${READ_ONLY_AGENTS}" != *" ${agent} "* ]]; then
+  agent="${agent#vibes:}"
+  if [[ -z "${agent}" || "${REVIEWERS}" != *" ${agent} "* ]]; then
     exit 0
   fi
+  tool="$(hook::json_field "${input}" '.tool_name')"
+  if [[ "${tool}" != "Bash" ]]; then
+    path="$(hook::json_field "${input}" '.tool_input.file_path')"
+    if ! is_findings_file "${path}" "${agent}"; then
+      printf 'vibes: %s is read-only. It may write only ' "${agent}" >&2
+      printf 'findings-%s.md in the review directory.\n' "${agent}" >&2
+      exit 2
+    fi
+    exit 0
+  fi
+  [[ "${READ_ONLY_SHELL}" == *" ${agent} "* ]] || exit 0
   command="$(hook::json_field "${input}" '.tool_input.command' \
     | hook::strip_text)"
   found="$(reason "${command}")"

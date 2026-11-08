@@ -33,6 +33,9 @@ CHANGE = EVALS / "source" / "change"
 FIXTURES = EVALS / "fixtures"
 
 TASK = "Add a low-stock report to the stock library, as docs/spec.md describes."
+# The round directory, where the plugin's hook lets a reviewer write its
+# findings file.
+REVIEW = ".vibes/stock/review/round-1"
 
 
 @dataclass(frozen=True)
@@ -559,13 +562,20 @@ with `<cwd>` replaced by the absolute path of your working directory:
 Task: {task}
 Spec: <cwd>/docs/spec.md
 Design: <cwd>/docs/design.md
-Review directory: <cwd>/review
+Review directory: <cwd>/{review}
 Phase: {phase}
 Guides: languages/Python
 Round: 1
 ```
 
-Don't review the change yourself. Reply with the agent's reply, complete and
+Don't review the change yourself. When the agent is done, read the file it
+writes its review to:
+
+```text
+<cwd>/{review}/findings-{reviewer}.md
+```
+
+Reply with the agent's reply, then the file's contents, both complete and
 unchanged, and nothing else.
 """
 
@@ -665,8 +675,8 @@ def build_fixture(variant: Variant) -> None:
         files = git(work, "diff", "--cached", "--name-only")
         shutil.rmtree(work / ".git")
         shutil.copytree(work, target)
-    review = target / "review"
-    review.mkdir()
+    review = target / REVIEW
+    review.mkdir(parents=True)
     (review / "diff.patch").write_text(diff, encoding="utf-8")
     (review / "files.txt").write_text(files, encoding="utf-8")
 
@@ -687,7 +697,9 @@ def write_case(case: Case) -> None:
         encoding="utf-8",
     )
     (directory / "prompt.md").write_text(
-        PROMPT.format(reviewer=case.reviewer, task=TASK, phase=case.phase),
+        PROMPT.format(
+            reviewer=case.reviewer, task=TASK, phase=case.phase, review=REVIEW
+        ),
         encoding="utf-8",
     )
     scaffold = directory / "scaffold.sh"

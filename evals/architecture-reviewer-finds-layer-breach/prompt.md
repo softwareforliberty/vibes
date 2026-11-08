@@ -12,11 +12,18 @@ with `<cwd>` replaced by the absolute path of your working directory:
 Task: Add a low-stock report to the stock library, as docs/spec.md describes.
 Spec: <cwd>/docs/spec.md
 Design: <cwd>/docs/design.md
-Review directory: <cwd>/review
+Review directory: <cwd>/.vibes/stock/review/round-1
 Phase: spike
 Guides: languages/Python
 Round: 1
 ```
 
-Don't review the change yourself. Reply with the agent's reply, complete and
+Don't review the change yourself. When the agent is done, read the file it
+writes its review to:
+
+```text
+<cwd>/.vibes/stock/review/round-1/findings-architecture-reviewer.md
+```
+
+Reply with the agent's reply, then the file's contents, both complete and
 unchanged, and nothing else.

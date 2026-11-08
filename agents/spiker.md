@@ -73,12 +73,14 @@ the brief names to the changed design, and nothing else. Run the code and
 tests to check them, then commit to the spike branch. If the change can't
 work as designed, don't work around it: report what fails and why.
 
-Reply with each design change and whether it holds up, with its commits,
-then the spec and design changes, guides and gaps as below.
+Add to the spike report each design change and whether it holds up,
+with its commits, then the spec and design changes, guides and gaps as
+below.
 
 ## Report
 
-In build mode, when you're done, reply with:
+Write your report to `.vibes/<task>/spike-report.md`, or in fix mode add
+to it:
 
 - **Files:** every file you added or changed, with one line on each.
 - **How to run it:** the commands to build, run and test the spike.
@@ -88,3 +90,9 @@ In build mode, when you're done, reply with:
 - **Guides:** every guide you read for a kind of file the brief's guides
   didn't cover, and every file you wrote that no guide covers.
 - **Gaps:** anything unfinished, and anything you'd do differently.
+
+Then reply in a few lines, since the main agent carries your reply for the
+rest of the run: your commits, whether every requirement is met, and only
+what the main agent must act on, such as a design change that doesn't hold
+up, a change you made to the spec or design, or a guide the brief didn't
+name.

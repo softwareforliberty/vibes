@@ -12,6 +12,23 @@ guides behave, and says so under **Changed**.
 
 - **The designer fixes the review findings in the spec and design,** in a
   new `revise` mode, so the main agent no longer edits them itself.
+- **The main agent no longer reads the findings.** Each reviewer writes its
+  own findings file and replies in one line, and the fixer, the designer
+  or the builder, decides on each finding and records the response. The
+  builder and the spiker write their own reports, and the designer writes
+  the rebuild plan. A hook lets a reviewer write only its own findings
+  file.
+- **The spec and design stay in proportion to the task:** they specify
+  what users would notice, follow the platform's conventions instead of
+  restating them, and the reviewers don't hold them up over details that
+  don't matter.
+- **A fix to a MINOR finding isn't reviewed again,** and the rebuild's last
+  round brings back only the reviewers whose area a BLOCKER or MAJOR fix
+  changed.
+- **The commit gate is set up while the spec is written,** with the spec
+  drafted where git ignores it until the gate is committed.
+- **A small new program whose design is clear is a medium task,** with no
+  spike.
 
 ## [0.2.0] - 2026-11-08
 

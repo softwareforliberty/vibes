@@ -6,7 +6,9 @@ each comment with the section's content, and write "None." under a heading
 that doesn't apply. Every statement must be specific enough to check:
 "rejects a quantity below 1 with the error `quantity must be at least 1`",
 never "validates the quantity". Say each thing once, in as few words as
-that precision allows: every agent in the run reads the spec.
+that precision allows: every agent in the run reads the spec. Specify what
+users and callers would notice, and where the platform has a convention,
+such as how command-line options are written, say the task follows it.
 -->
 
 ## Summary

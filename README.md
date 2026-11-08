@@ -26,8 +26,8 @@ while holding it to the standards of careful, experienced developers.
   reviewer agents.
 - **`hooks/`:** the commit gate, for Claude Code and for git; a guide
   check that makes the agent read the guide for each kind of file before
-  writing it; and a guard that keeps the spec reviewer from changing files
-  or git state.
+  writing it; and a guard that keeps the reviewers from changing anything
+  but their own findings files.
 - **`evals/`:** evals that check each reviewer agent finds the defects in
   its area and approves clean code, and that the workflow picks the right
   reviewers for a change, run with `claude plugin eval`.
@@ -40,9 +40,10 @@ can name one yourself, such as `/vibes:vibe small: fix the date parsing`:
 
 - **Small,** such as a fix in existing code: a spec, a test-first build
   and a focused review, with no design or spike.
-- **Medium,** a feature whose design is clear: adds the design, and the full
-  review panel.
-- **Large,** new or uncertain work: everything below.
+- **Medium,** a feature or a small new program whose design is clear: adds
+  the design, and the full review panel.
+- **Large,** a new application with several parts, or uncertain work:
+  everything below.
 
 At every size, a reviewer whose area the change can't touch is left out,
 such as the performance and resource-leak reviewers for a change to only
@@ -55,8 +56,9 @@ first in its final report. It still stops rather than touch anything that
 could lose your work.
 
 1. **Spec.** A designer subagent writes a complete spec: every requirement,
-   error and edge case, each testable. You answer any open questions, and a
-   spec reviewer checks it until it's complete.
+   error and edge case, each testable, in proportion to the task. You
+   answer any open questions, and a spec reviewer checks it until it's
+   complete. Meanwhile, another subagent sets up the commit gate.
 2. **Design.** The designer writes the design to the spec, and the
    architecture reviewer checks it before any code exists. The spec and
    design are committed in your repository, in `docs/specs/<task>/` or
@@ -78,8 +80,9 @@ could lose your work.
 6. **Rebuild.** The spike is set aside, never merged. Builder subagents
    rebuild the task on a `vibe/<task>` branch, test-first, one atomic
    commit at a time, each starting fresh on its own batch of the work. The
-   main agent only coordinates, so its context stays small however long
-   the run.
+   main agent only coordinates: subagents keep their own records, decide
+   on and fix the findings, and reply in a line or two, so its context
+   stays small however long the run.
 7. **Gate.** Every commit runs the project's linters and full test suite, and
    is blocked if anything fails.
 8. **Review again.** The same reviewers, plus reviewers for code
