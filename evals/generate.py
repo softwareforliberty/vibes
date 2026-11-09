@@ -73,7 +73,8 @@ class Case:
         return f"{self.reviewer}-finds-{self.variant}"
 
 
-READS_ONCE_TEST = """def test_reads_the_database_once(
+READS_ONCE_TEST = """# Covers: docs Q1
+def test_reads_the_database_once(
     service: StockService,
     connection: sqlite3.Connection,
 ) -> None:
@@ -90,6 +91,7 @@ READS_ONCE_TEST = """def test_reads_the_database_once(
 CLOSE_TEST = """
 
 
+# Covers: docs R6
 def test_export_closes_the_file_when_writing_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -352,11 +354,13 @@ class StockService:""",
             ),
             Edit(
                 "tests/test_low_stock.py",
-                """def test_rejects_a_negative_threshold(service: StockService) -> None:
+                """# Covers: docs R4
+def test_rejects_a_negative_threshold(service: StockService) -> None:
     with pytest.raises(ValueError, match="threshold must not be negative"):
         service.low_stock(-1)
 
 
+# Covers: docs R5
 @pytest.mark.parametrize(
     ("page", "page_size"),
     [(0, 10), (-1, 10), (1, 0), (1, -1)],

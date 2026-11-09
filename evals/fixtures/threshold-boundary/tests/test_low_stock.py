@@ -26,6 +26,7 @@ def service(repository: ItemRepository) -> StockService:
     return StockService(repository)
 
 
+# Covers: docs R1
 def test_lists_items_below_threshold_fewest_first(service: StockService) -> None:
     items = service.low_stock(5)
 
@@ -37,12 +38,15 @@ def test_lists_items_below_threshold_fewest_first(service: StockService) -> None
     ]
 
 
+# Covers: docs R1
+# Covers: docs R2
 def test_filters_by_name_ignoring_case(service: StockService) -> None:
     items = service.low_stock(5, name_contains="BOLT")
 
     assert [item.sku for item in items] == ["E5", "B2"]
 
 
+# Covers: docs R2
 def test_name_filter_ignores_case_beyond_ascii(repository: ItemRepository) -> None:
     repository.save(Item("F6", "ÉCROU", 1))
     repository.save(Item("G7", "Straße", 1))
@@ -54,6 +58,7 @@ def test_name_filter_ignores_case_beyond_ascii(repository: ItemRepository) -> No
     ]
 
 
+# Covers: docs R2
 def test_name_filter_treats_wildcards_as_text(repository: ItemRepository) -> None:
     repository.save(Item("F6", "50% off", 1))
     repository.save(Item("G7", "a_b", 1))
@@ -65,6 +70,8 @@ def test_name_filter_treats_wildcards_as_text(repository: ItemRepository) -> Non
     assert [item.sku for item in service.low_stock(5, name_contains="a_")] == ["G7"]
 
 
+# Covers: docs R1
+# Covers: docs R3
 def test_pages_start_at_one(service: StockService) -> None:
     first = service.low_stock(5, page=1, page_size=3)
     second = service.low_stock(5, page=2, page_size=3)
@@ -73,6 +80,7 @@ def test_pages_start_at_one(service: StockService) -> None:
     assert [item.sku for item in second] == ["B2"]
 
 
+# Covers: docs Q1
 def test_reads_the_database_once(
     service: StockService,
     connection: sqlite3.Connection,
@@ -85,6 +93,7 @@ def test_reads_the_database_once(
     assert len(statements) == 1
 
 
+# Covers: docs R3
 def test_pages_hold_fifty_items_by_default(repository: ItemRepository) -> None:
     for number in range(51):
         repository.save(Item(f"S{number:02}", "Screw", 1))
@@ -94,11 +103,13 @@ def test_pages_hold_fifty_items_by_default(repository: ItemRepository) -> None:
     assert [item.sku for item in service.low_stock(5, page=2)] == ["S50"]
 
 
+# Covers: docs R4
 def test_rejects_a_negative_threshold(service: StockService) -> None:
     with pytest.raises(ValueError, match="threshold must not be negative"):
         service.low_stock(-1)
 
 
+# Covers: docs R5
 @pytest.mark.parametrize(
     ("page", "page_size"),
     [(0, 10), (-1, 10), (1, 0), (1, -1)],
@@ -112,6 +123,7 @@ def test_rejects_pages_below_one(
         service.low_stock(5, page=page, page_size=page_size)
 
 
+# Covers: docs R6
 def test_exports_csv_with_header_and_a_row_per_item(tmp_path: Path) -> None:
     path = tmp_path / "low.csv"
 
@@ -125,6 +137,7 @@ def test_exports_csv_with_header_and_a_row_per_item(tmp_path: Path) -> None:
         ]
 
 
+# Covers: docs R6
 def test_export_replaces_an_existing_file(tmp_path: Path) -> None:
     path = tmp_path / "low.csv"
     path.write_text("old contents\n", encoding="utf-8")
@@ -135,6 +148,7 @@ def test_export_replaces_an_existing_file(tmp_path: Path) -> None:
         assert list(csv.reader(file)) == [["sku", "name", "quantity"]]
 
 
+# Covers: docs R7
 @pytest.mark.parametrize("prefix", ["=", "+", "-", "@", "\t", "\r"])
 def test_export_stops_text_running_as_a_formula(tmp_path: Path, prefix: str) -> None:
     path = tmp_path / "low.csv"
@@ -145,6 +159,7 @@ def test_export_stops_text_running_as_a_formula(tmp_path: Path, prefix: str) -> 
         assert list(csv.reader(file))[1] == [f"'{prefix}A1", f"'{prefix}Bolt", "1"]
 
 
+# Covers: docs R7
 def test_export_leaves_formula_characters_inside_text(tmp_path: Path) -> None:
     path = tmp_path / "low.csv"
 
@@ -154,6 +169,7 @@ def test_export_leaves_formula_characters_inside_text(tmp_path: Path) -> None:
         assert list(csv.reader(file))[1] == ["A=1", "Bolt+Nut", "1"]
 
 
+# Covers: docs R6
 def test_export_closes_the_file_when_writing_fails(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

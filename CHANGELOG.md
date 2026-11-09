@@ -10,6 +10,10 @@ guides behave, and says so under **Changed**.
 
 ### Fixed
 
+- **The reviewer evals' clean change names the requirements its tests
+  cover.** Its tests had no `# Covers:` markers, which the
+  test-driven-development skill requires, so the test reviewer rightly
+  flagged the clean change in every run.
 - **pip-audit no longer fails on the project itself.** The Python guide's
   command skips editable packages, so the project, installed with
   `pip install -e .` and never published, isn't looked up on PyPI.
