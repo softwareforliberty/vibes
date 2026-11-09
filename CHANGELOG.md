@@ -8,6 +8,8 @@ guides behave, and says so under **Changed**.
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-11-09
+
 ### Fixed
 
 - **The reviewer evals' clean change names the requirements its tests
@@ -108,6 +110,7 @@ The first versioned release.
 - **A worked example** of a large, unattended run, in
   [`docs/example/`](docs/example/README.md).
 
-[Unreleased]: https://github.com/softwareforliberty/vibes/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/softwareforliberty/vibes/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/softwareforliberty/vibes/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/softwareforliberty/vibes/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/softwareforliberty/vibes/releases/tag/v0.1.0
