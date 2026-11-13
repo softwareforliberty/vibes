@@ -1,6 +1,6 @@
 {
   "name": "vibes",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Clean vibe coding: write a complete spec and design, spike to them, review with a panel of critic agents, then rebuild test-first in atomic, gated commits, using style, idiom and tool guides for each language, format and tool. Also optimises performance from real profiles, and reviews outside pull requests for malicious changes.",
   "author": {
     "name": "Reece Fowell"

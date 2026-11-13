@@ -8,6 +8,8 @@ guides behave, and says so under **Changed**.
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-13
+
 ### Added
 
 - **`/vibes:optimise` makes a program faster where a profile shows the
@@ -148,7 +150,8 @@ The first versioned release.
 - **A worked example** of a large, unattended run, in
   [`docs/example/`](docs/example/README.md).
 
-[Unreleased]: https://github.com/softwareforliberty/vibes/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/softwareforliberty/vibes/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/softwareforliberty/vibes/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/softwareforliberty/vibes/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/softwareforliberty/vibes/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/softwareforliberty/vibes/compare/v0.1.0...v0.2.0
