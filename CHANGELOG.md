@@ -8,6 +8,24 @@ guides behave, and says so under **Changed**.
 
 ## [Unreleased]
 
+### Added
+
+- **`/vibes:optimise` makes a program faster where a profile shows the
+  time goes.** It profiles a baseline, plans and specs the optimisation,
+  tries each idea as a spike measured against the best version so far
+  until the ideas stop paying, has the winner reviewed, then rebuilds it
+  test-first and measures it again. `/vibes:vibe` never uses it.
+- **`bin/bench`** runs a benchmark harness against two trees in
+  interleaved pairs, and decides whether the change is better beyond the
+  noise an A/A run measured, with guard rails such as peak memory.
+- **The profiler and optimiser agents.** The profiler measures and never
+  changes the code, which a hook enforces; the optimiser builds and never
+  measures.
+- **`performance/`:** the method for measuring and profiling, and the
+  profilers and benchmark tools for each guide.
+- **Evals** for the profiler, the optimiser and the whole command, on a
+  small Python tool with a quadratic hot spot.
+
 ## [0.4.0] - 2026-11-13
 
 ### Added

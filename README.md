@@ -18,9 +18,12 @@ while holding it to the standards of careful, experienced developers.
 - **`bin/pr-prepare` and `bin/pr-scan`:** fetch an untrusted pull request
   and scan it for malicious changes, without running anything in it. The
   scanner is in `lib/pr_scan/`, and its tests in `tests/pr_scan/`.
-- **`skills/`:** agent skills for the workflow, reviewing an outside pull
-  request, test-driven development, atomic commits and setting up the
-  commit gate.
+- **`bin/bench`:** measures whether a change made a program faster, in
+  interleaved A/B runs with a verdict beyond the noise. It's in
+  `lib/bench/`, and its tests in `tests/bench/`.
+- **`skills/`:** agent skills for the workflow, optimising performance,
+  reviewing an outside pull request, test-driven development, atomic
+  commits and setting up the commit gate.
 - **`principles.md`:** the programming principles every change is held
   to, such as SOLID, DRY and KISS.
 - **`architecture/`:** how to structure software: rules for every kind,
@@ -28,16 +31,20 @@ while holding it to the standards of careful, experienced developers.
   tools, libraries, OS components and embedded systems.
 - **`security/`:** how malicious changes hide, for the supply-chain
   reviewer.
-- **`agents/`:** the designer, the spike agent, the builder and eleven
-  reviewer agents.
+- **`performance/`:** how to measure and profile a program, and the
+  profilers and benchmark tools for each guide, for the profiler and the
+  optimiser.
+- **`agents/`:** the designer, the spike agent, the builder, eleven
+  reviewer agents, and the profiler and optimiser.
 - **`hooks/`:** the commit gate, for Claude Code and for git; a guide
   check that makes the agent read the guide for each kind of file before
   writing it; and a guard that keeps the reviewers from changing anything
-  but their own findings files.
+  but their own findings files, and the profiler from changing the code.
 - **`evals/`:** evals that check each reviewer agent finds the defects in
   its area and approves clean code, that the workflow picks the right
-  reviewers for a change, and that a pull request review catches malicious
-  changes, run with `claude plugin eval`.
+  reviewers for a change, that a pull request review catches malicious
+  changes, and that the profiler and optimiser find and measure the hot
+  spot, run with `claude plugin eval`.
 
 ## The workflow
 
@@ -101,6 +108,45 @@ Nothing is pushed or merged unless you ask.
 
 To see what a run looks like, from the spec to the first rebuild batches,
 read the [worked example](docs/example/README.md).
+
+## Optimise performance
+
+`/vibes:optimise [area or problem]` makes a program faster where a profile
+shows the time goes, such as `/vibes:optimise the CSV import is slow`.
+Without an area, it optimises the program's usual workload. It's separate
+from `/vibes:vibe`, which never uses it.
+
+1. **Baseline.** The profiler agrees a workload with you, at two sizes and
+   with a holdout input, and builds a harness for it outside the code. It
+   profiles with real tools, such as `perf`, samply, `sample`, cProfile or
+   pprof, and measures how noisy this machine is with an A/A run.
+2. **Plan and spec.** The optimiser ranks ideas by the share of time each
+   can save. It writes the optimisation's own spec, with targets relative
+   to the baseline and guard rails such as peak memory, which the spec
+   reviewer approves.
+3. **The spike loop.** Each idea is built, spec first, on its own
+   `spike/optimise-<slug>-<i>` branch from the best version so far. The
+   profiler runs the tests, then measures it against the best version in
+   interleaved pairs, and `bin/bench verdict` decides: `IMPROVED`,
+   `NO CHANGE`, `REGRESSED`, `INCONCLUSIVE` or `BROKEN`. An improvement
+   becomes the best version. The loop stops when the next idea could save
+   under 5%, after three attempts in a row without a gain, or at eight
+   attempts; `max <n>` changes the last.
+4. **Review the spike.** The reviewers check the best version for
+   architecture and every standard, knowing what each change measured.
+   The spec and design are corrected, and their findings about the code
+   become lessons for the rebuild.
+5. **Rebuild test-first** on `optimise/<slug>`, as the vibe workflow does,
+   with a benchmark committed in the language's own benchmark tool.
+6. **Verify.** The rebuild is measured against the baseline and the spike,
+   must meet the spec's targets, and is reviewed in rounds.
+
+`/vibes:optimise unattended: <area>` runs without stopping to ask: it
+takes the profiler's workload, installs nothing, and rejects any trade-off
+outside the spec. Otherwise it asks before installing a profiler. Measure
+on mains power with nothing else running: `bench` warns when the machine is
+on battery, in Low Power Mode or busy.
+[performance/README.md](performance/README.md) describes the method.
 
 ## Review a pull request from outside
 

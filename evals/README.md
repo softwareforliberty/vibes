@@ -31,6 +31,17 @@ own tests are in `tests/pr_scan/`. **`review-pr-flags-xz-payload`** runs the
 whole `/vibes:review-pr` command on a local pull request, and fails if it
 builds, tests, checks out or posts anything.
 
+The **`profiler-*`** and **`optimiser-*`** cases work on contacts, a small
+Python tool whose dedupe command is quadratic. `profiler-finds-hot-spot`
+passes when the baseline profile ranks the quadratic scan first, and the
+`profiler-measures-*` cases when a faster candidate measures `IMPROVED`, an
+unchanged one `NO CHANGE` and a faster but wrong one `BROKEN`. Each scaffold
+takes the A/A measurement itself, so a case takes a minute or two.
+`optimiser-plans-by-profile` passes when the plan goes after the hot spot,
+not cold code. **`optimise-speeds-up-dedupe`** runs the whole
+`/vibes:optimise` command unattended, which takes much longer; it has its
+own tag, `optimise-e2e`, so `--tag optimise` leaves it out.
+
 | Path | What it holds |
 | --- | --- |
 | `source/base/` | The library before the change, with the spec and design |
@@ -38,6 +49,8 @@ builds, tests, checks out or posts anything.
 | `source/pr-base/`, `source/pr-change/` | strbuf, and the clean pull request's files |
 | `generate.py` | The defect variants, and the code that writes the fixtures and cases |
 | `pr_cases.py` | The pull request variants and cases, which `generate.py` writes too |
+| `source/optimise/`, `source/optimise-run/` | contacts, and the run directory its baseline leaves |
+| `optimise_cases.py` | The optimise candidates and cases, which `generate.py` writes too |
 | `fixtures/` | Each variant's project and review directory, generated |
 | `<case>/` | Each case's prompt, graders and setup script, generated |
 
@@ -50,7 +63,9 @@ claude plugin eval . --scaffold --ablation none --allow-tools Write "Bash(cat:*)
 ```
 
 - `--scaffold` lets each case's setup script copy its fixture into the run's
-  working directory. The scripts only copy files from `fixtures/`.
+  working directory. The scripts copy files from `fixtures/`, and some
+  commit them to a new git repository there. The optimise ones also make
+  their input data and take an A/A measurement with `bin/bench`.
 - `--allow-tools` lets each reviewer write its findings file, which the
   case then reads. The spec reviewer, which Claude Code gives no Write
   tool because it has Bash, writes it with `cat`. The plugin's hook keeps
@@ -60,6 +75,17 @@ claude plugin eval . --scaffold --ablation none --allow-tools Write "Bash(cat:*)
 - `--case 'security-reviewer-*'`, `--tag recall` or `--tag panel` runs a
   subset, and `--runs 1` runs each case once instead of three times.
 - `--max-cost-usd 30` sets a hard limit on the cost.
+
+The optimise cases run commands, so give them the tools their prompts
+list rather than unrestricted Bash:
+
+```sh
+claude plugin eval . --scaffold --ablation none --tag optimise \
+  --allow-tools Write Edit "Bash(git *)" "Bash(python3 *)" \
+  "Bash(*/bin/bench *)" "Bash(*/bench/run *)" "Bash(*/bench/prepare *)" \
+  "Bash(command -v *)" "Bash(ls *)" "Bash(cat *)" "Bash(head *)" \
+  "Bash(mkdir *)" "Bash(chmod *)" "Bash(/usr/bin/time *)"
+```
 
 Results and an HTML report go to `evals/results/`, which git ignores.
 
