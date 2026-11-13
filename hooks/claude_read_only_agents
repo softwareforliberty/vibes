@@ -4,9 +4,11 @@
 # may write only its own findings file in a review round's directory, so this
 # blocks (exit 2) any other file it would write or edit. The spec reviewer may
 # also build, test and run the program, but must never change files or git
-# state, so this blocks any Bash command of its that would. It guards against
-# mistakes, not a determined attacker: a program the reviewer runs can still
-# write files.
+# state, so this blocks any Bash command of its that would. The profiler may
+# write and edit only its own files in an optimise run's state directory,
+# never the project's code, so this blocks its other writes and edits. It
+# guards against mistakes, not a determined attacker: a program an agent runs
+# can still write files.
 
 set -euo pipefail
 
@@ -19,6 +21,8 @@ REVIEWERS+=" idioms-reviewer performance-reviewer resource-leak-reviewer"
 REVIEWERS+=" security-reviewer spec-reviewer style-reviewer"
 REVIEWERS+=" supply-chain-reviewer test-reviewer "
 readonly REVIEWERS
+# Agents that may write and edit only in an optimise run's state directory.
+readonly PROFILERS=" profiler "
 # Agents whose Bash commands may not change files or git state.
 readonly READ_ONLY_SHELL=" spec-reviewer "
 # git subcommands that only read.
@@ -41,6 +45,16 @@ is_findings_file() {
   [[ "${path}" == /* && "${path}" != *"/../"* ]] \
     && [[ "${path}" == */.vibes/*/review/*/"${reviewer}.md" ]] \
     && [[ "${path#*/.vibes/*/review/}" != */*/* ]]
+}
+
+# Succeeds when the path is in an optimise run's state directory,
+# .vibes/optimise-<slug>/, other than its worktrees in wt/, which hold the
+# project's code.
+is_profiler_file() {
+  local path="$1"
+  [[ "${path}" == /* && "${path}" != *"/../"* ]] \
+    && [[ "${path}" == */.vibes/optimise-*/* ]] \
+    && [[ "${path#*/.vibes/optimise-*/}" != wt/* ]]
 }
 
 # Prints why a redirection in the command writes to a file, or nothing. The
@@ -146,10 +160,19 @@ main() {
   input="$(cat)"
   agent="$(hook::json_field "${input}" '.agent_type')"
   agent="${agent#vibes:}"
-  if [[ -z "${agent}" || "${REVIEWERS}" != *" ${agent} "* ]]; then
+  [[ -n "${agent}" ]] || exit 0
+  tool="$(hook::json_field "${input}" '.tool_name')"
+  if [[ "${PROFILERS}" == *" ${agent} "* ]]; then
+    [[ "${tool}" != "Bash" ]] || exit 0
+    path="$(hook::json_field "${input}" '.tool_input.file_path')"
+    if ! is_profiler_file "${path}"; then
+      printf 'vibes: %s may write only in the run directory ' "${agent}" >&2
+      printf '.vibes/optimise-<slug>/, outside wt/, never the code.\n' >&2
+      exit 2
+    fi
     exit 0
   fi
-  tool="$(hook::json_field "${input}" '.tool_name')"
+  [[ "${REVIEWERS}" == *" ${agent} "* ]] || exit 0
   if [[ "${tool}" != "Bash" ]]; then
     path="$(hook::json_field "${input}" '.tool_input.file_path')"
     if ! is_findings_file "${path}" "${agent}"; then
