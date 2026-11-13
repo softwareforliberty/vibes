@@ -1,0 +1,4 @@
+protected	vendor/*/get.sh
+protected	scripts/fetch.sh
+protected	.github/**
+binary-allowed	tests/data/*.png

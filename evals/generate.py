@@ -26,6 +26,8 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+import pr_cases
+
 EVALS = Path(__file__).resolve().parent
 GUIDES_FOR = EVALS.parent / "bin" / "guides-for"
 BASE = EVALS / "source" / "base"
@@ -816,6 +818,7 @@ def main() -> None:
     for panel_case in PANEL_CASES:
         build_panel_fixture(panel_case)
         write_panel_case(panel_case)
+    pr_cases.build()
 
 
 if __name__ == "__main__":
