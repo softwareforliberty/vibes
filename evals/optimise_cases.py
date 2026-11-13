@@ -214,7 +214,8 @@ allowed_tools: [Read, Glob, Grep, Agent, Write, Edit, {PROFILER_TOOLS}, "Bash(sc
 /vibes:optimise unattended: max 3 {TASK}
 """
 
-TREE_CLEAN = ("---\ntype: regex\npattern: 'TREE CLEAN'\n---\n")
+# On a line of its own, so a reply saying it can't tell doesn't match.
+TREE_CLEAN = ("---\ntype: regex\npattern: '^TREE CLEAN$'\nflags: m\n---\n")
 
 
 def dispatched(agent: str) -> str:
@@ -275,10 +276,11 @@ def build() -> None:
         SCAFFOLD_PLAN.format(generated=GENERATED, run=RUN_DIR),
         {"tree-clean": TREE_CLEAN,
          "targets-hot-spot": llm(
-             "the top-ranked candidate replaces the scan of the list of "
-             "seen addresses in _is_seen with a set or dict lookup, and no "
-             "candidate targets header() in contacts/summary.py or any "
-             "code the profile gives under 2% of the time")},
+             "the plan in the reply ranks first a candidate that replaces "
+             "the linear scan of the seen addresses in _is_seen with a set "
+             "or dict lookup, and no candidate changes header() in "
+             "contacts/summary.py, which dedupe never calls. Judge only the "
+             "plan: ignore the TREE line and the branch")},
         tools='"Bash(git *)"')
     write_case(
         "optimise-speeds-up-dedupe", "optimise-e2e", E2E_PROMPT,

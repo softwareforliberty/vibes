@@ -2,5 +2,5 @@
 type: llm
 ---
 
-PASS if the top-ranked candidate replaces the scan of the list of seen addresses in _is_seen with a set or dict lookup, and no candidate targets header() in contacts/summary.py or any code the profile gives under 2% of the time.
+PASS if the plan in the reply ranks first a candidate that replaces the linear scan of the seen addresses in _is_seen with a set or dict lookup, and no candidate changes header() in contacts/summary.py, which dedupe never calls. Judge only the plan: ignore the TREE line and the branch.
 FAIL otherwise.

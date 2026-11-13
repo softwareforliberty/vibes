@@ -1,4 +1,5 @@
 ---
 type: regex
-pattern: 'TREE CLEAN'
+pattern: '^TREE CLEAN$'
+flags: m
 ---
