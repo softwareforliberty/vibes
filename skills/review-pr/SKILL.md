@@ -51,7 +51,9 @@ So:
    ```
 
    or `"${CLAUDE_PLUGIN_ROOT}/bin/pr-prepare" --local <base> <head>` for a
-   local branch or range, as the arguments say. It exits 0 when the scan
+   local branch or range, as the arguments say. Run it as a command of its
+   own, not joined to others with `&&` or `;`, so a permission rule for it
+   matches. It finds the repository root itself. It exits 0 when the scan
    finds nothing and 1 when it finds something: both mean it worked. On
    exit 2, tell the user its one-line error, and that details are in the
    review directory's `prepare.log`, and stop. It prints the review
@@ -121,7 +123,7 @@ So:
    "${CLAUDE_PLUGIN_ROOT}/bin/pr-scan" report --out <dir>
    ```
 
-   It writes `<dir>/pr-review.md` for the maintainer and
+   Run it on its own too. It writes `<dir>/pr-review.md` for the maintainer and
    `<dir>/comment-draft.md` for them to edit and post themselves, and prints
    the counts.
 7. **Tell the user,** in a few lines:

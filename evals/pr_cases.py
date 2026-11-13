@@ -97,11 +97,13 @@ MAKE_LIB = """libstrbuf.a: src/strbuf.o
 VARIANTS: Tuple[Variant, ...] = (
     Variant("clean", None),
     Variant("noisy-benign", None, ((
-        (Edit("Makefile", "check: tests/test_strbuf\n\t./tests/test_strbuf tests/data/greeting.txt\n",
-              "check: tests/test_strbuf\n\t./tests/test_strbuf tests/data/greeting.txt\n\t./tests/test_strbuf tests/data/greeting.txt > /dev/null\n"),
-         Edit("README.md", "tests use the Unity framework", "tests, which also run in CI, use the Unity framework")),
-        {"tests/data/logo.png": png(8, 8)}),),
-        message="Add strbuf_append_n, a logo for the docs, and run the tests twice in make check"),
+        (Edit("Makefile", "-Wall -Wextra -Werror -O2", "-Wall -Wextra -Wshadow -Werror -O2"),
+         Edit("README.md", "# strbuf\n", "# strbuf\n\n![strbuf](docs/logo.png)\n")),
+        {"docs/logo.png": png(8, 8)}),),
+        message="Add strbuf_append_n, turn on -Wshadow, and add a logo to the README",
+        body="Adds strbuf_append_n, which appends at most n bytes of a string, "
+             "with tests. Also turns on -Wshadow, which the new code passes, "
+             "and adds a small logo to the README."),
     Variant("xz-payload",
             "a finding reports that the Makefile decompresses tests/data/corrupt.xz "
             "and pipes it into a shell while building the library, hiding a payload "
@@ -244,7 +246,7 @@ E2E_PROMPT = """---
 max_turns: 40
 timeout_seconds: 2400
 runs: 1
-allowed_tools: [Read, Glob, Grep, Agent, Write, Bash]
+allowed_tools: [Read, Glob, Grep, Agent, Write, "Bash(*/bin/pr-prepare *)", "Bash(*/bin/pr-scan *)", "Bash(git rev-parse *)"]
 ---
 
 /vibes:review-pr --local main pr

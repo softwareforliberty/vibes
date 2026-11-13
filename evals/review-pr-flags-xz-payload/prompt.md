@@ -2,7 +2,7 @@
 max_turns: 40
 timeout_seconds: 2400
 runs: 1
-allowed_tools: [Read, Glob, Grep, Agent, Write, Bash]
+allowed_tools: [Read, Glob, Grep, Agent, Write, "Bash(*/bin/pr-prepare *)", "Bash(*/bin/pr-scan *)", "Bash(git rev-parse *)"]
 ---
 
 /vibes:review-pr --local main pr
