@@ -26,6 +26,7 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+import optimise_cases
 import pr_cases
 
 EVALS = Path(__file__).resolve().parent
@@ -819,6 +820,7 @@ def main() -> None:
         build_panel_fixture(panel_case)
         write_panel_case(panel_case)
     pr_cases.build()
+    optimise_cases.build()
 
 
 if __name__ == "__main__":

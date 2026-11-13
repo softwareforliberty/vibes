@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+#
+# Prepares a tree for measuring: bench/prepare <tree>. The project is pure
+# Python, so there's nothing to build.
+
+set -euo pipefail
+
+[[ -d "$1/contacts" ]]

@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#
+# Runs the workload once on a tree: bench/run <tree> <small|main|holdout>.
+
+set -euo pipefail
+
+here="$(dirname -- "$(realpath -- "$0")")"
+cd -- "$1"
+exec python3 -m contacts dedupe "${here}/data/$2.csv"

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#
+# The commit gate: every commit must pass this.
+#
+# Guides: languages/Python
+
+set -euo pipefail
+
+cd -- "$(dirname -- "$0")/.."
+python3 -m unittest discover -s tests -t . -q
