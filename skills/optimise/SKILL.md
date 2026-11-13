@@ -211,15 +211,16 @@ The best version starts as the head of `optimise/<slug>`. For each attempt
    side b the candidate's head, into `profile/candidate-<i>/`, with the
    noise directory `profile/aa/main`, the test command and the guard rails.
    Then check the main tree.
-5. **Decide,** yourself:
+5. **Decide,** yourself, running each command on its own, with no shell
+   variables, so a permission rule for `bench` matches:
 
    ```sh
-   bench="${CLAUDE_PLUGIN_ROOT}/bin/bench"
-   run=.vibes/optimise-<slug>
-   "${bench}" verdict --out "${run}/profile/candidate-<i>/main" \
-     --noise "${run}/profile/aa/main" --guard <each guard rail>
-   "${bench}" verdict --out "${run}/profile/candidate-<i>/holdout" \
-     --noise "${run}/profile/aa/main"
+   "${CLAUDE_PLUGIN_ROOT}/bin/bench" verdict \
+     --out .vibes/optimise-<slug>/profile/candidate-<i>/main \
+     --noise .vibes/optimise-<slug>/profile/aa/main --guard <each guard rail>
+   "${CLAUDE_PLUGIN_ROOT}/bin/bench" verdict \
+     --out .vibes/optimise-<slug>/profile/candidate-<i>/holdout \
+     --noise .vibes/optimise-<slug>/profile/aa/main
    ```
 
    - **Accept** it when the main verdict is `IMPROVED` with its guards ok,
