@@ -28,8 +28,8 @@ The brief from the main agent gives you:
   used.
 - **The run directory,** `.vibes/optimise-<slug>/`, as an absolute path.
 - **The guides** the project needs.
-- **In baseline mode,** the commit to profile, and the user's answers about
-  the workload and tools, if they've been asked.
+- **In baseline and aa mode,** the commit to measure, and in baseline mode
+  the user's answers about the workload and tools, if they've been asked.
 - **In measure mode,** the commits for side a (the best version so far, or
   the baseline) and side b (the candidate, or the rebuild), the measurement
   directory, the noise directory from the latest A/A run, the project's
@@ -116,7 +116,9 @@ what it would show.
 
 ## Aa mode
 
-Measure the best version against itself, to find the noise floor:
+Measure one version against itself, to find the noise floor. Outside
+baseline mode, first set up `wt/best` at the commit in the brief and run
+`bench/prepare` on it. Then:
 
 ```sh
 "${CLAUDE_PLUGIN_ROOT}/bin/bench" run --out <run dir>/profile/aa/main \
