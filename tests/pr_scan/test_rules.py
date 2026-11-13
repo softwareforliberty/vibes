@@ -219,6 +219,8 @@ ATTACKS = [
     Case("config-changed", {".vibes-review": "binary-allowed\t**\n"},
          ["config-changed"], base={**C_BASE, ".vibes-review": "protected\t"
                                    "vendor/**\n"}),
+    Case("env-command", {"src/main.c": "int main(void) { system(getenv(\"X\"));"
+                         " return 0; }\n"}, ["exec-env-command"]),
     Case("auto-run", {"conftest.py": "import os\n"}, ["build-auto-run"]),
     Case("install-script", {"package.json": "{\n  \"scripts\": {\n    "
                             "\"postinstall\": \"node x.js\"\n  }\n}\n"},
@@ -266,6 +268,12 @@ BENIGN = [
                             "tests/test_main.bats": "@test \"reads\" {\n  run "
                             "./app tests/data/input.txt\n}\n"},
          ["build-unused-test-data", "build-reads-test-data"]),
+    Case("check-target", {"Makefile": "all:\n\tcc -fstack-protector-strong "
+                          "-o app src/main.c\ncheck:\n\t./app tests/data/a.txt"
+                          "\n\t./app tests/data/b.txt\n"},
+         ["exec-decode", "exec-pipe-to-shell"],
+         base={**C_BASE, "Makefile": "all:\n\tcc -fstack-protector-strong -o "
+               "app src/main.c\ncheck:\n\t./app tests/data/a.txt\n"}),
     Case("normal-message", {"src/x.c": "int x;\n"}, ["injection-metadata"],
          message="Add x\n\nThe reviewer asked for this in #12."),
 ]

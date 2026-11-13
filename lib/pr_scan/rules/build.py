@@ -9,6 +9,7 @@ from typing import Iterator
 from ..escape import ascii_only, excerpt
 from ..model import HIGH, REVIEW, Context, Finding, classes
 from .common import added, matching, regex
+from .exec_ import DECODE, PIPE_TO_SHELL
 
 TEST_PATH = re.compile(r"(?:^|[\s\"'=/$({:,])(?:tests?|testdata|test-data|"
                        r"testing|fixtures?|t)/", re.IGNORECASE)
@@ -66,10 +67,17 @@ def check(ctx: Context) -> Iterator[Finding]:
 def _reads_test_data(ctx: Context) -> Iterator[Finding]:
     """Build or CI code that names a test directory or a changed test file."""
     for change, number, text in added(ctx, "build", "ci"):
-        if TEST_PATH.search(text) and "test" not in change.classes:
-            yield Finding(HIGH, "build-reads-test-data", change.path, number,
-                          f"build code that refers to test files, as XZ's "
-                          f"backdoor did: {excerpt(text)}")
+        if not TEST_PATH.search(text) or "test" in change.classes:
+            continue
+        # A build file that already ran the tests, such as a check target,
+        # is only worth a look; decoding or running test data never is.
+        usual = TEST_PATH.search(change.old_text()) and not (
+            DECODE.search(text) or PIPE_TO_SHELL.search(text))
+        like_xz = "" if usual else ", as XZ's backdoor did"
+        yield Finding(REVIEW if usual else HIGH, "build-reads-test-data",
+                      change.path, number,
+                      f"build code that refers to test files{like_xz}: "
+                      f"{excerpt(text)}")
     for change in ctx.changed():
         if not ctx.is_test_data(change.path):
             continue

@@ -18,6 +18,10 @@ from ..model import HIGH, REVIEW, Context, Finding, is_binary, matches
 LFS = b"version https://git-lfs.github.com/spec/"
 
 
+def a(kind: str) -> str:
+    return f"an {kind}" if kind[:1] in "aeiou" else f"a {kind}"
+
+
 def check(ctx: Context) -> Iterator[Finding]:
     images_changed = []
     for change in ctx.changed():
@@ -40,16 +44,16 @@ def check(ctx: Context) -> Iterator[Finding]:
                           f"a binary of no known kind, {len(data)} bytes")
         elif kind in binfmt.OPAQUE:
             yield Finding(HIGH, "binary-opaque", change.path, 0,
-                          f"a {kind} file, {len(data)} bytes: code, an "
+                          f"{a(kind)} file, {len(data)} bytes: code, an "
                           f"archive or compressed data can't be reviewed; "
                           f"ask for it to be built from source in the "
                           f"repository instead")
         elif matches(change.path, ctx.config.binary_allowed):
             yield Finding(REVIEW, "binary-changed", change.path, 0,
-                          f"a {kind} file, {len(data)} bytes: look at it")
+                          f"{a(kind)} file, {len(data)} bytes: look at it")
         else:
             yield Finding(HIGH, "binary-unexpected", change.path, 0,
-                          f"a {kind} file, {len(data)} bytes, outside the "
+                          f"{a(kind)} file, {len(data)} bytes, outside the "
                           f"paths .vibes-review allows binaries in")
         if kind in binfmt.IMAGES and ctx.is_test_data(change.path):
             images_changed.append(change)

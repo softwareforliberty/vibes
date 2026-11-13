@@ -58,6 +58,10 @@ DOWNLOAD = regex(r"\b(?:curl|wget|aria2c)\b", r"\bgit\s+clone\b",
                  r"\bcargo\s+install\b", r"\bgem\s+install\b",
                  r"\bapt(?:-get)?\s+install\b|\bapk\s+add\b|\bdnf\s+install\b|"
                  r"\byum\s+install\b|\bbrew\s+install\b")
+ENV_COMMAND = regex(r"\b(?:system|popen|exec[lv]p?e?|posix_spawnp?)\s*\([^;]*"
+                    r"\bgetenv\s*\(", r"\bsubprocess\.\w+\([^)]*os\.environ",
+                    r"\bos\.system\([^)]*os\.environ",
+                    r"\bchild_process\.\w+\([^)]*process\.env")
 MAKE_EXECUTABLE = re.compile(r"\bchmod\s+(?:[ugoa]*\+[rwx]*x|[0-7]?[0-7]*[1357]"
                              r"[0-7]{0,2})\b")
 
@@ -81,6 +85,8 @@ def check(ctx: Context) -> Iterator[Finding]:
                           f"runs a string or data as code"
                           f"{', after decoding it' if decoded else ''}: "
                           f"{excerpt(text)}")
+    yield from matching(added(ctx), ENV_COMMAND, HIGH, "exec-env-command",
+                        "runs a command taken from the environment")
     yield from matching(added(ctx, "build", "ci", "gate"), INLINE, REVIEW,
                         "exec-inline", "runs an inline program")
     yield from matching(added(ctx, "build", "ci", "gate"), DOWNLOAD, REVIEW,
