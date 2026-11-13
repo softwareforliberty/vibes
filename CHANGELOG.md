@@ -8,6 +8,24 @@ guides behave, and says so under **Changed**.
 
 ## [Unreleased]
 
+### Added
+
+- **`/vibes:review-pr` reviews a pull request from outside the project,**
+  above all for malicious changes like the XZ Utils backdoor. It never runs
+  the pull request's code, and never posts to GitHub: it writes a report and
+  a draft comment for you.
+- **`bin/pr-prepare` and `bin/pr-scan`** fetch a pull request and scan it,
+  reading it only from git objects. The scan checks every file and every
+  commit for hidden payloads, obfuscation, build-time code, weakened
+  checks, pin and key changes, CI and agent-config risks, and text aimed at
+  AI reviewers, and its HIGH findings can't be cleared by a reviewer.
+- **The supply-chain reviewer,** used only by `/vibes:review-pr`, with its
+  standards in `security/malicious-changes.md`.
+- **A `.vibes-review` file** lists a project's protected paths, test data,
+  allowed binaries and hosts, and is read from the base branch only.
+- **Evals** for the supply-chain reviewer, on twelve versions of a pull
+  request to a small C library, and for the whole command.
+
 ## [0.3.0] - 2026-11-09
 
 ### Fixed

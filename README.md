@@ -15,22 +15,29 @@ while holding it to the standards of careful, experienced developers.
   needs.
 - **`bin/guides-for`:** lists the guides a set of files needs, such as
   `git ls-files | bin/guides-for`.
-- **`skills/`:** agent skills for the workflow, test-driven development,
-  atomic commits and setting up the commit gate.
+- **`bin/pr-prepare` and `bin/pr-scan`:** fetch an untrusted pull request
+  and scan it for malicious changes, without running anything in it. The
+  scanner is in `lib/pr_scan/`, and its tests in `tests/pr_scan/`.
+- **`skills/`:** agent skills for the workflow, reviewing an outside pull
+  request, test-driven development, atomic commits and setting up the
+  commit gate.
 - **`principles.md`:** the programming principles every change is held
   to, such as SOLID, DRY and KISS.
 - **`architecture/`:** how to structure software: rules for every kind,
   and a guide each for web, desktop and mobile applications, command-line
   tools, libraries, OS components and embedded systems.
-- **`agents/`:** the designer, the spike agent, the builder and ten
+- **`security/`:** how malicious changes hide, for the supply-chain
+  reviewer.
+- **`agents/`:** the designer, the spike agent, the builder and eleven
   reviewer agents.
 - **`hooks/`:** the commit gate, for Claude Code and for git; a guide
   check that makes the agent read the guide for each kind of file before
   writing it; and a guard that keeps the reviewers from changing anything
   but their own findings files.
 - **`evals/`:** evals that check each reviewer agent finds the defects in
-  its area and approves clean code, and that the workflow picks the right
-  reviewers for a change, run with `claude plugin eval`.
+  its area and approves clean code, that the workflow picks the right
+  reviewers for a change, and that a pull request review catches malicious
+  changes, run with `claude plugin eval`.
 
 ## The workflow
 
@@ -95,6 +102,75 @@ Nothing is pushed or merged unless you ask.
 To see what a run looks like, from the spec to the first rebuild batches,
 read the [worked example](docs/example/README.md).
 
+## Review a pull request from outside
+
+`/vibes:review-pr <number or URL>` reviews a pull request from someone
+outside the project, above all for malicious changes, such as the XZ Utils
+backdoor (CVE-2024-3094), which hid its payload in test data and pulled it
+into the build. It's separate from `/vibes:vibe`, which never uses it.
+`/vibes:review-pr --local <base> <head>` reviews a local branch instead.
+
+1. **Prepare.** `bin/pr-prepare` fetches the pull request and its metadata
+   with `gh` and git, and reads it only from git objects, with hooks,
+   filters, textconv, LFS and submodules turned off. Nothing from the pull
+   request is checked out, built, tested or run.
+2. **Scan.** `bin/pr-scan` checks every changed file, and every commit on
+   its own, against about twenty families of rules: binaries and what they
+   hide, encoded payloads, hidden Unicode, build-time code, code that runs
+   before `main`, weakened checks, pins and keys, dependencies, CI, agent
+   config, git tricks, privilege and kernel settings, network use,
+   behaviour that depends on where it runs, text aimed at AI reviewers, and
+   who the commits come from. It writes the pull request's files under
+   hashed names with hidden characters shown, so no `CLAUDE.md` or
+   `.claude/settings.json` in it is ever loaded, and describes binaries
+   instead of showing them.
+3. **Review.** The supply-chain, security and bug reviewers always run, and
+   the quality reviewers join when the change is in their area. The spec
+   reviewer never does, since it runs code. The supply-chain reviewer must
+   account for every HIGH scan finding.
+4. **Report.** `pr-review.md` lists the scan's findings first, then each
+   reviewer's, then the files a person must inspect. `comment-draft.md` is a
+   comment for you to edit and post. Nothing is posted to GitHub, approved
+   or merged.
+
+No reviewer can clear a HIGH scan finding: each needs a person.
+
+### Protected paths
+
+A `.vibes-review` file in the repository adds project-specific rules, one
+per line, a kind and a glob separated by a tab:
+
+```text
+protected	vendor/*/get.sh
+test-data	tests/smoke/references/**
+binary-allowed	tests/smoke/references/*.png
+allowed-host	cdn.kernel.org
+```
+
+- **`protected`:** any change is HIGH.
+- **`test-data`:** treated as test data, which build code mustn't read.
+- **`binary-allowed`:** a well-formed image or font here is REVIEW, not HIGH.
+  Archives and executables are always HIGH.
+- **`allowed-host`:** not reported as a new host.
+
+The scan reads `.vibes-review` from the base branch only, so a pull request
+can't weaken it, and a pull request that changes it is HIGH.
+
+### Limits
+
+- An attacker who knows these checks may write a change that passes all of
+  them.
+- Nothing here can tell whether an upstream release a pin points at is
+  itself malicious, so every pin, hash and key change needs checking by
+  hand.
+- Nothing here detects social engineering: pressure to merge, or trust
+  built up over years.
+- CI may already have run the pull request's code on GitHub.
+- A reviewer can be misled by text in the pull request, which is why the
+  scan's HIGH findings and the list of files to inspect always stand.
+- Merge with `gh pr merge --squash --match-head-commit <head>`, so what you
+  merge is what was reviewed, and no commit's history comes with it.
+
 ## Install as a Claude Code plugin
 
 This repository is its own plugin marketplace. In Claude Code 2.1.275 or
@@ -116,9 +192,9 @@ To try a local checkout without installing it, start Claude Code with
 
 The plugin provides:
 
-- **Skills:** `/vibes:vibe`, plus `vibes:test-driven-development`,
-  `vibes:atomic-commits` and `vibes:commit-gate`, which agents use on their
-  own when they apply.
+- **Skills:** `/vibes:vibe` and `/vibes:review-pr`, plus
+  `vibes:test-driven-development`, `vibes:atomic-commits` and
+  `vibes:commit-gate`, which agents use on their own when they apply.
 - **Agents:** `vibes:designer`, `vibes:spiker`, `vibes:builder` and the
   reviewers, such as `vibes:security-reviewer`.
 - **The commit gate hook,** which runs before every `git commit` the agent
