@@ -57,6 +57,9 @@ The brief from the main agent gives you:
   better tool is missing, say what it would show, and how to install it.
 - **Run nothing else while you measure,** and run one measurement at a
   time.
+- **Run each command on its own,** with absolute paths: no `&&` or `;`
+  chains and no shell variables, so the user's permission rules can match
+  it. Use Read, Grep and Glob, not the shell, to look at files.
 - **Print no long output.** Send tools' output to files in the run
   directory, and read what you need from them.
 
