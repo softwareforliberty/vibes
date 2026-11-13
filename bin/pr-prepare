@@ -1,0 +1,146 @@
+#!/usr/bin/env bash
+#
+# Prepares an untrusted pull request for review, without running anything
+# in it: fetches it and its metadata, then scans it with pr-scan into
+# .vibes/pr-<number>/. Run it from the repository the pull request is for:
+#
+#   pr-prepare <number or URL>
+#   pr-prepare --local <base> <head> [<name>]
+#
+# The second form reviews a local branch or commit range, with no GitHub
+# metadata, into .vibes/pr-<name>/.
+#
+# Git runs only tree-to-tree commands, with hooks, filters, external diff
+# programs, textconv, LFS and submodules turned off, and nothing is checked
+# out. It prints only validated SHAs, counts and guide names, never text from
+# the pull request. Exits 0 when the scan finds nothing, 1 when it finds
+# something and 2 on an error, whose details go to the review directory's
+# prepare.log.
+
+set -euo pipefail
+
+ROOT="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/.."
+readonly ROOT
+# shellcheck source=hooks/lib/guides.sh
+source "${ROOT}/hooks/lib/guides.sh"
+
+readonly SHA_RE='^[0-9a-f]{40}$'
+readonly REF_RE='^[A-Za-z0-9._/-]+$'
+readonly NAME_RE='^[A-Za-z0-9._-]+$'
+LOG=/dev/null
+
+die() {
+  printf 'pr-prepare: %s\n' "$*" >&2
+  exit 2
+}
+
+# Runs git with everything that could run code from the repository turned
+# off.
+safe_git() {
+  env GIT_TERMINAL_PROMPT=0 GIT_LFS_SKIP_SMUDGE=1 GIT_PAGER=cat \
+    GIT_CONFIG_NOSYSTEM=1 GIT_EXTERNAL_DIFF= GIT_SSH_COMMAND= \
+    git -c core.hooksPath=/dev/null -c core.fsmonitor=false \
+    -c diff.external= -c log.showSignature=false \
+    -c protocol.file.allow=never -c protocol.ext.allow=never \
+    -c submodule.recurse=false -c fetch.recurseSubmodules=false "$@"
+}
+
+# Moves an earlier review aside, rather than deleting it.
+fresh_directory() {
+  local out="$1"
+  if [[ -e "${out}" ]]; then
+    mv -- "${out}" "${out}.$(date +%Y%m%d%H%M%S)"
+  fi
+  mkdir -p -- "${out}/meta" "${out}/review/round-1"
+  [[ -f .vibes/.gitignore ]] || printf '*\n' >.vibes/.gitignore
+}
+
+# Prints the GitHub pull request field, checked against a pattern.
+field() {
+  local number="$1" query="$2" pattern="$3" value
+  value="$(gh api "repos/{owner}/{repo}/pulls/${number}" --jq "${query}" \
+    2>>"${LOG}")" || die "gh couldn't read pull request ${number}"
+  [[ "${value}" =~ ${pattern} ]] || die "unexpected ${query} from GitHub"
+  printf '%s\n' "${value}"
+}
+
+# Fetches the pull request's head and its base branch into refs/vibes/.
+fetch_pull() {
+  local number="$1" out="$2" head base_ref url fetched
+  gh api "repos/{owner}/{repo}/pulls/${number}" >"${out}/meta/pull.json" \
+    2>>"${LOG}" || die "gh couldn't read pull request ${number}"
+  gh api "repos/{owner}/{repo}/pulls/${number}/commits?per_page=100" \
+    --paginate --jq '.[]' >"${out}/meta/commits.json" 2>>"${LOG}" \
+    || die "gh couldn't read the pull request's commits"
+  head="$(field "${number}" .head.sha "${SHA_RE}")"
+  base_ref="$(field "${number}" .base.ref "${REF_RE}")"
+  url="$(field "${number}" .base.repo.clone_url '^https://[A-Za-z0-9.-]+/[A-Za-z0-9._/-]+$')"
+  safe_git fetch --no-tags --no-recurse-submodules --quiet "${url}" \
+    "+refs/pull/${number}/head:refs/vibes/pr/${number}" \
+    "+refs/heads/${base_ref}:refs/vibes/pr/${number}-base" >>"${LOG}" 2>&1 \
+    || die "git couldn't fetch the pull request; see ${out}/prepare.log"
+  fetched="$(safe_git rev-parse --verify --quiet "refs/vibes/pr/${number}")"
+  [[ "${fetched}" == "${head}" ]] \
+    || die "the fetched head isn't the one GitHub reports: it moved, so run this again"
+}
+
+# Writes guides.txt: the guides the changed files need, from each file's
+# path and the first line of its snapshot.
+write_guides() {
+  local out="$1" path view entries
+  local guides="" unknown=""
+  while IFS=$'\t' read -r path view; do
+    entries="$(guides::for_file "${path}" "${view}")"
+    if [[ -z "${entries}" ]]; then
+      unknown+="no guide: ${path}"$'\n'
+    else
+      guides+="${entries}"$'\n'
+    fi
+  done <"${out}/guides-input.tsv"
+  {
+    printf '%s' "${guides}" | grep -vx -- '-' | sort -u || true
+    printf '%s' "${unknown}"
+  } >"${out}/guides.txt"
+}
+
+main() {
+  local base head name number out status=0
+  (($# > 0)) || die "usage: pr-prepare <number or URL> | --local <base> <head> [<name>]"
+  cd -- "$(safe_git rev-parse --show-toplevel 2>/dev/null)" \
+    || die "run it inside the repository the pull request is for"
+  if [[ "$1" == "--local" ]]; then
+    (($# >= 3)) || die "usage: pr-prepare --local <base> <head> [<name>]"
+    base="$(safe_git rev-parse --verify --quiet "$2^{commit}")" \
+      || die "no such commit: $2"
+    head="$(safe_git rev-parse --verify --quiet "$3^{commit}")" \
+      || die "no such commit: $3"
+    name="${4:-local-${head:0:12}}"
+    [[ "${name}" =~ ${NAME_RE} ]] || die "the name may hold only letters, digits, ., _ and -"
+    out=".vibes/pr-${name}"
+    fresh_directory "${out}"
+    LOG="${out}/prepare.log"
+  else
+    number="${1##*/pull/}"
+    number="${number%%[/?#]*}"
+    [[ "${number}" =~ ^[0-9]+$ ]] || die "not a pull request number or URL"
+    command -v gh >/dev/null || die "needs the GitHub CLI, gh"
+    out=".vibes/pr-${number}"
+    fresh_directory "${out}"
+    LOG="${out}/prepare.log"
+    fetch_pull "${number}" "${out}"
+    base="refs/vibes/pr/${number}-base"
+    head="refs/vibes/pr/${number}"
+  fi
+  "${ROOT}/bin/pr-scan" scan --repo . --base "${base}" --head "${head}" \
+    --out "${out}" ${number:+--meta "${out}/meta"} || status=$?
+  ((status <= 1)) || die "the scan failed"
+  write_guides "${out}"
+  printf 'pr-prepare: review directory %s\n' "$(pwd)/${out}"
+  printf 'pr-prepare: guides %s\n' "$(grep -v '^no guide: ' \
+    "${out}/guides.txt" | tr '\n' ' ')"
+  printf 'pr-prepare: files no guide covers %s\n' \
+    "$(grep -c '^no guide: ' "${out}/guides.txt" || true)"
+  return "${status}"
+}
+
+main "$@"

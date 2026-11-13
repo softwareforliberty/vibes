@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# Scans an untrusted pull request for malicious changes, or builds the
+# review's report. It reads the pull request only from git objects, so
+# nothing in it runs:
+#
+#   pr-scan scan --repo <dir> --base <commit> --head <commit> --out <dir> \
+#     [--meta <dir>]
+#   pr-scan report --out <dir>
+#
+# Exits 0 with no findings, 1 with findings and 2 on an error. It prints only
+# a fixed summary of SHAs and counts. Needs Python 3.9 or later.
+
+set -euo pipefail
+
+ROOT="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/.."
+readonly ROOT
+
+# -I ignores PYTHON* variables and the user's site directory, and -S skips
+# site, so nothing outside the plugin is imported. -I also leaves the
+# script's own directory off the path, so lib/ is added here.
+exec python3 -I -S -c 'import sys; sys.path.insert(0, sys.argv.pop(1)); from pr_scan.cli import main; sys.exit(main(sys.argv[1:]))' \
+  "${ROOT}/lib" "$@"
