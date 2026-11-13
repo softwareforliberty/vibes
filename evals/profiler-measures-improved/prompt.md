@@ -26,7 +26,7 @@ Don't do its work yourself. When it's done, run `git status --porcelain` and
 `git branch --show-current` in your working directory, then read this file:
 
 ```text
-<cwd>/.vibes/optimise-dedupe/profile/candidate-1/report.md
+<cwd>/.vibes/optimise-dedupe/profile/candidate-1/measured.md
 ```
 
 Reply with the agent's reply, then `TREE CLEAN` if `git status --porcelain`

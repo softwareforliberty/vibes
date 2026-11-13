@@ -164,7 +164,9 @@ interval as a percentage, and any warning `bench` printed.
    `--guard <measure>=<percent>`.
 6. **Profile side b** on the main size, with the same tool and options as
    the baseline, into `<dir>/profile/`.
-7. **Write `<dir>/report.md`:** the commits, the test result, each size's
+7. **Write `<dir>/measured.md`,** not `report.md`, since Claude Code
+   refuses a subagent's write to a Markdown file named for a report: the
+   commits, the test result, each size's
    verdict line, the hot-spot table for side b in the baseline's form, and
    what moved since side a: which hot spot shrank, which grew, and what is
    now on top.

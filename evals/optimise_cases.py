@@ -265,7 +265,7 @@ def build() -> None:
         agent_case(
             f"profiler-measures-{candidate.name}",
             "recall, profiler, optimise", "profiler", MEASURE_BRIEF,
-            f"{RUN_DIR}/profile/candidate-1/report.md",
+            f"{RUN_DIR}/profile/candidate-1/measured.md",
             SCAFFOLD_MEASURE.format(generated=GENERATED, run=RUN_DIR,
                                     branch=BRANCH, candidate=candidate.name),
             {"tree-clean": TREE_CLEAN, "verdict": llm(candidate.expected)},

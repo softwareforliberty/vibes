@@ -27,7 +27,7 @@ The brief from the main agent gives you:
 - **The spec directory,** `<project spec dir>/optimise-<slug>/`.
 - **The guides** that apply.
 - **In plan mode,** the latest profile: `profile/baseline.md`, or the last
-  candidate's `report.md`.
+  candidate's `measured.md`.
 - **In spec mode,** whether to write the goal, before any candidate, or to
   settle the targets, after the last one, with the best measurements.
 - **In try mode,** the candidate from the plan, or the design change the
@@ -90,7 +90,8 @@ section as its comment describes.
   stay the same.
 - **Quality requirements:** the target for the main workload, relative to
   the baseline commit, such as `Q1: the main workload's wall time is at
-  most 60% of the baseline's, as bench verdict measures it`, and a guard
+  most 60% of the baseline's: the median change bench verdict prints is
+  -40% or less`, and a guard
   rail for each resource that mustn't grow, such as peak memory. Set the
   target from the plan's expected gains, or the user's goal if they gave
   one.
@@ -100,9 +101,12 @@ section as its comment describes.
   benchmark tool from `${CLAUDE_PLUGIN_ROOT}/performance/tools.md`, such as
   pytest-benchmark, `go test -bench` or criterion.
 
-**Settling the targets,** after the last candidate: set each target to what
-the best version measured, less twice the noise floor, so the rebuild must
-match the spike within the noise. Add a change log row for each change.
+**Settling the targets,** after the last candidate: set each target to the
+median change the best version measured, less twice the noise floor, so
+the rebuild must match the spike within the noise. A target is always on
+the median `bench verdict` prints, never on an end of its interval: the
+noise floor is already in the margin, and an interval's end moves with
+how busy the machine is. Add a change log row for each change.
 
 ## Try mode
 

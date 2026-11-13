@@ -232,7 +232,7 @@ The best version starts as the head of `optimise/<slug>`. For each attempt
 6. **Record the attempt** in the candidates table: attempt, candidate,
    branch, commit, the verdict line, and accepted or not.
 7. **Update the plan:** spawn `vibes:optimiser` in `plan` mode with the
-   candidate's `report.md`, or the latest profile of the best version if
+   candidate's `measured.md`, or the latest profile of the best version if
    it was rejected.
 8. **Stop** at the first of:
    - the plan's top candidate has a bound under 5%, or there's none;
@@ -247,7 +247,7 @@ When the loop stops:
    `measure` mode, with side a the head of `optimise/<slug>` and side b the
    best version, into `profile/best/`.
 2. **Settle the targets:** on the best version's branch, spawn the
-   optimiser in `spec` mode to settle them from `profile/best/report.md`
+   optimiser in `spec` mode to settle them from `profile/best/measured.md`
    and the noise floor. Commit the change there.
 
 If nothing was accepted, tell the user what was tried and why it didn't
@@ -326,7 +326,8 @@ check the guides.
    a the spike and side b the rebuild, into `profile/verify-<n>-spike/`.
    Remove the worktrees.
 2. **Check it,** with `bench verdict` on each main size: against the
-   baseline it's `IMPROVED` and its change meets each target in the spec;
+   baseline it's `IMPROVED` and its median change meets each target in the
+   spec;
    against the spike it isn't `REGRESSED`. If either fails, spawn a builder
    in `fix` mode with both reports, and measure again.
 3. **Review it** in `rebuild` rounds, with the panel from step 1 of Phase 4
