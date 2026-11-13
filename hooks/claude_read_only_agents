@@ -16,7 +16,8 @@ source "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/lib/hook_input.sh"
 # Reviewers, which may write only their own findings file.
 REVIEWERS=" architecture-reviewer bug-reviewer cleanliness-reviewer"
 REVIEWERS+=" idioms-reviewer performance-reviewer resource-leak-reviewer"
-REVIEWERS+=" security-reviewer spec-reviewer style-reviewer test-reviewer "
+REVIEWERS+=" security-reviewer spec-reviewer style-reviewer"
+REVIEWERS+=" supply-chain-reviewer test-reviewer "
 readonly REVIEWERS
 # Agents whose Bash commands may not change files or git state.
 readonly READ_ONLY_SHELL=" spec-reviewer "

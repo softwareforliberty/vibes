@@ -110,6 +110,8 @@ def read_review(path: str) -> Dict:
             elif section == "FINDINGS" and (FINDING.match(line)
                                             or line == "- None."):
                 review["FINDINGS"].append(line)
+            elif section in ("SCAN", "UNREVIEWED") and line == "- None.":
+                continue
             elif section == "SCAN" and ACCOUNT.match(line):
                 review["SCAN"].append(line)
             elif section == "UNREVIEWED" and UNREVIEWED.match(line):

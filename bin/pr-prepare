@@ -135,6 +135,7 @@ main() {
     --out "${out}" ${number:+--meta "${out}/meta"} || status=$?
   ((status <= 1)) || die "the scan failed"
   write_guides "${out}"
+  cp -- "${out}/diff.patch" "${out}/files.txt" "${out}/review/round-1/"
   printf 'pr-prepare: review directory %s\n' "$(pwd)/${out}"
   printf 'pr-prepare: guides %s\n' "$(grep -v '^no guide: ' \
     "${out}/guides.txt" | tr '\n' ' ')"
