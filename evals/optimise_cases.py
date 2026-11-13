@@ -208,7 +208,7 @@ E2E_PROMPT = f"""---
 max_turns: 400
 timeout_seconds: 10800
 runs: 1
-allowed_tools: [Read, Glob, Grep, Agent, Write, Edit, {PROFILER_TOOLS}, "Bash(scripts/check*)", "Bash(*/bin/guides-for*)", "Bash(printf *)", "Bash(cp *)", "Bash(git worktree *)"]
+allowed_tools: [Read, Glob, Grep, Agent, Write, Edit, {PROFILER_TOOLS}, "Bash(scripts/check*)", "Bash(*/bin/guides-for*)", "Bash(printf *)", "Bash(cp *)", "Bash(echo *)", "Bash(grep *)", "Bash(find *)", "Bash(sed -n *)"]
 ---
 
 /vibes:optimise unattended: max 3 {TASK}
