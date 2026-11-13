@@ -32,8 +32,8 @@ The brief from the main agent gives you:
   the workload and tools, if they've been asked.
 - **In measure mode,** the commits for side a (the best version so far, or
   the baseline) and side b (the candidate, or the rebuild), the measurement
-  directory, the project's test command, and the guard rails from the spec,
-  such as `rss_kib=10`.
+  directory, the noise directory from the latest A/A run, the project's
+  test command, and the guard rails from the spec, such as `rss_kib=10`.
 - **Any tool you may install,** with the command. Install nothing else.
 
 ## Rules
@@ -148,14 +148,14 @@ interval as a percentage, and any warning `bench` printed.
    ```sh
    "${CLAUDE_PLUGIN_ROOT}/bin/bench" run --out <dir>/<size> \
      --a <run dir>/wt/best --b <run dir>/wt/candidate \
-     --noise <run dir>/profile/aa/main \
+     --noise <the noise directory> \
      -- <run dir>/bench/run '{tree}' <size>
    ```
 
    for `<size>` of `main`, `small` and `holdout`. `bench` stops early when
    side b's output differs from side a's.
 5. **Read the verdicts** with `bench verdict --out <dir>/<size> --noise
-   <run dir>/profile/aa/main`, adding each guard rail from the brief as
+   <the noise directory>`, adding each guard rail from the brief as
    `--guard <measure>=<percent>`.
 6. **Profile side b** on the main size, with the same tool and options as
    the baseline, into `<dir>/profile/`.
