@@ -245,11 +245,12 @@ run without them.
 
 The plugin provides:
 
-- **Skills:** `/vibes:vibe` and `/vibes:review-pr`, plus
-  `vibes:test-driven-development`, `vibes:atomic-commits` and
+- **Skills:** `/vibes:vibe`, `/vibes:optimise` and `/vibes:review-pr`,
+  plus `vibes:test-driven-development`, `vibes:atomic-commits` and
   `vibes:commit-gate`, which agents use on their own when they apply.
-- **Agents:** `vibes:designer`, `vibes:spiker`, `vibes:builder` and the
-  reviewers, such as `vibes:security-reviewer`.
+- **Agents:** `vibes:designer`, `vibes:spiker`, `vibes:builder`,
+  `vibes:profiler`, `vibes:optimiser` and the reviewers, such as
+  `vibes:security-reviewer`.
 - **The commit gate hook,** which runs before every `git commit` the agent
   makes.
 - **The guide check hook.** The first time an agent, or each subagent, writes a
