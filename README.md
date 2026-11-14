@@ -236,6 +236,13 @@ Or in two steps:
 To try a local checkout without installing it, start Claude Code with
 `claude --plugin-dir /path/to/vibes`.
 
+If you run sessions in git worktrees, install it at user scope, the
+default for `claude plugin install vibes@vibes` in a shell, or enable it in
+each worktree. A plugin enabled only for the main checkout can load its
+skills in a worktree session but not its agents. `/vibes:vibe`,
+`/vibes:optimise` and `/vibes:review-pr` then stop and say so, rather than
+run without them.
+
 The plugin provides:
 
 - **Skills:** `/vibes:vibe` and `/vibes:review-pr`, plus

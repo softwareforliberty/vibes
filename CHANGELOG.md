@@ -8,6 +8,15 @@ guides behave, and says so under **Changed**.
 
 ## [Unreleased]
 
+### Changed
+
+- **`/vibes:vibe`, `/vibes:optimise` and `/vibes:review-pr` check their
+  agents are loaded before they start,** and stop if they aren't, rather
+  than stand in for them with general agents, which have none of their
+  tool limits and slip past the hooks that keep reviewers read-only. A
+  plugin enabled only for the main checkout can load its skills but not
+  its agents in a git worktree session; the README says how to avoid it.
+
 ## [0.5.0] - 2026-11-13
 
 ### Added

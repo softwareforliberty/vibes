@@ -58,6 +58,17 @@ carries every phase, and the details belong in theirs.
 Outside the plugin, the same definitions are in this repo's `agents/`
 directory, without the `vibes:` prefix.
 
+**Check they're loaded before anything else,** even before resuming: each
+agent above must be among the agent types you can spawn, with or without
+the prefix. If any is missing, stop and tell the user the vibes agents
+aren't loaded in this session. This happens when vibes is enabled only for
+one checkout and the session runs in a git worktree or another checkout;
+enabling it at user scope, or running from the checkout it's enabled in,
+then starting a new session, fixes it. Never stand in for an agent with
+`general-purpose` or any other agent told to read its definition: a
+stand-in has none of its tool limits, and the hooks that keep the reviewers
+from changing files know them only by their agent type.
+
 ## The spec comes first
 
 The spec is the single source of truth for what the task does, and the

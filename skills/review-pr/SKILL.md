@@ -43,7 +43,16 @@ So:
 
 1. **Check the setup.** You're in a git repository, and for a pull request
    number or URL, `gh auth status` succeeds. If not, tell the user what's
-   missing and stop.
+   missing and stop. Check too that `vibes:supply-chain-reviewer` and the
+   other reviewers are among the agent types you can spawn. If any is
+   missing, the vibes agents aren't loaded in this session, which happens
+   when vibes is enabled only for one checkout and the session runs in a
+   git worktree or another checkout: tell the user to enable it at user
+   scope, or to run from the checkout it's enabled in, in a new session,
+   and stop. Never stand in for a reviewer with `general-purpose` or any
+   other agent told to read its definition: a stand-in has none of its tool
+   limits, and the hooks that keep reviewers from changing files know them
+   only by their agent type.
 2. **Prepare the review.** Run, from the repository root:
 
    ```sh

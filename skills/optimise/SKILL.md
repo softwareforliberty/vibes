@@ -46,6 +46,18 @@ needs it.
 | `vibes:builder` | Rebuilds the optimisation test-first, and fixes review findings |
 | The reviewers | As in `/vibes:vibe`, in the spike review and the rebuild review |
 
+**Check they're loaded before anything else,** even before resuming: each
+agent above, and each reviewer `/vibes:vibe` lists, must be among the
+agent types you can spawn. If any is missing, stop and tell the user the
+vibes agents aren't loaded in this session. This happens when vibes is
+enabled only for one checkout and the session runs in a git worktree or
+another checkout; enabling it at user scope, or running from the checkout
+it's enabled in, then starting a new session, fixes it. Never stand in for
+an agent with `general-purpose` or any other agent told to read its
+definition: a stand-in has none of its tool limits, and the hooks that keep
+the profiler and the reviewers from changing the code know them only by
+their agent type.
+
 ## Names
 
 Pick a short kebab-case slug for the task, such as `csv-import`. Everything
