@@ -62,8 +62,8 @@ their agent type.
 
 **Your own commits.** For each commit you make yourself, such as the spec
 or the spike review's corrections, stage it, then spawn
-`vibes:commit-message-suggester` with the task and what the commit is for,
-and commit with the message it replies. The agents that commit, such as
+`vibes:commit-message-suggester` with the repository's path, the task and
+what the commit is for, and commit with the message it replies. The agents that commit, such as
 the builders, write their own. Every subject is 50 characters at most: the
 gate refuses a longer one.
 

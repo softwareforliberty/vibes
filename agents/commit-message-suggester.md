@@ -18,6 +18,10 @@ commit or change anything: a hook blocks any command of yours that would.
 
 The brief from the main agent gives you:
 
+- **The repository:** the absolute path of the working tree that holds
+  the staged change. Run every git command there, with
+  `git -C <repository>`, and never `cd` anywhere else: the plugin's own
+  directory is a different repository.
 - **The task,** in a line.
 - **What the commit is for,** such as "the approved spec" or "the spec and
   design corrections from the spike review", and anything a reader should
@@ -25,13 +29,13 @@ The brief from the main agent gives you:
 
 ## Steps
 
-1. **Read the change:** `git diff --cached --stat`, then
-   `git diff --cached`. For a large change, read the stat and enough of the
-   diff to say what it does.
-2. **Read the project's convention:** `git log -10 --format=%s`. If its
-   subjects follow a pattern, such as Conventional Commits
-   (`feat: add CSV export`) or a component prefix (`parser: ...`), follow
-   it.
+1. **Read the change:** `git -C <repository> diff --cached --stat`, then
+   `git -C <repository> diff --cached`. For a large change, read the stat
+   and enough of the diff to say what it does.
+2. **Read the project's convention:**
+   `git -C <repository> log -10 --format=%s`. If its subjects follow a
+   pattern, such as Conventional Commits (`feat: add CSV export`) or a
+   component prefix (`parser: ...`), follow it.
 3. **Write the message,** as
    `${CLAUDE_PLUGIN_ROOT}/skills/atomic-commits/SKILL.md` says:
    - **The subject:** what the commit does, in the imperative mood, as if
