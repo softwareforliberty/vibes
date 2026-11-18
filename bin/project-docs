@@ -1,0 +1,108 @@
+#!/usr/bin/env bash
+#
+# Prints the project's own documents: the files that can hold its
+# requirements, architecture, conventions and advice, such as a README, an
+# architecture decision record or an earlier task's spec. Give it paths from
+# the repository root as arguments, or one per line on standard input, and
+# leave out a directory, such as the task's own spec directory, with
+# --exclude:
+#
+#   git ls-files | project-docs --exclude docs/specs/order-export
+#
+# Release notes, licences, templates, vendored code and test data aren't the
+# project's guidance, so they're skipped. Prints nothing when the project has
+# no documents.
+
+set -euo pipefail
+
+# Names, in lower case, of documents that record or license rather than
+# guide.
+SKIPPED_NAMES_RE='^(changelog|changes|history|news|releases|license|licence'
+SKIPPED_NAMES_RE+='|copying|notice|authors|contributors|code_of_conduct'
+SKIPPED_NAMES_RE+='|code-of-conduct|pull_request_template|issue_template)'
+SKIPPED_NAMES_RE+='([.-]|$)'
+readonly SKIPPED_NAMES_RE
+# Directories, in lower case, whose documents aren't the project's own.
+SKIPPED_DIRS_RE='(^|/)(node_modules|vendor|third_party|third-party|external'
+SKIPPED_DIRS_RE+='|\.git|\.vibes|fixtures|testdata|test-data|__snapshots__'
+SKIPPED_DIRS_RE+='|issue_template)/'
+readonly SKIPPED_DIRS_RE
+# Directories, in lower case, whose plain text files are documents too.
+readonly DOC_DIRS_RE='(^|/)(doc|docs|documentation|adr|adrs|decisions|rfc|rfcs)/'
+
+usage() {
+  printf 'usage: project-docs [--exclude <dir>]... [<path>...]\n' >&2
+  exit 2
+}
+
+# Succeeds when a path from the repository root is one of the project's
+# documents.
+is_doc() {
+  local lower name
+  lower="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')"
+  name="${lower##*/}"
+  [[ "${lower}" =~ ${SKIPPED_DIRS_RE} ]] && return 1
+  [[ "${name}" =~ ${SKIPPED_NAMES_RE} ]] && return 1
+  case "${name}" in
+    *.md | *.markdown | *.mdx | *.mdc | *.rst | *.adoc | *.asciidoc | *.org)
+      return 0
+      ;;
+    .cursorrules) return 0 ;;
+    *.txt) [[ "${lower}" =~ ${DOC_DIRS_RE} ]] ;;
+    *) return 1 ;;
+  esac
+}
+
+# Succeeds when a path is inside one of the directories after it.
+is_excluded() {
+  local path="$1" dir
+  shift
+  for dir in "$@"; do
+    [[ "${path}" == "${dir}/"* ]] && return 0
+  done
+  return 1
+}
+
+main() {
+  local -a excluded=() paths=()
+  local path dir
+  while (($# > 0)); do
+    case "$1" in
+      --exclude)
+        (($# > 1)) || usage
+        dir="${2#./}"
+        excluded+=("${dir%/}")
+        shift 2
+        ;;
+      --)
+        shift
+        paths+=("$@")
+        break
+        ;;
+      -*) usage ;;
+      *)
+        paths+=("$1")
+        shift
+        ;;
+    esac
+  done
+  if ((${#paths[@]} == 0)); then
+    while IFS= read -r path; do
+      paths+=("${path}")
+    done
+  fi
+  # Bash 3.2 treats an empty array as unset, which set -u rejects.
+  ((${#paths[@]} > 0)) || return 0
+  for path in "${paths[@]}"; do
+    path="${path#./}"
+    [[ -n "${path}" ]] || continue
+    if ((${#excluded[@]} > 0)) && is_excluded "${path}" "${excluded[@]}"; then
+      continue
+    fi
+    if is_doc "${path}"; then
+      printf '%s\n' "${path}"
+    fi
+  done | LC_ALL=C sort -u
+}
+
+main "$@"
