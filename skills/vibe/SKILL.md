@@ -47,6 +47,7 @@ carries every phase, and the details belong in theirs.
 | `vibes:spec-reviewer` | The spec's completeness, then whether the code meets it |
 | `vibes:architecture-reviewer` | The design, then module boundaries, coupling, API design |
 | `vibes:project-docs-reviewer` | That the spec, design and code keep to the project's own documents |
+| `vibes:commit-message-suggester` | Suggests the message for each commit you make yourself |
 | `vibes:cleanliness-reviewer` | Readability, naming, size, duplication, dead code, principles |
 | `vibes:style-reviewer` | Each guide's `coding-style.md` |
 | `vibes:idioms-reviewer` | The most idiomatic approach in each language, format and tool |
@@ -69,6 +70,13 @@ then starting a new session, fixes it. Never stand in for an agent with
 `general-purpose` or any other agent told to read its definition: a
 stand-in has none of its tool limits, and the hooks that keep the reviewers
 from changing files know them only by their agent type.
+
+**Your own commits.** For each commit you make yourself, such as the
+approved spec and design or the spike review's corrections, stage it, then
+spawn `vibes:commit-message-suggester` with the task and what the commit is
+for, and commit with the message it replies. The agents that commit, such
+as the builders, write their own. Every subject is 50 characters at most:
+the gate refuses a longer one.
 
 ## The spec comes first
 

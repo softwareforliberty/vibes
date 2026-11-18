@@ -46,6 +46,7 @@ needs it.
 | `vibes:builder` | Rebuilds the optimisation test-first, and fixes review findings |
 | The reviewers | As in `/vibes:vibe`, in the spike review and the rebuild review |
 | `vibes:project-docs-reviewer` | That the spec, design and code keep to the project's own documents, in every review |
+| `vibes:commit-message-suggester` | Suggests the message for each commit you make yourself |
 
 **Check they're loaded before anything else,** even before resuming: each
 agent above, and each reviewer `/vibes:vibe` lists, must be among the
@@ -58,6 +59,13 @@ an agent with `general-purpose` or any other agent told to read its
 definition: a stand-in has none of its tool limits, and the hooks that keep
 the profiler and the reviewers from changing the code know them only by
 their agent type.
+
+**Your own commits.** For each commit you make yourself, such as the spec
+or the spike review's corrections, stage it, then spawn
+`vibes:commit-message-suggester` with the task and what the commit is for,
+and commit with the message it replies. The agents that commit, such as
+the builders, write their own. Every subject is 50 characters at most: the
+gate refuses a longer one.
 
 ## Names
 

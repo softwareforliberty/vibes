@@ -60,9 +60,31 @@ class ReviewerTest(unittest.TestCase):
                 self.assertEqual(hook("vibes:project-docs-reviewer", "Edit",
                                       file_path=path), 2)
 
+    def test_the_spec_reviewer_runs_but_never_changes_git(self) -> None:
+        self.assertEqual(hook("spec-reviewer", "Bash", command="make test"), 0)
+        self.assertEqual(
+            hook("spec-reviewer", "Bash", command="git commit -m x"), 2)
+
     def test_other_agents_are_free(self) -> None:
         self.assertEqual(hook("optimiser", "Write", file_path="/p/a.py"), 0)
         self.assertEqual(hook("", "Write", file_path="/p/a.py"), 0)
+
+
+class SuggesterTest(unittest.TestCase):
+    AGENT = "vibes:commit-message-suggester"
+
+    def test_reads_the_staged_change(self) -> None:
+        for command in ("git diff --cached --stat", "git log -5 --format=%s",
+                        "printf '%s' 'Add CSV export' | wc -m"):
+            with self.subTest(command=command):
+                self.assertEqual(hook(self.AGENT, "Bash", command=command), 0)
+
+    def test_never_commits_or_writes(self) -> None:
+        for command in ("git commit -m x", "git add a.py", "git reset",
+                        "echo x > msg.txt"):
+            with self.subTest(command=command):
+                self.assertEqual(hook(self.AGENT, "Bash", command=command), 2)
+        self.assertEqual(hook(self.AGENT, "Write", file_path="/p/msg"), 2)
 
 
 if __name__ == "__main__":

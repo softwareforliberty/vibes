@@ -3,8 +3,10 @@
 # Claude Code PreToolUse hook that keeps the reviewers read-only. A reviewer
 # may write only its own findings file in a review round's directory, so this
 # blocks (exit 2) any other file it would write or edit. The spec reviewer may
-# also build, test and run the program, but must never change files or git
-# state, so this blocks any Bash command of its that would. The profiler may
+# also build, test and run the program, and the commit message suggester may
+# read the staged change, but neither may change files or git state, so this
+# blocks any Bash command of theirs that would, and any write of the
+# suggester's. The profiler may
 # write and edit only its own files in an optimise run's state directory,
 # never the project's code, so this blocks its other writes and edits. It
 # guards against mistakes, not a determined attacker: a program an agent runs
@@ -24,7 +26,7 @@ readonly REVIEWERS
 # Agents that may write and edit only in an optimise run's state directory.
 readonly PROFILERS=" profiler "
 # Agents whose Bash commands may not change files or git state.
-readonly READ_ONLY_SHELL=" spec-reviewer "
+readonly READ_ONLY_SHELL=" commit-message-suggester spec-reviewer "
 # git subcommands that only read.
 GIT_READERS=" blame cat-file describe diff grep log ls-files ls-tree"
 GIT_READERS+=" merge-base rev-parse shortlog show status "
@@ -172,23 +174,27 @@ main() {
     fi
     exit 0
   fi
-  [[ "${REVIEWERS}" == *" ${agent} "* ]] || exit 0
-  if [[ "${tool}" != "Bash" ]]; then
+  if [[ "${tool}" == "Bash" ]]; then
+    [[ "${READ_ONLY_SHELL}" == *" ${agent} "* ]] || exit 0
+    command="$(hook::json_field "${input}" '.tool_input.command' \
+      | hook::strip_text)"
+    found="$(reason "${command}" "${agent}")"
+    if [[ -n "${found}" ]]; then
+      printf 'vibes: %s is read-only, and %s. ' "${agent}" "${found}" >&2
+      printf 'It can run commands, but not change files or git.\n' >&2
+      exit 2
+    fi
+    exit 0
+  fi
+  if [[ "${REVIEWERS}" == *" ${agent} "* ]]; then
     path="$(hook::json_field "${input}" '.tool_input.file_path')"
     if ! is_findings_file "${path}" "${agent}"; then
       printf 'vibes: %s is read-only. It may write only ' "${agent}" >&2
       printf '%s.md in the review directory.\n' "${agent}" >&2
       exit 2
     fi
-    exit 0
-  fi
-  [[ "${READ_ONLY_SHELL}" == *" ${agent} "* ]] || exit 0
-  command="$(hook::json_field "${input}" '.tool_input.command' \
-    | hook::strip_text)"
-  found="$(reason "${command}" "${agent}")"
-  if [[ -n "${found}" ]]; then
-    printf 'vibes: %s is read-only, and %s. ' "${agent}" "${found}" >&2
-    printf 'It can build, test and run code, but not change files or git.\n' >&2
+  elif [[ "${READ_ONLY_SHELL}" == *" ${agent} "* ]]; then
+    printf 'vibes: %s is read-only, and may not write files.\n' "${agent}" >&2
     exit 2
   fi
 }
