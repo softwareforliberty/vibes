@@ -2,7 +2,7 @@
 
     pr-scan scan --repo <dir> --base <commit> --head <commit> --out <dir>
                  [--meta <dir>]
-    pr-scan report --out <dir>
+    pr-scan report --out <dir> [--branch]
 
 Both print only a fixed summary of validated SHAs and counts, so no text
 from the pull request reaches the agent that runs them.
@@ -38,12 +38,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     scan.add_argument("--meta")
     build = commands.add_parser("report")
     build.add_argument("--out", required=True)
+    build.add_argument("--branch", action="store_true")
     args = parser.parse_args(argv)
     try:
         if args.command == "scan":
             return run_scan(args.repo, args.base, args.head, args.out,
                             args.meta)
-        return report.build(args.out)
+        return report.build(args.out, args.branch)
     except (RuntimeError, OSError, ValueError) as error:
         print(f"pr-scan: {ascii_only(str(error), 300)}", file=sys.stderr)
         return 2

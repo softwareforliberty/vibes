@@ -6,9 +6,15 @@
 #
 #   pr-prepare <number or URL>
 #   pr-prepare --local <base> <head> [<name>]
+#   pr-prepare --branch [<base branch>]
 #
 # The second form reviews a local branch or commit range, with no GitHub
-# metadata, into .vibes/pr-<name>/.
+# metadata, into .vibes/pr-<name>/. The third reviews the checked-out branch
+# since it left its base branch, the remote's default branch unless one is
+# named, into .vibes/review-<branch>/. Uncommitted changes to tracked files
+# are included, as a commit object made from them that no ref points to, so
+# the working tree, the index and the branch are left as they were. New
+# files not yet added are listed in untracked.txt, and not reviewed.
 #
 # Git runs only tree-to-tree commands, with hooks, filters, external diff
 # programs, textconv, LFS and submodules turned off, and nothing is checked
@@ -53,6 +59,38 @@ fresh_directory() {
   fi
   mkdir -p -- "${out}/meta" "${out}/review/round-1"
   [[ -f .vibes/.gitignore ]] || printf '*\n' >.vibes/.gitignore
+}
+
+# Prints the branch that the checked-out one was made from: the remote's
+# default branch, or else main, master or trunk.
+default_branch() {
+  local ref
+  if ref="$(safe_git symbolic-ref --quiet --short refs/remotes/origin/HEAD)"; then
+    printf '%s\n' "${ref}"
+    return 0
+  fi
+  for ref in main master trunk; do
+    if safe_git rev-parse --verify --quiet "refs/heads/${ref}" >/dev/null; then
+      printf '%s\n' "${ref}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Prints a commit holding the working tree's tracked files on top of HEAD,
+# or HEAD when nothing is uncommitted. Only objects are written: no ref, no
+# index and no file changes.
+working_head() {
+  local stash tree
+  stash="$(safe_git stash create)" || die "git stash create failed"
+  if [[ -z "${stash}" ]]; then
+    safe_git rev-parse HEAD
+    return 0
+  fi
+  tree="$(safe_git rev-parse "${stash}^{tree}")"
+  safe_git commit-tree "${tree}" -p HEAD -m "Uncommitted changes" \
+    || die "git commit-tree failed: set user.name and user.email"
 }
 
 # Prints the GitHub pull request field, checked against a pattern.
@@ -104,11 +142,30 @@ write_guides() {
 }
 
 main() {
-  local base head name number out status=0
-  (($# > 0)) || die "usage: pr-prepare <number or URL> | --local <base> <head> [<name>]"
+  local base head name number out target branch status=0
+  (($# > 0)) || die "usage: pr-prepare <number or URL> | --local <base> <head> [<name>] | --branch [<base branch>]"
   cd -- "$(safe_git rev-parse --show-toplevel 2>/dev/null)" \
     || die "run it inside the repository the pull request is for"
-  if [[ "$1" == "--local" ]]; then
+  if [[ "$1" == "--branch" ]]; then
+    target="${2:-}"
+    if [[ -z "${target}" ]]; then
+      target="$(default_branch)" \
+        || die "can't tell the base branch: name it, such as --branch main"
+    fi
+    safe_git rev-parse --verify --quiet "${target}^{commit}" >/dev/null \
+      || die "no such branch: ${target}"
+    base="$(safe_git merge-base "${target}" HEAD)" \
+      || die "the branch shares no history with ${target}"
+    head="$(working_head)"
+    [[ "${base}" != "${head}" ]] \
+      || die "nothing to review: no commits or changes since ${target}"
+    branch="$(safe_git symbolic-ref --quiet --short HEAD || echo detached)"
+    name="$(printf '%s' "${branch}" | tr -c 'A-Za-z0-9._-' '-')"
+    out=".vibes/review-${name}"
+    fresh_directory "${out}"
+    LOG="${out}/prepare.log"
+    safe_git ls-files --others --exclude-standard >"${out}/untracked.txt"
+  elif [[ "$1" == "--local" ]]; then
     (($# >= 3)) || die "usage: pr-prepare --local <base> <head> [<name>]"
     base="$(safe_git rev-parse --verify --quiet "$2^{commit}")" \
       || die "no such commit: $2"
@@ -141,6 +198,11 @@ main() {
     "${out}/guides.txt" | tr '\n' ' ')"
   printf 'pr-prepare: files no guide covers %s\n' \
     "$(grep -c '^no guide: ' "${out}/guides.txt" || true)"
+  if [[ -f "${out}/untracked.txt" ]]; then
+    printf 'pr-prepare: base %s, head %s\n' "${base}" "${head}"
+    printf 'pr-prepare: new files not added to git, not reviewed %s\n' \
+      "$(wc -l <"${out}/untracked.txt" | tr -d ' ')"
+  fi
   return "${status}"
 }
 

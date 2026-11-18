@@ -1,5 +1,7 @@
 """Builds pr-review.md for the maintainer, and comment-draft.md for them to
-edit and post themselves, from scan.md and the reviewers' files.
+edit and post themselves, from scan.md and the reviewers' files. For a
+review of the checked-out branch, builds review.md instead, with no merge
+instructions or comment.
 
 Reviewer files quote the pull request, so every line is checked against the
 findings format, and anything else is escaped and marked. The agent that
@@ -12,16 +14,16 @@ import glob
 import os
 import re
 from collections import Counter
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from .escape import ascii_only, visible
 
-VERDICT = re.compile(r"\AVERDICT: (APPROVED|CHANGES REQUESTED)\Z")
+VERDICT = re.compile(r"\AVERDICT: (APPROVED|CHANGES REQUESTED|NOT APPLICABLE)\Z")
 FINDING = re.compile(r"\A- \[(BLOCKER|MAJOR|MINOR)\] \S.*\Z")
 SCAN_LINE = re.compile(r"\A\[(HIGH|REVIEW|INFO)\] (.*?):(\d+): ([a-z0-9-]+): ")
 ACCOUNT = re.compile(r"\A- (?:explained|not cleared|confirmed): \S.*\Z")
 UNREVIEWED = re.compile(r"\A- \S.*\Z")
-SECTIONS = ("FINDINGS", "SCAN", "UNREVIEWED")
+SECTIONS = ("FINDINGS", "SCAN", "UNREVIEWED", "DOCS")
 LIMIT = 400
 LIMITS = """\
 ## Limits
@@ -37,9 +39,17 @@ LIMITS = """\
   reviewer can clear a HIGH scan finding, and why the files above must be
   inspected by a person.
 """
+BRANCH_LIMITS = """\
+## Limits
+
+- The scan and the reviewers find known tricks and common mistakes, not
+  every one.
+- Nothing here can tell whether an upstream release a pin points at is
+  itself malicious. Check new releases and keys by hand.
+"""
 
 
-def build(out: str) -> int:
+def build(out: str, branch: bool = False) -> int:
     scan = read_scan(out)
     reviews = {os.path.basename(path)[:-3]: read_review(path)
                for path in sorted(glob.glob(os.path.join(out, "review", "*",
@@ -47,11 +57,17 @@ def build(out: str) -> int:
                if not os.path.basename(path).startswith("responses")}
     head = _first_line(os.path.join(out, "head.txt"))
     base = _first_line(os.path.join(out, "base.txt"))
-    with open(os.path.join(out, "pr-review.md"), "w", encoding="utf-8") as f:
-        f.write(review_text(base, head, scan, reviews))
-    with open(os.path.join(out, "comment-draft.md"), "w",
-              encoding="utf-8") as f:
-        f.write(comment_text(scan, reviews))
+    if branch:
+        with open(os.path.join(out, "review.md"), "w", encoding="utf-8") as f:
+            f.write(review_text(base, head, scan, reviews,
+                                untracked=_untracked(out)))
+    else:
+        with open(os.path.join(out, "pr-review.md"), "w",
+                  encoding="utf-8") as f:
+            f.write(review_text(base, head, scan, reviews))
+        with open(os.path.join(out, "comment-draft.md"), "w",
+                  encoding="utf-8") as f:
+            f.write(comment_text(scan, reviews))
     severities = Counter(severity for severity, *_ in scan)
     print("pr-scan report: scan " + " ".join(
         f"{s} {severities.get(s, 0)}" for s in ("HIGH", "REVIEW", "INFO")))
@@ -66,6 +82,14 @@ def build(out: str) -> int:
               + (f", {len(review['malformed'])} malformed lines"
                  if review["malformed"] else ""))
     return 0
+
+
+def _untracked(out: str) -> List[str]:
+    path = os.path.join(out, "untracked.txt")
+    if not os.path.exists(path):
+        return []
+    with open(path, encoding="utf-8", errors="replace") as stream:
+        return [f"- `{clean(line)}`" for line in stream if line.strip()]
 
 
 def _first_line(path: str) -> str:
@@ -114,21 +138,29 @@ def read_review(path: str) -> Dict:
                 continue
             elif section == "SCAN" and ACCOUNT.match(line):
                 review["SCAN"].append(line)
-            elif section == "UNREVIEWED" and UNREVIEWED.match(line):
-                review["UNREVIEWED"].append(line)
+            elif section in ("UNREVIEWED", "DOCS") and UNREVIEWED.match(line):
+                review[section].append(line)
             else:
                 review["malformed"].append(line)
     return review
 
 
-def review_text(base: str, head: str, scan, reviews: Dict) -> str:
-    lines = ["# Pull request review", "",
-             f"- Reviewed: `{base}..{head}`",
-             f"- Before merging, check the pull request's head is still "
-             f"`{head}`, and merge with "
-             f"`gh pr merge --squash --match-head-commit {head}`. If it "
-             f"moved, review it again.", "",
-             "## Scan findings", "",
+def review_text(base: str, head: str, scan, reviews: Dict,
+                untracked: Optional[List[str]] = None) -> str:
+    if untracked is None:
+        lines = ["# Pull request review", "",
+                 f"- Reviewed: `{base}..{head}`",
+                 f"- Before merging, check the pull request's head is still "
+                 f"`{head}`, and merge with "
+                 f"`gh pr merge --squash --match-head-commit {head}`. If it "
+                 f"moved, review it again.", ""]
+    else:
+        lines = ["# Branch review", "",
+                 f"- Reviewed: `{base}..{head}`, the branch's commits and "
+                 f"its uncommitted changes to tracked files.",
+                 "- New files not yet added to git weren't reviewed:", "",
+                 *(untracked or ["- None."]), ""]
+    lines += ["## Scan findings", "",
              "No reviewer can clear a HIGH finding: each needs a person.", ""]
     for severity in ("HIGH", "REVIEW", "INFO"):
         rows = [line for s, _, _, line in scan if s == severity]
@@ -158,7 +190,8 @@ def review_text(base: str, head: str, scan, reviews: Dict) -> str:
     unreviewed = [line for review in reviews.values()
                   for line in review["UNREVIEWED"]]
     lines += ["", "## Not read in full by a reviewer", "",
-              *(unreviewed or ["None reported."]), "", LIMITS]
+              *(unreviewed or ["None reported."]), "",
+              LIMITS if untracked is None else BRANCH_LIMITS]
     return "\n".join(lines)
 
 
