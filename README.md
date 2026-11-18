@@ -310,7 +310,8 @@ Once it exists, the gate:
 - runs `scripts/check` before each commit, and blocks the commit if it fails
 - refuses to commit while there are unstaged changes or untracked files, so
   the checks test exactly what's being committed
-- skips `spike/*` branches
+- blocks a commit whose subject is longer than 50 characters
+- runs no checks on `spike/*` branches, apart from the subject's length
 - in Claude Code, also blocks `git commit -a` and `--no-verify`
 
 For a project with specs, `scripts/check` also checks the tests'
@@ -320,10 +321,11 @@ requirement the spec doesn't have, and `scripts/audit`, run before a task
 finishes, fails on any requirement no test covers.
 
 Projects without `scripts/check` are never blocked. To enforce the gate for
-every commit, including your own, install the git hook:
+every commit, including your own, install the git hooks:
 
 ```sh
 ln -s /path/to/vibes/hooks/git_pre_commit .git/hooks/pre-commit
+ln -s /path/to/vibes/hooks/git_commit_msg .git/hooks/commit-msg
 ```
 
 The hooks need Bash, git and `realpath`. The Claude Code hook also uses `jq`

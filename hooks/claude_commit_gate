@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 #
 # Claude Code PreToolUse hook for the vibes commit gate. Reads the tool call
-# as JSON on stdin and blocks a git commit (exit 2) when the gate fails.
+# as JSON on stdin and blocks a git commit (exit 2) when its subject is
+# longer than 50 characters or the gate fails.
 
 set -euo pipefail
 
@@ -17,6 +18,8 @@ readonly COMMIT_WORD_RE='(^|[;&|[:space:]])commit([;&|[:space:]]|$)'
 readonly VALUE_OPTIONS='CcFmStu'
 # Characters that group commands, which don't change the words in them.
 readonly GROUPING='[(){}]'
+# The longest commit subject allowed, as hooks/lib/commit_subject.py checks.
+readonly SUBJECT_LIMIT=50
 
 # Prints a path resolved against a directory, or nothing when either is
 # unknown.
@@ -132,6 +135,15 @@ bypass_options() {
   done
 }
 
+# Prints each commit subject in a command that's longer than the limit, as
+# its length, a tab and the subject. Prints nothing without python3.
+long_subjects() {
+  local command="$1" dir="$2"
+  command -v python3 >/dev/null || return 0
+  python3 -I -S "${LIB}/commit_subject.py" --command "${dir}" \
+    <<<"${command}" || true
+}
+
 # Returns 0 when the project's own git hook is the vibes gate.
 git_hook_is_gate() {
   local hook
@@ -168,15 +180,16 @@ check_commit() {
 }
 
 main() {
-  local input command cwd dir args
+  local input raw command cwd dir args length subject
+  local -a found=()
   input="$(cat)"
-  command="$(hook::json_field "${input}" '.tool_input.command' \
-    | hook::strip_text)"
+  raw="$(hook::json_field "${input}" '.tool_input.command')"
+  command="$(hook::strip_text <<<"${raw}")"
   cwd="$(hook::json_field "${input}" '.cwd')"
   cwd="${cwd:-${PWD}}"
 
   # Without a parser there's no command to read, so check as if it commits.
-  if [[ -z "${command}" ]]; then
+  if [[ -z "${raw}" ]]; then
     check_commit "${cwd}" "" || exit 2
     exit 0
   fi
@@ -184,7 +197,32 @@ main() {
     exit 0
   fi
 
-  while IFS=$'\t' read -r dir args; do
+  while IFS= read -r dir; do
+    found+=("${dir}")
+  done < <(commits "${command}" "${cwd}")
+  # Bash 3.2 treats an empty array as unset, which set -u rejects.
+  ((${#found[@]} > 0)) || exit 0
+
+  # The subject is checked first, since it's cheap and the checks aren't.
+  for dir in "${found[@]}"; do
+    dir="${dir%%$'\t'*}"
+    dir="${dir#d:}"
+    if [[ -z "${dir}" ]] || ! gated "${dir}"; then
+      continue
+    fi
+    while IFS=$'\t' read -r length subject; do
+      [[ -n "${length}" ]] || continue
+      gate::err "the subject \"${subject}\" is ${length} characters. Keep it"
+      gate::err "to ${SUBJECT_LIMIT} or fewer: say what the commit does, in the"
+      gate::err "imperative, and put the detail in the body."
+      exit 2
+    done < <(long_subjects "${raw}" "${dir}")
+    break
+  done
+
+  for dir in "${found[@]}"; do
+    args="${dir#*$'\t'}"
+    dir="${dir%%$'\t'*}"
     dir="${dir#d:}"
     if [[ -z "${dir}" ]]; then
       if gated "${cwd}"; then
@@ -196,7 +234,7 @@ main() {
       continue
     fi
     check_commit "${dir}" "${args}" || exit 2
-  done < <(commits "${command}" "${cwd}")
+  done
 }
 
 main "$@"

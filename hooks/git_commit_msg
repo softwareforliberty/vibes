@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+#
+# vibes-commit-gate
+#
+# Git commit-msg hook for the vibes commit gate: refuses a commit whose
+# subject is longer than 50 characters, in a project with the gate. Install
+# it in a project with:
+#   ln -s /path/to/vibes/hooks/git_commit_msg .git/hooks/commit-msg
+
+set -euo pipefail
+
+LIB="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/lib"
+readonly LIB
+
+main() {
+  local message="$1" root length subject
+  root="$(git rev-parse --show-toplevel 2>/dev/null)" || exit 0
+  [[ -x "${root}/scripts/check" ]] || exit 0
+  command -v python3 >/dev/null || exit 0
+  while IFS=$'\t' read -r length subject; do
+    [[ -n "${length}" ]] || continue
+    printf 'vibes commit gate: the subject "%s" is %s characters.\n' \
+      "${subject}" "${length}" >&2
+    printf 'vibes commit gate: keep it to 50 or fewer, and put the detail\n' >&2
+    printf 'vibes commit gate: in the body.\n' >&2
+    exit 1
+  done < <(python3 -I -S "${LIB}/commit_subject.py" --file "${message}" || true)
+}
+
+main "$@"

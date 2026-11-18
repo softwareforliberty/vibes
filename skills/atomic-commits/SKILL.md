@@ -116,8 +116,10 @@ Closes #142
 
 - **Subject line:** what the commit does, in the imperative mood, as if
   finishing "This commit will…": "Add CSV export", not "Added" or "Adds".
-  Capitalise it, keep it to 50 characters where you can and 72 at most, and
-  don't end it with a full stop.
+  Capitalise it, keep it to **50 characters at most**, and don't end it
+  with a full stop. The commit gate refuses a longer one. If the change
+  needs more words than that, the subject says what it does and the body
+  says the rest; if it can't be said in 50, it's probably two commits.
 - **Blank line** between the subject and the body.
 - **Body:** explain **why** the change was made and anything a reviewer
   wouldn't see from the diff: context, trade-offs, side effects. The diff
@@ -176,6 +178,6 @@ Before each commit:
 - [ ] The project builds and the tests and linters pass with only the staged
       changes.
 - [ ] Tests, docs and config for the change are included.
-- [ ] The message has an imperative subject of 72 characters or fewer, and the
+- [ ] The message has an imperative subject of 50 characters or fewer, and the
       body explains why.
 - [ ] No secrets, build output or editor files are staged.

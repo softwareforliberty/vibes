@@ -15,16 +15,16 @@ same logic:
 
 - **Claude Code:** the vibes plugin's `PreToolUse` hook runs it before every
   `git commit` the agent makes.
-- **Git:** `hooks/git_pre_commit` in this repo, installed as the project's
-  pre-commit hook, runs it for every commit, including commits made by people
-  and by other agents.
+- **Git:** `hooks/git_pre_commit` and `hooks/git_commit_msg` in this repo,
+  installed as the project's pre-commit and commit-msg hooks, run it for
+  every commit, including commits made by people and by other agents.
 
 ## What the gate does
 
 1. It does nothing in projects without an executable `scripts/check`, so
    installing the plugin never blocks unrelated projects.
-2. It does nothing on `spike/*` branches, where the vibe workflow's throwaway
-   spikes live.
+2. It runs no checks on `spike/*` branches, where the vibe workflow's
+   throwaway spikes live, but still checks the subject's length.
 3. It blocks the commit when there are unstaged changes or untracked files,
    because the checks would then test something other than the commit.
 4. It blocks the commit when a staged file needs a guide that the
@@ -35,7 +35,9 @@ same logic:
    until the gate checks them too.
 5. It runs `scripts/check` and blocks the commit if it fails, showing the end
    of its output.
-6. In Claude Code it also blocks `git commit -a`, `--all`, `--no-verify` and
+6. It blocks a commit whose subject is longer than 50 characters, before
+   running anything else.
+7. In Claude Code it also blocks `git commit -a`, `--all`, `--no-verify` and
    `-n`. Each change is staged deliberately, and the gate is never bypassed.
 
 ## Step 1: find the guides
@@ -178,15 +180,16 @@ should run it too.
 1. Make both scripts executable, then run `scripts/check` on the current
    state of the project. Fix or report any failures before going on: a gate
    that already fails can't tell new problems from old ones.
-2. Install the git hook, which links to this repo's copy so updates apply
-   automatically:
+2. Install the git hooks, which link to this repo's copies so updates
+   apply automatically:
 
    ```sh
    ln -s "${CLAUDE_PLUGIN_ROOT}/hooks/git_pre_commit" .git/hooks/pre-commit
+   ln -s "${CLAUDE_PLUGIN_ROOT}/hooks/git_commit_msg" .git/hooks/commit-msg
    ```
 
-   If the project already has a pre-commit hook, ask the user before
-   replacing it.
+   If the project already has either hook, ask the user before replacing
+   it.
 3. Commit `scripts/check`, `scripts/audit`, `scripts/check-requirements`
    if the project has specs, and the tool config files in one commit. The
    gate runs on that commit too.
