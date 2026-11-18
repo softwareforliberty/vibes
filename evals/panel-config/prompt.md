@@ -7,8 +7,9 @@ allowed_tools: [Read, Glob, Grep]
 
 `SKILL.md` in your working directory is the vibes workflow skill. You're its
 main agent, about to start round 1 of the `rebuild` review of a medium task,
-which has a design. `files.txt` lists the files the change touches, and
-`guides.txt` is what `guides-for` printed for them. Following the skill's
+which has a design. `files.txt` lists the files the change touches,
+`guides.txt` is what `guides-for` printed for them, and `project-docs.txt`
+is what `project-docs` printed for the project. Following the skill's
 rules for the review panel, decide which reviewers run. Don't run any.
 
 Reply with one line: `PANEL:` and then the reviewers' names without the

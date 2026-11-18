@@ -42,6 +42,17 @@ not cold code. **`optimise-speeds-up-dedupe`** runs the whole
 `/vibes:optimise` command unattended, which takes much longer; it has its
 own tag, `optimise-e2e`, so `--tag optimise` leaves it out.
 
+The **`project-docs-reviewer-*`** cases review the spec for a late fee in
+a small invoicing library. `-finds-contradiction` passes when the reviewer
+reports that the spec's fee, a float of dollars, breaks the architecture
+notes' rule that money is whole cents. `-skips-not-applicable` gives it
+only documents about releases and branding, and passes when it replies
+`NOT APPLICABLE` without reading them. The panel cases also check it joins
+a panel only when `project-docs.txt` lists a document.
+**`commit-message-suggester-fits-subject`** stages that spec in a new
+repository, and passes when the suggested subject is 50 characters or
+fewer and in the imperative.
+
 | Path | What it holds |
 | --- | --- |
 | `source/base/` | The library before the change, with the spec and design |
@@ -51,6 +62,7 @@ own tag, `optimise-e2e`, so `--tag optimise` leaves it out.
 | `pr_cases.py` | The pull request variants and cases, which `generate.py` writes too |
 | `source/optimise/`, `source/optimise-run/` | contacts, and the run directory its baseline leaves |
 | `optimise_cases.py` | The optimise candidates and cases, which `generate.py` writes too |
+| `docs_cases.py` | The project docs reviewer's and commit message suggester's projects and cases, which `generate.py` writes too |
 | `fixtures/` | Each variant's project and review directory, generated |
 | `<case>/` | Each case's prompt, graders and setup script, generated |
 

@@ -26,6 +26,7 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+import docs_cases
 import optimise_cases
 import pr_cases
 
@@ -516,20 +517,29 @@ class PanelCase:
 
     name: str
     files: tuple[str, ...]
+    docs: tuple[str, ...]
     panel: tuple[str, ...]
 
 
 ALL_REVIEWERS = tuple(sorted(reviewer for reviewer, _, _ in REVIEWERS))
+DOCS_REVIEWER = "project-docs-reviewer"
+
+
+def with_docs(panel: tuple[str, ...]) -> tuple[str, ...]:
+    """A panel with the project docs reviewer, for a project with docs."""
+    return tuple(sorted((*panel, DOCS_REVIEWER)))
 
 PANEL_CASES = (
     PanelCase(
         "python",
         ("src/stock/report.py", "tests/test_report.py", "docs/specs/low-stock/spec.md"),
-        ALL_REVIEWERS,
+        ("README.md", "docs/architecture.md"),
+        with_docs(ALL_REVIEWERS),
     ),
     PanelCase(
         "config",
         ("config/settings.yaml", "config/limits.toml"),
+        (),
         tuple(
             r
             for r in ALL_REVIEWERS
@@ -539,17 +549,20 @@ PANEL_CASES = (
     PanelCase(
         "container",
         ("Dockerfile", ".github/workflows/ci.yaml"),
-        tuple(r for r in ALL_REVIEWERS if r != "resource-leak-reviewer"),
+        ("README.md",),
+        with_docs(tuple(r for r in ALL_REVIEWERS if r != "resource-leak-reviewer")),
     ),
     PanelCase(
         "migration",
         ("migrations/001_add_reorder_level.sql", "docs/specs/reorder/spec.md"),
+        (),
         tuple(r for r in ALL_REVIEWERS if r != "resource-leak-reviewer"),
     ),
     PanelCase(
         "docs",
         ("README.md", "docs/usage.md"),
-        ("security-reviewer", "spec-reviewer"),
+        ("README.md", "docs/usage.md"),
+        with_docs(("security-reviewer", "spec-reviewer")),
     ),
 )
 
@@ -606,8 +619,9 @@ allowed_tools: [Read, Glob, Grep]
 
 `SKILL.md` in your working directory is the vibes workflow skill. You're its
 main agent, about to start round 1 of the `rebuild` review of a medium task,
-which has a design. `files.txt` lists the files the change touches, and
-`guides.txt` is what `guides-for` printed for them. Following the skill's
+which has a design. `files.txt` lists the files the change touches,
+`guides.txt` is what `guides-for` printed for them, and `project-docs.txt`
+is what `project-docs` printed for the project. Following the skill's
 rules for the review panel, decide which reviewers run. Don't run any.
 
 Reply with one line: `PANEL:` and then the reviewers' names without the
@@ -768,6 +782,8 @@ def build_panel_fixture(case: PanelCase) -> None:
         ).stdout
     (target / "files.txt").write_text("\n".join(case.files) + "\n", encoding="utf-8")
     (target / "guides.txt").write_text(guides, encoding="utf-8")
+    (target / "project-docs.txt").write_text(
+        "".join(f"{path}\n" for path in case.docs), encoding="utf-8")
 
 
 def write_panel_case(case: PanelCase) -> None:
@@ -821,6 +837,7 @@ def main() -> None:
         write_panel_case(panel_case)
     pr_cases.build()
     optimise_cases.build()
+    docs_cases.build()
 
 
 if __name__ == "__main__":
