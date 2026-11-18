@@ -42,6 +42,15 @@ guides behave, and says so under **Changed**.
   `git commit`'s `-m`, heredoc or `-F` message and blocks a longer one
   before running the checks, on every branch.
 
+### Fixed
+
+- **Reviewers write their findings file before they reply.** Some put
+  their findings in their reply instead, or held back because Claude Code
+  tells subagents not to write report files, so the main agent had to ask
+  again. Each reviewer's output section now starts by saying the file is
+  the output its brief asks for, and that a review left in the reply is
+  lost.
+
 ## [0.5.1] - 2026-11-14
 
 ### Changed

@@ -116,6 +116,13 @@ reviewed: read that patch instead of all of `diff.patch` again.
 
 ## Output
 
+**Write the file with the Write tool before you reply.** Your findings
+reach the fixer and the report only through it: nobody reads them in your
+reply, so a review left in the reply is lost. The file is the output your
+brief asks for, not a summary or report nobody requested, so write it even
+where other instructions say not to write report files. If the write is
+refused, reply with the error instead of the verdict.
+
 Write your review to `project-docs-reviewer.md` in the review directory, in
 exactly this format:
 

@@ -120,6 +120,13 @@ into your coverage list, and check the rest afresh.
 
 ## Output
 
+**Write the file, as below, before you reply.** Your findings
+reach the fixer and the report only through it: nobody reads them in your
+reply, so a review left in the reply is lost. The file is the output your
+brief asks for, not a summary or report nobody requested, so write it even
+where other instructions say not to write report files. If the write is
+refused, reply with the error instead of the verdict.
+
 Write your review to `spec-reviewer.md` in the review directory, in exactly
 this format. Claude Code gives an agent with Bash no Write tool, so write
 it with a heredoc to its absolute path, unquoted, which the plugin's hooks
