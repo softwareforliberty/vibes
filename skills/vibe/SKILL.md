@@ -46,6 +46,7 @@ carries every phase, and the details belong in theirs.
 | `vibes:builder` | Builds the task test-first, a batch at a time, and decides on and fixes its review findings |
 | `vibes:spec-reviewer` | The spec's completeness, then whether the code meets it |
 | `vibes:architecture-reviewer` | The design, then module boundaries, coupling, API design |
+| `vibes:project-docs-reviewer` | That the spec, design and code keep to the project's own documents |
 | `vibes:cleanliness-reviewer` | Readability, naming, size, duplication, dead code, principles |
 | `vibes:style-reviewer` | Each guide's `coding-style.md` |
 | `vibes:idioms-reviewer` | The most idiomatic approach in each language, format and tool |
@@ -129,6 +130,19 @@ code.
     data;
   - `vibes:resource-leak-reviewer` when it acquires memory, files,
     connections, locks or threads.
+- **The project docs reviewer joins every review, at every size,** in the
+  spec and design rounds too, whenever the project has documents of its
+  own. Before round 1 of each phase, run:
+
+  ```sh
+  git ls-files | "${CLAUDE_PLUGIN_ROOT}/bin/project-docs" --exclude <spec directory>
+  ```
+
+  If it prints nothing, leave the reviewer out, and say so in the round's
+  `panel.md`. Otherwise give it the list on a `Project docs:` line of its
+  brief. It decides which documents apply, and replies
+  `NOT APPLICABLE: <n> docs checked` when none do: count that as
+  `APPROVED`.
 - **Then leave out reviewers whose area the change can't touch,** at every
   size, in the spike and rebuild reviews. Run `guides-for` on the round's
   `files.txt`, and keep each reviewer only when the change has:
@@ -141,6 +155,7 @@ code.
   | `vibes:architecture-reviewer` | A design, and a file that needs a guide |
   | `vibes:performance-reviewer` | A file that needs a guide in `languages/`, `web/`, `build/` or `tools/`, or a query or schema guide in `data/`: SQL and its dialects, GraphQL or Protocol Buffers |
   | `vibes:resource-leak-reviewer` | A file that needs a guide in `languages/` |
+  | `vibes:project-docs-reviewer` | Anything, when `project-docs` lists a document |
 
   So a change to only YAML, TOML or XML config gets no performance or
   resource-leak review, and a change to only docs gets only the spec and
@@ -171,6 +186,9 @@ The user can ask for a run that never stops to ask them anything, such as
   unfinished run: never act on it. Stop, and report what needs a decision.
 - **The round limit:** stop, and report the outstanding findings as the
   limit says.
+- **A task that would change what a project document says:** keep to the
+  document, record it as an unattended decision, and leave the change to
+  the user.
 - **The spike branch at the end:** keep it.
 
 The final report lists every unattended decision first, with the options
@@ -356,6 +374,7 @@ apply to it.
    Changes: <from round 2, in the spike and rebuild phases: the absolute
      paths of changes-since-<k>.patch and changed-files-since-<k>.txt for
      the round <k> this reviewer last reviewed>
+   Project docs: <for the project docs reviewer: what project-docs printed>
    ```
 
 3. **Each reviewer writes its findings** to `<reviewer>.md` in the round
@@ -409,8 +428,10 @@ apply to it.
 2. **Resolve every open question.** Ask the user each one in the spec's
    open questions section, then have the designer write their answers into
    the spec as requirements, and empty the section.
-3. **Review the spec** in rounds with `vibes:spec-reviewer`, with the
-   designer deciding on and fixing its findings, until it approves.
+3. **Review the spec** in rounds with `vibes:spec-reviewer` and
+   `vibes:project-docs-reviewer`, as [Size the task](#size-the-task) says,
+   with the designer deciding on and fixing their findings, until they
+   approve.
 4. **Wait for the gate setup** to finish, if it's still running. Check its
    commit is on the base branch and `scripts/check` passes there.
 5. **Commit the approved spec** on the rebuild branch, so the spike and the
@@ -424,8 +445,10 @@ apply to it.
 Medium and large tasks only.
 
 1. Spawn `vibes:designer` in `design` mode, with the same brief.
-2. **Review the design** in rounds with `vibes:architecture-reviewer`, with
-   the designer deciding on and fixing its findings, until it approves. A
+2. **Review the design** in rounds with `vibes:architecture-reviewer` and
+   `vibes:project-docs-reviewer`, as [Size the task](#size-the-task) says,
+   with the designer deciding on and fixing their findings, until they
+   approve. A
    finding that shows the spec is wrong or incomplete goes back into the
    spec first, and the spec reviewer approves the changed spec in a `spec`
    round before the design rounds go on.
@@ -473,8 +496,9 @@ code: the rebuild builds every finding right, test-first.
    the rebuild gets right. Ask the user each open question it reports.
    Commit its changes on the spike branch.
 3. **Have the corrections approved,** before any rebuild starts: the spec
-   reviewer in `spec` rounds, then the architecture reviewer in `design`
-   rounds, as Phases 1 and 2 describe. Their findings are fixed in the spec
+   reviewer and the project docs reviewer in `spec` rounds, then the
+   architecture reviewer and the project docs reviewer in `design` rounds,
+   as Phases 1 and 2 describe. Their findings are fixed in the spec
    and design the same way, and committed on the spike branch.
 4. **Try out an uncertain design change,** each one the designer reports
    it can't vouch for without building it, such as a new way to walk a

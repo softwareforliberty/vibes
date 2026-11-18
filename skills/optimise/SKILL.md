@@ -45,6 +45,7 @@ needs it.
 | `vibes:designer` | Decides on review findings and corrects the spec and design, and writes the rebuild plan |
 | `vibes:builder` | Rebuilds the optimisation test-first, and fixes review findings |
 | The reviewers | As in `/vibes:vibe`, in the spike review and the rebuild review |
+| `vibes:project-docs-reviewer` | That the spec, design and code keep to the project's own documents, in every review |
 
 **Check they're loaded before anything else,** even before resuming: each
 agent above, and each reviewer `/vibes:vibe` lists, must be among the
@@ -115,6 +116,8 @@ to ask the user:
 - **A trade-off,** such as a candidate that fails a guard rail: reject it.
 - **Anything that could lose the user's work:** stop, and report it.
 - **A round limit:** stop, and report the outstanding findings.
+- **An optimisation that would change what a project document says:** keep
+  to the document, and record it as an unattended decision.
 
 The final report lists every unattended decision first.
 
@@ -199,9 +202,10 @@ the baseline again before trusting old gains.
 2. **Create the rebuild branch:** `git switch -c optimise/<slug>`.
 3. **Spawn `vibes:optimiser` in `spec` mode,** to write the goal. Ask the
    user each open question it reports, and have it write the answers in.
-4. **Review the spec** in `spec` rounds with `vibes:spec-reviewer`, as
-   [Review rounds](#review-rounds) describes, with `vibes:designer` in
-   `revise` mode fixing the findings, until it approves.
+4. **Review the spec** in `spec` rounds with `vibes:spec-reviewer` and
+   `vibes:project-docs-reviewer`, as [Review rounds](#review-rounds)
+   describes, with `vibes:designer` in `revise` mode fixing the findings,
+   until they approve.
 5. **Commit the spec** on its own, through the gate. Record the guard rails
    from its quality requirements in the state file, as `bench` guards such
    as `rss_kib=10`.
@@ -275,8 +279,9 @@ needs.
    `vibes:architecture-reviewer`, `vibes:bug-reviewer`,
    `vibes:security-reviewer`, `vibes:performance-reviewer`,
    `vibes:resource-leak-reviewer`, `vibes:style-reviewer`,
-   `vibes:idioms-reviewer` and `vibes:cleanliness-reviewer`, less any whose
-   area the change can't touch, as [Review rounds](#review-rounds) says.
+   `vibes:idioms-reviewer`, `vibes:cleanliness-reviewer` and
+   `vibes:project-docs-reviewer`, less any whose area the change can't
+   touch, as [Review rounds](#review-rounds) says.
    Their findings about the code become lessons for the rebuild.
 2. **Correct the spec and design** on the spike branch: spawn
    `vibes:designer` in `revise` mode, in the `spike` phase, asking for
@@ -285,8 +290,9 @@ needs.
    rejected, with the measurement as the reason, unless the gain is small
    beside what the finding costs; then it's an open question for the user.
    Commit its changes on the spike branch.
-3. **Have the corrections approved:** the spec reviewer in `spec` rounds,
-   then, if there's a design, the architecture reviewer in `design` rounds.
+3. **Have the corrections approved:** the spec reviewer and the project
+   docs reviewer in `spec` rounds, then, if there's a design, the
+   architecture reviewer and the project docs reviewer in `design` rounds.
 4. **Try an uncertain design change,** each one the designer can't vouch
    for without building it: a new attempt from the spike, with the
    optimiser in `try` mode given the change and its findings, then a
@@ -395,7 +401,11 @@ A round reviews one phase, `spec`, `design`, `spike` or `rebuild`, in
    test reviewers for a file that needs a guide; the architecture and
    resource-leak reviewers for a file that needs a guide in `languages/`;
    the performance reviewer for one in `languages/`, `web/`, `build/` or
-   `tools/`, or a query or schema guide in `data/`. Write the panel to
+   `tools/`, or a query or schema guide in `data/`. The project docs
+   reviewer joins every round 1, in the spec and design phases too, when
+   `git ls-files | "${CLAUDE_PLUGIN_ROOT}/bin/project-docs" --exclude <spec
+   directory>` prints any document; give it the list on a `Project docs:`
+   line. Its `NOT APPLICABLE` reply counts as `APPROVED`. Write the panel to
    `panel.md`, with each reviewer left out and why.
 3. **Spawn the panel in a single message,** each with this brief:
 
@@ -408,6 +418,7 @@ A round reviews one phase, `spec`, `design`, `spike` or `rebuild`, in
    Guides: <guides>
    Round: <n>
    Changes: <from round 2: the changes-since files for this reviewer>
+   Project docs: <for the project docs reviewer: what project-docs printed>
    Measurements: <for the spike: each accepted candidate's candidates/<i>.md
      and profile report; for the rebuild: the latest verify reports>
    Rules:

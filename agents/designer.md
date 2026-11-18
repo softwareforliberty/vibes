@@ -134,6 +134,13 @@ Then fix each accepted finding, other than a lesson:
   naming its finding.
 - If a fix would change what the user asked for, don't make it: report it
   as an open question.
+- **A project docs finding** is fixed by bringing the spec or design into
+  line with the project's document, never by arguing with the document.
+  When the task itself seems meant to change what the document says, as
+  the finding may note, don't decide: report it as an open question, asking
+  whether the task overrides the document. If the main agent's brief says
+  it does, add a requirement to update that document in this task, and
+  record why in the change log.
 
 Write one line per finding to the round's `responses.md`: its reviewer and
 number, then `fixed: <what changed>`, or in a spike round
