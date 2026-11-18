@@ -15,6 +15,9 @@ while holding it to the standards of careful, experienced developers.
   needs.
 - **`bin/guides-for`:** lists the guides a set of files needs, such as
   `git ls-files | bin/guides-for`.
+- **`bin/project-docs`:** lists a project's own documents, such as its
+  README, architecture notes and earlier specs, for the project docs
+  reviewer: `git ls-files | bin/project-docs`.
 - **`bin/pr-prepare` and `bin/pr-scan`:** fetch an untrusted pull request
   and scan it for malicious changes, without running anything in it. The
   scanner is in `lib/pr_scan/`, and its tests in `tests/pr_scan/`.
@@ -34,17 +37,22 @@ while holding it to the standards of careful, experienced developers.
 - **`performance/`:** how to measure and profile a program, and the
   profilers and benchmark tools for each guide, for the profiler and the
   optimiser.
-- **`agents/`:** the designer, the spike agent, the builder, eleven
-  reviewer agents, and the profiler and optimiser.
+- **`agents/`:** the designer, the spike agent, the builder, twelve
+  reviewer agents, the profiler and optimiser, and the commit message
+  suggester.
 - **`hooks/`:** the commit gate, for Claude Code and for git; a guide
   check that makes the agent read the guide for each kind of file before
-  writing it; and a guard that keeps the reviewers from changing anything
-  but their own findings files, and the profiler from changing the code.
+  writing it; and a guard that keeps the reviewers and the commit message
+  suggester from changing anything but the reviewers' own findings files,
+  and the profiler from changing the code. The commit gate also refuses a
+  subject longer than 50 characters.
 - **`evals/`:** evals that check each reviewer agent finds the defects in
   its area and approves clean code, that the workflow picks the right
   reviewers for a change, that a pull request review catches malicious
-  changes, and that the profiler and optimiser find and measure the hot
-  spot, run with `claude plugin eval`.
+  changes, that the profiler and optimiser find and measure the hot spot,
+  that the project docs reviewer finds a contradiction and skips documents
+  that don't apply, and that suggested commit subjects fit in 50
+  characters, run with `claude plugin eval`.
 
 ## The workflow
 
@@ -62,6 +70,15 @@ can name one yourself, such as `/vibes:vibe small: fix the date parsing`:
 At every size, a reviewer whose area the change can't touch is left out,
 such as the performance and resource-leak reviewers for a change to only
 config files.
+
+When the project has documents of its own, such as architecture notes,
+conventions or the specs of earlier tasks, the project docs reviewer joins
+every review, the spec and design ones too. It first decides which of them
+apply to the task, and stops at once when none do. Where one does, it
+reports each place the work contradicts it, and the spec and design are
+corrected to follow the document. If the task seems meant to change what a
+document says, you're asked, and if it is, the task updates the document
+too. A project with no documents never runs it.
 
 Add `unattended` to run it without stopping to ask you anything, such as
 `/vibes:vibe unattended: <task>`. The main agent then makes the narrowest
@@ -249,8 +266,9 @@ The plugin provides:
   plus `vibes:test-driven-development`, `vibes:atomic-commits` and
   `vibes:commit-gate`, which agents use on their own when they apply.
 - **Agents:** `vibes:designer`, `vibes:spiker`, `vibes:builder`,
-  `vibes:profiler`, `vibes:optimiser` and the reviewers, such as
-  `vibes:security-reviewer`.
+  `vibes:profiler`, `vibes:optimiser`, `vibes:commit-message-suggester` and
+  the reviewers, such as `vibes:security-reviewer` and
+  `vibes:project-docs-reviewer`.
 - **The commit gate hook,** which runs before every `git commit` the agent
   makes.
 - **The guide check hook.** The first time an agent, or each subagent, writes a

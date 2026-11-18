@@ -8,6 +8,32 @@ guides behave, and says so under **Changed**.
 
 ## [Unreleased]
 
+### Added
+
+- **The project docs reviewer** checks the spec, design and code against
+  the project's own documents, such as its README, architecture notes,
+  decision records and earlier specs, in every review of `/vibes:vibe` and
+  `/vibes:optimise`. It decides from their headings which apply, and stops
+  at once when none do; a project with no documents never runs it. The
+  designer corrects the spec and design to follow a document, and asks you
+  when the task seems meant to change what the document says.
+- **`bin/project-docs`** lists a project's own documents, skipping release
+  notes, licences, templates, vendored code and test data.
+- **The commit message suggester** writes the message for each commit the
+  workflows' main agent makes itself, with a subject it has counted to 50
+  characters or fewer.
+- **A `commit-msg` git hook,** `hooks/git_commit_msg`, which holds every
+  commit to the same limit.
+- **Evals** for the project docs reviewer and the commit message
+  suggester.
+
+### Changed
+
+- **Commit subjects are 50 characters at most,** not 50 where you can and
+  72 at most. The Claude Code gate hook reads the subject from
+  `git commit`'s `-m`, heredoc or `-F` message and blocks a longer one
+  before running the checks, on every branch.
+
 ## [0.5.1] - 2026-11-14
 
 ### Changed
