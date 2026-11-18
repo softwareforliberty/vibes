@@ -25,8 +25,8 @@ while holding it to the standards of careful, experienced developers.
   interleaved A/B runs with a verdict beyond the noise. It's in
   `lib/bench/`, and its tests in `tests/bench/`.
 - **`skills/`:** agent skills for the workflow, optimising performance,
-  reviewing an outside pull request, test-driven development, atomic
-  commits and setting up the commit gate.
+  reviewing your own branch or an outside pull request, test-driven
+  development, atomic commits and setting up the commit gate.
 - **`principles.md`:** the programming principles every change is held
   to, such as SOLID, DRY and KISS.
 - **`architecture/`:** how to structure software: rules for every kind,
@@ -188,8 +188,9 @@ into the build. It's separate from `/vibes:vibe`, which never uses it.
    `.claude/settings.json` in it is ever loaded, and describes binaries
    instead of showing them.
 3. **Review.** The supply-chain, security and bug reviewers always run, and
-   the quality reviewers join when the change is in their area. The spec
-   reviewer never does, since it runs code. The supply-chain reviewer must
+   the quality reviewers join when the change is in their area, as does the
+   project docs reviewer when the project has documents. The spec reviewer
+   never does, since it runs code. The supply-chain reviewer must
    account for every HIGH scan finding.
 4. **Report.** `pr-review.md` lists the scan's findings first, then each
    reviewer's, then the files a person must inspect. `comment-draft.md` is a
@@ -197,6 +198,28 @@ into the build. It's separate from `/vibes:vibe`, which never uses it.
    or merged.
 
 No reviewer can clear a HIGH scan finding: each needs a person.
+
+## Review your own branch
+
+`/vibes:review` reviews the checked-out branch since it left its base
+branch, the remote's default branch unless you name one, such as
+`/vibes:review develop`. Uncommitted changes to tracked files are included,
+without touching your working tree, index or branches; new files you
+haven't added to git are listed but not reviewed.
+
+It runs the same scan, guides and reviewers as `/vibes:review-pr`, but as
+your own work: the reviewers read the working tree, and with a spec, such
+as `/vibes:review spec docs/specs/order-export` or a `vibe/<name>` branch's
+own, the spec reviewer joins and may run the tests. Say what the change is
+for, such as `/vibes:review adds CSV export`, and the reviewers judge it
+against that and the commit messages.
+
+The report, `review.md`, lists the scan's findings, each reviewer's, and
+the files a person must inspect. Then it offers to fix the findings: a
+builder fixes them test-first, committing on your branch through the gate,
+and the reviewers who asked for changes check the fixes, for up to three
+rounds. Your uncommitted changes are never mixed in: commit or stash them
+first. Nothing is pushed.
 
 ### Protected paths
 
@@ -257,13 +280,13 @@ If you run sessions in git worktrees, install it at user scope, the
 default for `claude plugin install vibes@vibes` in a shell, or enable it in
 each worktree. A plugin enabled only for the main checkout can load its
 skills in a worktree session but not its agents. `/vibes:vibe`,
-`/vibes:optimise` and `/vibes:review-pr` then stop and say so, rather than
-run without them.
+`/vibes:optimise`, `/vibes:review` and `/vibes:review-pr` then stop and say
+so, rather than run without them.
 
 The plugin provides:
 
-- **Skills:** `/vibes:vibe`, `/vibes:optimise` and `/vibes:review-pr`,
-  plus `vibes:test-driven-development`, `vibes:atomic-commits` and
+- **Skills:** `/vibes:vibe`, `/vibes:optimise`, `/vibes:review` and
+  `/vibes:review-pr`, plus `vibes:test-driven-development`, `vibes:atomic-commits` and
   `vibes:commit-gate`, which agents use on their own when they apply.
 - **Agents:** `vibes:designer`, `vibes:spiker`, `vibes:builder`,
   `vibes:profiler`, `vibes:optimiser`, `vibes:commit-message-suggester` and

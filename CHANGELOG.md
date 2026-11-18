@@ -24,6 +24,14 @@ guides behave, and says so under **Changed**.
   characters or fewer.
 - **A `commit-msg` git hook,** `hooks/git_commit_msg`, which holds every
   commit to the same limit.
+- **`/vibes:review` reviews the checked-out branch,** uncommitted changes
+  included, with the same scan, guides and reviewers as
+  `/vibes:review-pr`, as your own work: the spec reviewer joins when the
+  branch has a spec, and you can have the findings fixed test-first.
+  `pr-prepare --branch` and `pr-scan report --branch` prepare and report
+  it, without touching the working tree, index or branches.
+- **`/vibes:review-pr`'s panel** gains the project docs reviewer when the
+  project has documents.
 - **Evals** for the project docs reviewer and the commit message
   suggester.
 
