@@ -17,9 +17,9 @@ source "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/lib/hook_input.sh"
 
 # Reviewers, which may write only their own findings file.
 REVIEWERS=" architecture-reviewer bug-reviewer cleanliness-reviewer"
-REVIEWERS+=" idioms-reviewer performance-reviewer resource-leak-reviewer"
-REVIEWERS+=" security-reviewer spec-reviewer style-reviewer"
-REVIEWERS+=" supply-chain-reviewer test-reviewer "
+REVIEWERS+=" idioms-reviewer performance-reviewer project-docs-reviewer"
+REVIEWERS+=" resource-leak-reviewer security-reviewer spec-reviewer"
+REVIEWERS+=" style-reviewer supply-chain-reviewer test-reviewer "
 readonly REVIEWERS
 # Agents that may write and edit only in an optimise run's state directory.
 readonly PROFILERS=" profiler "

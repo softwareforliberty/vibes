@@ -51,6 +51,15 @@ class ReviewerTest(unittest.TestCase):
         self.assertEqual(hook("bug-reviewer", "Write", file_path=findings), 0)
         self.assertEqual(hook("bug-reviewer", "Write", file_path="/p/a.py"), 2)
 
+    def test_the_project_docs_reviewer_never_edits_the_docs(self) -> None:
+        own = "/p/.vibes/x/review/spec-1/project-docs-reviewer.md"
+        self.assertEqual(
+            hook("vibes:project-docs-reviewer", "Write", file_path=own), 0)
+        for path in ("/p/docs/architecture.md", "/p/docs/specs/x/spec.md"):
+            with self.subTest(path=path):
+                self.assertEqual(hook("vibes:project-docs-reviewer", "Edit",
+                                      file_path=path), 2)
+
     def test_other_agents_are_free(self) -> None:
         self.assertEqual(hook("optimiser", "Write", file_path="/p/a.py"), 0)
         self.assertEqual(hook("", "Write", file_path="/p/a.py"), 0)
