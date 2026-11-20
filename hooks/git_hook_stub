@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#
+# vibes-commit-gate
+#
+# A git hook for the vibes commit gate, installed by bin/install-git-hooks.
+# It runs the vibes hook named below from the newest vibes in Claude Code's
+# plugin cache, so updates apply and removing an old version's folder breaks
+# nothing. When it can't find vibes, it refuses the commit rather than let it
+# through unchecked.
+
+set -euo pipefail
+
+# Set by bin/install-git-hooks: the folder holding a folder for each
+# installed version, or for a plugin outside the cache, its fixed root.
+readonly VIBES_VERSIONS=''
+readonly VIBES_ROOT=''
+readonly VIBES_HOOK=''
+
+# Prints the path of the hook to run, or nothing when there's none.
+find_hook() {
+  local dir newest
+  if [[ -n "${VIBES_ROOT}" ]]; then
+    if [[ -x "${VIBES_ROOT}/hooks/${VIBES_HOOK}" ]]; then
+      printf '%s\n' "${VIBES_ROOT}/hooks/${VIBES_HOOK}"
+    fi
+    return 0
+  fi
+  newest="$(for dir in "${VIBES_VERSIONS}"/*/; do
+    if [[ -x "${dir}hooks/${VIBES_HOOK}" ]]; then
+      basename -- "${dir}"
+    fi
+  done | sort -t . -k 1,1n -k 2,2n -k 3,3n | tail -n 1)"
+  if [[ -n "${newest}" ]]; then
+    printf '%s\n' "${VIBES_VERSIONS}/${newest}/hooks/${VIBES_HOOK}"
+  fi
+}
+
+main() {
+  local hook
+  hook="$(find_hook)"
+  if [[ -z "${hook}" ]]; then
+    {
+      printf 'vibes commit gate: vibes is no longer installed in %s,\n' \
+        "${VIBES_ROOT:-${VIBES_VERSIONS}}"
+      printf 'so this commit is blocked rather than left unchecked.\n'
+      printf 'Install vibes in Claude Code again, then commit. To drop the\n'
+      printf 'gate instead, remove %s.\n' "$0"
+    } >&2
+    exit 1
+  fi
+  exec "${hook}" "$@"
+}
+
+main "$@"

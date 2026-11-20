@@ -1,0 +1,102 @@
+#!/usr/bin/env bash
+#
+# Installs the vibes commit gate's git hooks, pre-commit and commit-msg, in
+# the repository holding the current directory.
+#
+# Each hook is a copy of hooks/git_hook_stub, not a link, set to run the hook
+# from the newest vibes in Claude Code's plugin cache. A link would point
+# into one version's folder, and git silently skips a hook whose link no
+# longer resolves. A vibes hook already there, including such a broken link,
+# is replaced; any other hook is left alone unless --replace is given.
+#
+# Usage: install-git-hooks [--replace]
+
+set -euo pipefail
+
+ROOT="$(dirname -- "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")")"
+readonly ROOT
+readonly STUB="${ROOT}/hooks/git_hook_stub"
+readonly MARKER='vibes-commit-gate'
+# Each git hook, and the vibes hook it runs.
+readonly HOOKS='pre-commit:git_pre_commit commit-msg:git_commit_msg'
+
+err() {
+  printf 'install-git-hooks: %s\n' "$*" >&2
+}
+
+# Returns 0 when a hook is vibes': a script with the marker, or a link to a
+# vibes hook, even one that no longer resolves.
+is_vibes() {
+  local path="$1"
+  if [[ -L "${path}" ]]; then
+    case "$(readlink -- "${path}")" in
+      */hooks/git_pre_commit | */hooks/git_commit_msg) return 0 ;;
+      *) ;;
+    esac
+  fi
+  [[ -f "${path}" ]] && grep -q -- "${MARKER}" "${path}"
+}
+
+# Prints the stub for one vibes hook, with its settings filled in.
+stub() {
+  local hook="$1" versions="" fixed="" line
+  # A plugin in Claude Code's cache sits in a folder named for its version.
+  if [[ "${ROOT}" == */plugins/cache/* ]]; then
+    versions="$(dirname -- "${ROOT}")"
+  else
+    fixed="${ROOT}"
+  fi
+  while IFS= read -r line; do
+    case "${line}" in
+      "readonly VIBES_VERSIONS="*)
+        printf 'readonly VIBES_VERSIONS=%q\n' "${versions}"
+        ;;
+      "readonly VIBES_ROOT="*) printf 'readonly VIBES_ROOT=%q\n' "${fixed}" ;;
+      "readonly VIBES_HOOK="*) printf 'readonly VIBES_HOOK=%q\n' "${hook}" ;;
+      *) printf '%s\n' "${line}" ;;
+    esac
+  done <"${STUB}"
+}
+
+main() {
+  local replace="" hooks_path dir pair path others=""
+  if [[ "${1:-}" == --replace ]]; then
+    replace=1
+  fi
+  if ! git rev-parse --show-toplevel >/dev/null 2>&1; then
+    err "not in a git repository."
+    exit 1
+  fi
+  if hooks_path="$(git config --get core.hooksPath)"; then
+    err "core.hooksPath is ${hooks_path}, so git doesn't run the hooks in"
+    err "the repository's hooks folder. Have that hook manager run"
+    err "${ROOT}/hooks/git_pre_commit and git_commit_msg instead."
+    exit 1
+  fi
+  dir="$(git rev-parse --git-path hooks)"
+  mkdir -p -- "${dir}"
+
+  # Check every hook first, so nothing is left half installed.
+  for pair in ${HOOKS}; do
+    path="${dir}/${pair%%:*}"
+    if [[ -e "${path}" || -L "${path}" ]] && ! is_vibes "${path}"; then
+      others+=" ${path}"
+    fi
+  done
+  if [[ -n "${others}" && -z "${replace}" ]]; then
+    err "these hooks aren't vibes', so nothing was installed:${others}"
+    err "Ask before replacing them, then run again with --replace."
+    exit 1
+  fi
+
+  for pair in ${HOOKS}; do
+    path="${dir}/${pair%%:*}"
+    stub "${pair#*:}" >"${path}.vibes-new"
+    chmod +x "${path}.vibes-new"
+    # Renaming replaces a link itself, not the file it points to.
+    mv -f -- "${path}.vibes-new" "${path}"
+    printf 'installed %s\n' "${path}"
+  done
+}
+
+main "$@"
