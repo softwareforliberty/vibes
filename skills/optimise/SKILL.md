@@ -192,7 +192,10 @@ the baseline again before trusting old gains.
    printf '*\n' > .vibes/.gitignore
    ```
 
-5. **Set up the commit gate,** if the project has no executable
+5. **Check the git hooks** as the vibe skill's
+   [Phase 0](../vibe/SKILL.md#phase-0-set-up) says, with
+   `bin/install-git-hooks`.
+6. **Set up the commit gate,** if the project has no executable
    `scripts/check` or `scripts/check-file`, or the `# Guides:` line misses
    a guide: spawn a
    `general-purpose` subagent with `medium` effort to follow

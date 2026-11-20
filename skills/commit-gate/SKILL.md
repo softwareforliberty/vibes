@@ -17,7 +17,7 @@ same logic:
 - **Claude Code:** the vibes plugin's `PreToolUse` hook runs it before every
   `git commit` the agent makes.
 - **Git:** `hooks/git_pre_commit` and `hooks/git_commit_msg` in this repo,
-  installed as the project's pre-commit and commit-msg hooks, run it for
+  run through the project's pre-commit and commit-msg hooks, run it for
   every commit, including commits made by people and by other agents.
 
 A third hook catches the small mistakes earlier: after each file an agent
@@ -299,20 +299,24 @@ should run it too.
 1. Make the scripts executable, then run `scripts/check --all` on the current
    state of the project. Fix or report any failures before going on: a gate
    that already fails can't tell new problems from old ones.
-2. Install the git hooks, which link to this repo's copies so updates
-   apply automatically:
+2. Install the git hooks:
 
    ```sh
-   ln -s "${CLAUDE_PLUGIN_ROOT}/hooks/git_pre_commit" .git/hooks/pre-commit
-   ln -s "${CLAUDE_PLUGIN_ROOT}/hooks/git_commit_msg" .git/hooks/commit-msg
+   "${CLAUDE_PLUGIN_ROOT}/bin/install-git-hooks"
    ```
 
-   If the project already has either hook, ask the user before replacing
-   it.
+   It writes a small stub for each hook, not a link, that runs the hook
+   from the newest vibes installed, so updates apply and removing an old
+   version's folder breaks nothing; with no vibes installed, it refuses
+   the commit. Never link the hooks into `${CLAUDE_PLUGIN_ROOT}`: that's
+   one version's folder, and git skips a hook whose link no longer
+   resolves, without a word. It replaces vibes' own hooks, and leaves any
+   other hook alone: if it reports one, ask the user before running it
+   again with `--replace`. If it reports that `core.hooksPath` is set,
+   tell the user that their hook manager needs to run the vibes hooks.
 3. Commit `scripts/check`, `scripts/check-file`, `scripts/audit`,
    `scripts/check-requirements` if the project has specs, and the tool
-   config files in one commit. The
-   gate runs on that commit too.
+   config files in one commit. The gate runs on that commit too.
 
 ## When the gate is older than this skill
 
@@ -321,7 +325,9 @@ set up before the steps above. Bring it up to date in one commit: write
 `scripts/check-file` as Step 3 says; make `scripts/check` fail fast, with
 its static checks before its tests; add its `--static` and `--all` modes;
 and move its slow tests under `--all`, telling the user which tests moved.
-Keep every check it already has. A script that ignores its arguments still
+Keep every check it already has. Then install the hooks again as Step 5
+says, which turns links to a plugin version's folder into stubs and adds a
+missing `commit-msg` hook. A script that ignores its arguments still
 works with the gate meanwhile: it runs everything every time.
 
 ## When the project needs a new guide

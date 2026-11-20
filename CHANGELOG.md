@@ -8,6 +8,22 @@ guides behave, and says so under **Changed**.
 
 ## [Unreleased]
 
+### Fixed
+
+- **A commit behind `time`, `env`, `nice` or another wrapper skipped the
+  gate.** The Claude Code hook looked for `git commit` only at the start of
+  a command, so `time git commit …` ran no checks; it now finds it anywhere
+  in the command, including in a subshell.
+- **The git hooks broke silently when vibes updated.** They were links into
+  one plugin version's folder, and git skips a hook whose link no longer
+  resolves, so removing an old version turned the gate off. The new
+  `bin/install-git-hooks` writes a small stub for each hook that runs the
+  newest vibes installed, and refuses the commit when there's none.
+  `/vibes:vibe` and `/vibes:optimise` run it at the start of each run,
+  which replaces the old links and adds a missing `commit-msg` hook, and
+  the Claude Code hook blocks a commit while a vibes hook's link is broken,
+  saying how to reinstall.
+
 ## [0.6.0] - 2026-11-20
 
 ### Added

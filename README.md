@@ -381,12 +381,19 @@ requirement the spec doesn't have, and `scripts/audit`, run before a task
 finishes, fails on any requirement no test covers.
 
 Projects without `scripts/check` are never blocked. To enforce the gate for
-every commit, including your own, install the git hooks:
+every commit, including your own, install the git hooks from the
+repository's root:
 
 ```sh
-ln -s /path/to/vibes/hooks/git_pre_commit .git/hooks/pre-commit
-ln -s /path/to/vibes/hooks/git_commit_msg .git/hooks/commit-msg
+~/.claude/plugins/cache/vibes/vibes/<version>/bin/install-git-hooks
 ```
+
+It writes a small stub for each hook, not a link: the stub runs the hook
+from the newest vibes installed, so updates apply and removing an old
+version breaks nothing, and refuses the commit if vibes is gone. It leaves
+a hook that isn't vibes' alone unless you add `--replace`. `/vibes:vibe`
+and `/vibes:optimise` run it at the start of each run, which also mends
+hooks installed as links by earlier versions.
 
 The hooks need Bash, git and `realpath`. The Claude Code hook also uses `jq`
 or Python 3 to read its input.

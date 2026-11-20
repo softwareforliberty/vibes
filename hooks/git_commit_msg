@@ -5,7 +5,7 @@
 # Git commit-msg hook for the vibes commit gate: refuses a commit whose
 # subject is longer than 50 characters, in a project with the gate. Install
 # it in a project with:
-#   ln -s /path/to/vibes/hooks/git_commit_msg .git/hooks/commit-msg
+#   /path/to/vibes/bin/install-git-hooks
 
 set -euo pipefail
 

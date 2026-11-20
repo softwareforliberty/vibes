@@ -339,10 +339,19 @@ To resume:
 
    Then write `.vibes/<name>/state.md`, as
    [Keep the state current](#keep-the-state-current) describes.
-7. **Start the commit gate setup.** If the project has no executable
+7. **Check the git hooks,** if the project has an executable
+   `scripts/check`: run `"${CLAUDE_PLUGIN_ROOT}/bin/install-git-hooks"`
+   from the repository root. It's quick, and makes sure both hooks are
+   installed and still find vibes, replacing a link to a removed plugin
+   version, which git would skip without a word. If it reports a hook that
+   isn't vibes', ask the user whether to replace it, with `--replace`; in
+   an unattended run, leave it and report it. If it reports that
+   `core.hooksPath` is set, tell the user that their hook manager needs to
+   run the vibes hooks.
+8. **Start the commit gate setup.** If the project has no executable
    `scripts/check` or `scripts/check-file`, or the `# Guides:` line
-   doesn't name every guide the project already needs, spawn a `general-purpose` subagent in the
-   background, with `medium` effort, to follow the
+   doesn't name every guide the project already needs, spawn a
+   `general-purpose` subagent in the background, with `medium` effort, to follow the
    `${CLAUDE_PLUGIN_ROOT}/skills/commit-gate/SKILL.md` skill on the base
    branch, with the guides and any rules the user gave about installing
    tools. It commits the gate setup on the base branch as one commit of its
