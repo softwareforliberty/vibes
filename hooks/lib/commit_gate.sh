@@ -4,7 +4,10 @@
 # pass on exactly what is being committed.
 #
 # A project opts in by providing an executable scripts/check that lints and
-# runs the full test suite. Projects without one are left alone.
+# runs the full test suite. Projects without one are left alone. A commit of
+# documents only runs scripts/check --static, its checks without the tests,
+# since a document can't break a test; a script that takes no arguments runs
+# everything anyway.
 
 # shellcheck source=hooks/lib/guides.sh
 source "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/guides.sh"
@@ -14,6 +17,24 @@ readonly GATE_OUTPUT_LINES=60
 
 gate::err() {
   printf 'vibes commit gate: %s\n' "$*" >&2
+}
+
+# Returns 0 when every staged change is to a document outside the tests, so
+# the tests needn't run. Test data, such as a fixture in Markdown, isn't a
+# document.
+gate::docs_only() {
+  local path any=""
+  while IFS= read -r -d '' path; do
+    any=1
+    case "/${path}" in
+      */test/* | */tests/* | */testdata/* | */fixtures/* | */__tests__/*)
+        return 1
+        ;;
+      *.md | *.markdown | *.mdx | *.rst | *.adoc | *.asciidoc | *.org) ;;
+      *) return 1 ;;
+    esac
+  done < <(git diff --cached --name-only -z)
+  [[ -n "${any}" ]]
 }
 
 # Returns 0 when scripts/check covers every guide the staged files need, as
@@ -113,7 +134,11 @@ gate::run() {
   fi
 
   local output
-  if ! output="$("./${GATE_CHECK_SCRIPT}" 2>&1)"; then
+  local -a mode=()
+  if gate::docs_only; then
+    mode=(--static)
+  fi
+  if ! output="$("./${GATE_CHECK_SCRIPT}" ${mode[@]+"${mode[@]}"} 2>&1)"; then
     gate::err "${GATE_CHECK_SCRIPT} failed, so the commit is blocked."
     gate::err "Fix the problems below, then commit again."
     printf '%s\n' "${output}" | tail -n "${GATE_OUTPUT_LINES}" >&2
