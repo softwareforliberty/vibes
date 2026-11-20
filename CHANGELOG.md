@@ -41,6 +41,19 @@ guides behave, and says so under **Changed**.
   `spike/*` branches, the spiker and files git ignores, and does nothing
   in projects without `scripts/check-file`. The commit-gate skill writes
   it, and the vibe and optimise workflows add it to a gate that lacks it.
+  It also checks each file a shell command writes, such as through a
+  heredoc or `sed`, by comparing the changed files before and after the
+  command; a command that runs git is left alone. Builders were making
+  almost every edit through the shell.
+- **`scripts/check --static` and `--all`.** The gate runs `--static`, the
+  checks without the tests, for a commit of documents only, such as a
+  spec. `--all` adds the slow tests, such as boot and smoke tests, which no
+  longer run on every commit: builders run them once at the end of each
+  batch, and the workflows before they finish. A `scripts/check` that
+  ignores its arguments runs everything, as before.
+- **A notification when a run needs you.** `/vibes:vibe` and
+  `/vibes:optimise` send a push notification, where the session can, before
+  they stop to ask you something, and ask everything they have at once.
 
 ### Changed
 
@@ -50,7 +63,17 @@ guides behave, and says so under **Changed**.
   before running the checks, on every branch.
 - **The builder runs the type checks before each commit,** so the gate's
   full run seldom fails on a small mistake and runs again. Tests and
-  coverage stay with the gate.
+  coverage stay with the gate. It writes files with Write and Edit rather
+  than the shell.
+- **`scripts/check` fails fast:** the commit-gate skill now has it run the
+  static checks first and stop before the tests if any fail, so a lint
+  error no longer costs a full test run. The vibe and optimise workflows
+  bring an older gate up to date.
+- **The audit runs alongside the rebuild review,** on the rebuild's head
+  in a worktree of its own, instead of after it, and runs again at the
+  finish only when the dependencies changed.
+- **The main agent no longer reruns `scripts/check` after each batch:** the
+  gate ran it on every commit, and the builder ran the slow tests.
 
 ### Fixed
 

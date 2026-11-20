@@ -114,8 +114,8 @@ could lose your work.
    main agent only coordinates: subagents keep their own records, decide
    on and fix the findings, and reply in a line or two, so its context
    stays small however long the run.
-7. **Gate.** Every commit runs the project's linters and full test suite, and
-   is blocked if anything fails.
+7. **Gate.** Every commit runs the project's linters and fast tests, and is
+   blocked if anything fails. Each batch ends with the slow tests too.
 8. **Review again.** The same reviewers, plus reviewers for code
    cleanliness, coding style, idioms and test quality, check the rebuild,
    and their findings are fixed test-first. The spec reviewer verifies
@@ -296,6 +296,8 @@ The plugin provides:
   makes.
 - **The check-file hook,** which formats and lints each file an agent
   writes, as soon as it's written, in projects with `scripts/check-file`.
+  It also checks the files a shell command changes, except a command that
+  runs git.
 - **The guide check hook.** The first time an agent, or each subagent, writes a
   kind of file in a conversation without having read its guide, it names the
   guide for it, and warns when the project's gate doesn't check that guide yet.
@@ -334,7 +336,7 @@ too:
 ## The commit gate
 
 A project opts in by adding an executable `scripts/check` that checks
-formatting, lints and runs the full test suite. The `commit-gate` skill
+formatting, lints and runs the tests. The `commit-gate` skill
 writes it from the `tools.md` of each guide the project needs, and names
 those guides on a `# Guides:` line in it:
 
@@ -350,19 +352,27 @@ Once it exists, the gate:
   until `scripts/check` runs that guide's checks too
 - blocks a commit with a file no guide covers, until a `# No guide:` line
   lists it, so a file is never quietly left unchecked
-- runs `scripts/check` before each commit, and blocks the commit if it fails
+- runs `scripts/check` before each commit, and blocks the commit if it fails;
+  for a commit of documents only, such as a spec, it runs
+  `scripts/check --static`, without the tests
 - refuses to commit while there are unstaged changes or untracked files, so
   the checks test exactly what's being committed
 - blocks a commit whose subject is longer than 50 characters
 - runs no checks on `spike/*` branches, apart from the subject's length
 - in Claude Code, also blocks `git commit -a` and `--no-verify`
 
+`scripts/check` runs its static checks first, and stops before the tests
+if any fail, since the tests are the slow part. It runs only the fast
+tests; the slow ones, such as boot or smoke tests, run with
+`scripts/check --all`, once at the end of each batch of work and before a
+task finishes.
+
 Alongside it, `scripts/check-file` runs the per-file checks, formatting in
 rewrite mode and linting, on the files it's given. The plugin runs it on
-each file an agent writes, except on `spike/*` branches and for the
-spiker, so a format or lint error is fixed straight away rather than at
-the commit. Type checks and tests need the whole project, so they stay in
-`scripts/check`.
+each file an agent writes, with the Write and Edit tools or a shell
+command, except on `spike/*` branches and for the spiker, so a format or
+lint error is fixed straight away rather than at the commit. Type checks
+and tests need the whole project, so they stay in `scripts/check`.
 
 For a project with specs, `scripts/check` also checks the tests'
 requirement markers. Each test names the requirements it covers, such as
