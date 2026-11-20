@@ -33,7 +33,9 @@ done
 """
 
 
-class CheckFileTest(unittest.TestCase):
+class RepoCase(unittest.TestCase):
+    """A repository with a scripts/check-file."""
+
     def setUp(self) -> None:
         self.repo = os.path.realpath(tempfile.mkdtemp())
         self.git("init", "-q", "-b", "main")
@@ -68,6 +70,8 @@ class CheckFileTest(unittest.TestCase):
             return []
         return self.read(".checked").split()
 
+
+class CheckFileTest(RepoCase):
     def hook(self, path: str, agent: str = "", tool: str = "Edit",
              cwd: str | None = None) -> subprocess.CompletedProcess:
         event = {"agent_type": agent, "tool_name": tool,
@@ -131,6 +135,92 @@ class CheckFileTest(unittest.TestCase):
     def test_does_nothing_for_a_missing_file(self) -> None:
         missing = os.path.join(self.repo, "src", "gone.py")
         self.assertEqual(self.hook(missing).returncode, 0)
+
+
+class BashTest(RepoCase):
+    """Files a shell command writes, found by comparing what's changed
+    before and after it."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.tmp = tempfile.mkdtemp()
+        self.count = 0
+
+    def tearDown(self) -> None:
+        super().tearDown()
+        shutil.rmtree(self.tmp)
+
+    def event(self, name: str, command: str,
+              agent: str = "") -> subprocess.CompletedProcess:
+        event = {"hook_event_name": name, "tool_name": "Bash",
+                 "agent_type": agent, "session_id": "s1",
+                 "tool_use_id": f"t{self.count}", "cwd": self.repo,
+                 "tool_input": {"command": command}}
+        return subprocess.run([HOOK], input=json.dumps(event), text=True,
+                              capture_output=True, check=False,
+                              env={**os.environ, "TMPDIR": self.tmp})
+
+    def bash(self, command: str, change, agent: str = ""
+             ) -> subprocess.CompletedProcess:
+        """Runs the hook around a command whose effect is change()."""
+        self.count += 1
+        self.assertEqual(self.event("PreToolUse", command, agent).returncode,
+                         0)
+        change()
+        return self.event("PostToolUse", command, agent)
+
+    def test_checks_a_file_the_command_changed(self) -> None:
+        self.write("src/a.py", "A = 1\n")
+        self.git("add", "src/a.py")
+        result = self.bash("sed -i '' s/A/bad/ src/a.py",
+                           lambda: self.write("src/a.py", "bad = 1\n"))
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("src/a.py:1: bad word", result.stderr)
+        self.assertEqual(self.checked(), ["src/a.py"])
+
+    def test_checks_a_new_file(self) -> None:
+        result = self.bash("cat > src/b.py <<'EOF'\nB = 1\nEOF",
+                           lambda: self.write("src/b.py", "B = 1\n"))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.read("src/b.py"), "b = 1\n")
+        self.assertEqual(self.checked(), ["src/b.py"])
+
+    def test_leaves_files_the_command_didnt_change(self) -> None:
+        self.write("src/old.py", "bad = 1\n")
+        result = self.bash("printf x > src/b.py",
+                           lambda: self.write("src/b.py", "B = 1\n"))
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.checked(), ["src/b.py"])
+
+    def test_leaves_git_commands_alone(self) -> None:
+        for command in ("git stash pop", "cd src && git switch main",
+                        "/usr/bin/git checkout -- a.py"):
+            with self.subTest(command=command):
+                result = self.bash(command, lambda: self.write(
+                    "src/a.py", "bad = 1\n"))
+                self.assertEqual(result.returncode, 0)
+        self.assertEqual(self.checked(), [])
+
+    def test_a_word_in_quotes_isnt_git(self) -> None:
+        result = self.bash("printf 'use git' > src/a.py",
+                           lambda: self.write("src/a.py", "bad\n"))
+        self.assertEqual(result.returncode, 2)
+
+    def test_never_checks_the_spiker_or_a_spike_branch(self) -> None:
+        result = self.bash("printf x > src/a.py", lambda: self.write(
+            "src/a.py", "bad\n"), agent="vibes:spiker")
+        self.assertEqual(result.returncode, 0)
+        self.git("switch", "-q", "-c", "spike/x")
+        result = self.bash("printf y > src/b.py", lambda: self.write(
+            "src/b.py", "bad\n"))
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(self.checked(), [])
+
+    def test_without_a_snapshot_does_nothing(self) -> None:
+        self.write("src/a.py", "bad = 1\n")
+        self.count += 1
+        self.assertEqual(
+            self.event("PostToolUse", "printf x > src/a.py").returncode, 0)
 
 
 if __name__ == "__main__":

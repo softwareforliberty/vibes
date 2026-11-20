@@ -1,14 +1,20 @@
 #!/usr/bin/env bash
 #
-# Claude Code PostToolUse hook that formats and lints each file an agent
-# writes, as soon as it's written, so a format or lint error is fixed then
-# rather than failing the commit gate later.
+# Claude Code hook that formats and lints each file an agent writes, as soon
+# as it's written, so a format or lint error is fixed then rather than
+# failing the commit gate later.
 #
 # It runs the project's scripts/check-file on the file, and does nothing in
 # projects without one. scripts/check-file rewrites the file's formatting and
 # prints any lint problems, which this hook shows the agent (exit 2). The
 # spike is never checked: not on spike/* branches, where the gate doesn't run
 # either, and not for the spiker, whose code is thrown away.
+#
+# After Write and Edit it checks the file written. A shell command can write
+# files too, so before each Bash command (PreToolUse) it notes the content of
+# every file changed since HEAD, and afterwards (PostToolUse) checks those
+# the command changed. A command that runs git is left alone, since
+# switching branches or stashing changes files the agent didn't write.
 
 set -euo pipefail
 
@@ -20,45 +26,132 @@ source "${LIB}/hook_input.sh"
 readonly CHECK_FILE_SCRIPT='scripts/check-file'
 # The most lines of a failing check's output to show.
 readonly OUTPUT_LINES=40
+readonly GIT_WORD_RE='(^|[;&|[:space:]])([^;&|[:space:]]*/)?git([;&|[:space:]]|$)'
 
-main() {
-  local input path cwd agent root relative branch output
-  input="$(cat)"
-  agent="$(hook::json_field "${input}" '.agent_type')"
-  [[ "${agent#vibes:}" != spiker ]] || exit 0
-
-  path="$(hook::json_field "${input}" '.tool_input.file_path')"
-  [[ -n "${path}" ]] \
-    || path="$(hook::json_field "${input}" '.tool_input.notebook_path')"
-  [[ -n "${path}" ]] || exit 0
-  cwd="$(hook::json_field "${input}" '.cwd')"
-  [[ "${path}" == /* || -z "${cwd}" ]] || path="${cwd}/${path}"
-  [[ -f "${path}" ]] || exit 0
-
-  root="$(git -C "$(dirname -- "${path}")" rev-parse --show-toplevel \
-    2>/dev/null || true)"
-  [[ -n "${root}" && -x "${root}/${CHECK_FILE_SCRIPT}" ]] || exit 0
-  path="$(realpath -- "${path}")"
-  root="$(realpath -- "${root}")"
-  [[ "${path}" == "${root}/"* ]] || exit 0
-  relative="${path#"${root}/"}"
-
+# Prints the root of the repository holding a directory, when it has a
+# scripts/check-file and isn't on a spike branch.
+checked_root() {
+  local dir="$1" root branch
+  root="$(git -C "${dir}" rev-parse --show-toplevel 2>/dev/null || true)"
+  [[ -n "${root}" && -x "${root}/${CHECK_FILE_SCRIPT}" ]] || return 0
   branch="$(git -C "${root}" symbolic-ref --quiet --short HEAD || true)"
-  [[ "${branch}" != spike/* ]] || exit 0
-  # The workflow's own files, such as .vibes/, aren't the project's code.
-  ! git -C "${root}" check-ignore --quiet -- "${relative}" || exit 0
+  [[ "${branch}" != spike/* ]] || return 0
+  realpath -- "${root}"
+}
 
-  if output="$(cd -- "${root}" && "./${CHECK_FILE_SCRIPT}" "${relative}" \
-    2>&1)"; then
-    exit 0
+# Prints "<blob hash><tab><path>" for each file changed since HEAD or not
+# yet added, as paths from the repository root. Ignored files aren't listed.
+changed_files() {
+  local root="$1" path paths=""
+  while IFS= read -r path; do
+    if [[ -n "${path}" && -f "${root}/${path}" ]]; then
+      paths+="${path}"$'\n'
+    fi
+  done < <({
+    git -C "${root}" diff --name-only HEAD 2>/dev/null \
+      || git -C "${root}" ls-files
+    git -C "${root}" ls-files --others --exclude-standard
+  } | sort -u)
+  [[ -n "${paths}" ]] || return 0
+  paste <(git -C "${root}" hash-object --stdin-paths <<<"${paths%$'\n'}") \
+    <(printf '%s' "${paths}")
+}
+
+# Runs scripts/check-file on paths from the repository root, and shows the
+# agent what it finds.
+check() {
+  local root="$1" output
+  shift
+  if output="$(cd -- "${root}" && "./${CHECK_FILE_SCRIPT}" "$@" 2>&1)"; then
+    return 0
   fi
   {
     printf 'vibes: %s found problems in %s. Fix them now; the commit gate' \
-      "${CHECK_FILE_SCRIPT}" "${relative}"
+      "${CHECK_FILE_SCRIPT}" "$*"
     printf ' runs the same checks.\n'
     tail -n "${OUTPUT_LINES}" <<<"${output}"
   } >&2
   exit 2
+}
+
+# Checks the file a Write or Edit wrote.
+after_write() {
+  local input="$1" path cwd root relative
+  path="$(hook::json_field "${input}" '.tool_input.file_path')"
+  [[ -n "${path}" ]] \
+    || path="$(hook::json_field "${input}" '.tool_input.notebook_path')"
+  [[ -n "${path}" ]] || return 0
+  cwd="$(hook::json_field "${input}" '.cwd')"
+  [[ "${path}" == /* || -z "${cwd}" ]] || path="${cwd}/${path}"
+  [[ -f "${path}" ]] || return 0
+
+  root="$(checked_root "$(dirname -- "${path}")")"
+  [[ -n "${root}" ]] || return 0
+  path="$(realpath -- "${path}")"
+  [[ "${path}" == "${root}/"* ]] || return 0
+  relative="${path#"${root}/"}"
+  # The workflow's own files, such as .vibes/, aren't the project's code.
+  ! git -C "${root}" check-ignore --quiet -- "${relative}" || return 0
+  check "${root}" "${relative}"
+}
+
+# Prints where a Bash command's snapshot is kept, or nothing for a command
+# that isn't checked.
+snapshot_path() {
+  local input="$1" command session id
+  command="$(hook::json_field "${input}" '.tool_input.command')"
+  [[ ! "$(hook::strip_text <<<"${command}")" =~ ${GIT_WORD_RE} ]] || return 0
+  session="$(hook::json_field "${input}" '.session_id')"
+  id="$(hook::json_field "${input}" '.tool_use_id')"
+  [[ -n "${session}" && -n "${id}" ]] || return 0
+  printf '%s/vibes-check-file/%s/%s\n' "${TMPDIR:-/tmp}" \
+    "${session//[^A-Za-z0-9_-]/_}" "${id//[^A-Za-z0-9_-]/_}"
+}
+
+# Notes the changed files before a Bash command runs.
+before_bash() {
+  local input="$1" snapshot cwd root
+  snapshot="$(snapshot_path "${input}")"
+  cwd="$(hook::json_field "${input}" '.cwd')"
+  [[ -n "${snapshot}" && -d "${cwd}" ]] || return 0
+  root="$(checked_root "${cwd}")"
+  [[ -n "${root}" ]] || return 0
+  mkdir -p -- "$(dirname -- "${snapshot}")"
+  {
+    printf '%s\n' "${root}"
+    changed_files "${root}"
+  } >"${snapshot}"
+}
+
+# Checks each file a Bash command wrote or changed.
+after_bash() {
+  local input="$1" snapshot root path
+  local -a paths=()
+  snapshot="$(snapshot_path "${input}")"
+  [[ -n "${snapshot}" && -f "${snapshot}" ]] || return 0
+  root="$(head -n 1 -- "${snapshot}")"
+  while IFS= read -r path; do
+    paths+=("${path}")
+  done < <(awk -F '\t' 'NR == FNR { if (FNR > 1) before[$2] = $1; next }
+    before[$2] != $1 { print $2 }' "${snapshot}" <(changed_files "${root}"))
+  rm -f -- "${snapshot}"
+  ((${#paths[@]} > 0)) || return 0
+  check "${root}" "${paths[@]}"
+}
+
+main() {
+  local input agent event tool
+  input="$(cat)"
+  agent="$(hook::json_field "${input}" '.agent_type')"
+  [[ "${agent#vibes:}" != spiker ]] || exit 0
+  event="$(hook::json_field "${input}" '.hook_event_name')"
+  tool="$(hook::json_field "${input}" '.tool_name')"
+  case "${event}/${tool}" in
+    PreToolUse/Bash) before_bash "${input}" || true ;;
+    PostToolUse/Bash) after_bash "${input}" ;;
+    PreToolUse/*) ;;
+    *) after_write "${input}" ;;
+  esac
 }
 
 main "$@"
