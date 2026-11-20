@@ -53,7 +53,7 @@ should take minutes, not hours.
 Run tests with the runner's quiet option, such as `pytest -q` or
 `cargo test -q`, so a passing run prints a line, not a page, and a failing
 one still shows each failure in full. While you work, run the one test or
-module you're changing; the full suite runs before each commit.
+module you're changing; the gate runs the rest before each commit.
 
 ### 1. Red: write one failing test
 
@@ -98,8 +98,8 @@ after green or after a refactor. Each commit holds a test together with the
 code that makes it pass. Never commit with failing tests. See the
 [atomic commits](../atomic-commits/SKILL.md) skill for how to shape each
 commit. If the project has a [commit gate](../commit-gate/SKILL.md), it runs
-the linters and the full test suite on every commit and blocks any commit
-that fails.
+the linters and the fast tests on every commit and blocks any commit that
+fails; `scripts/check --all` runs the slow tests too.
 
 ## Fixing a bug
 

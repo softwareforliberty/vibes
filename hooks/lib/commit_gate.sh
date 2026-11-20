@@ -4,7 +4,7 @@
 # pass on exactly what is being committed.
 #
 # A project opts in by providing an executable scripts/check that lints and
-# runs the full test suite. Projects without one are left alone. A commit of
+# runs the tests. Projects without one are left alone. A commit of
 # documents only runs scripts/check --static, its checks without the tests,
 # since a document can't break a test; a script that takes no arguments runs
 # everything anyway.

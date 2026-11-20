@@ -2,7 +2,7 @@
 name: commit-gate
 description: >-
   Sets up the vibes commit gate in a project: writes scripts/check (format,
-  lint and full tests), scripts/check-file (each file's format and lint, as
+  lint and the fast tests, with the slow ones under --all), scripts/check-file (each file's format and lint, as
   it's written) and scripts/audit from the guides' tools.md, and installs
   the git hook so no commit lands unless every check passes. Use when
   starting the vibe workflow in a project, or when asked to add a commit gate.
@@ -41,7 +41,10 @@ whose code is thrown away, and files git ignores.
    that adds a Python script or a Dockerfile, can't commit those files
    until the gate checks them too.
 5. It runs `scripts/check` and blocks the commit if it fails, showing the end
-   of its output.
+   of its output. For a commit of documents only, such as a spec, it runs
+   `scripts/check --static`, without the tests, since a document can't
+   break a test. Test data, such as a Markdown fixture under `tests/`,
+   isn't a document.
 6. It blocks a commit whose subject is longer than 50 characters, before
    running anything else.
 7. In Claude Code it also blocks `git commit -a`, `--all`, `--no-verify` and
@@ -76,13 +79,13 @@ source, leave it out of the scripts and tell the user.
 ## Step 2: write scripts/check
 
 `scripts/check` is the gate. It runs on every commit, so it holds everything
-that's **local and reasonably fast**:
+that's **local and reasonably fast**. It runs the static checks first, then
+the tests:
 
 - **Formatting,** in check mode only. It never rewrites files.
 - **Linting and type checking,** with warnings treated as errors.
 - **Static security checks that run locally,** such as the guide's
   security linter and Opengrep rules from `tools.md`.
-- **The full test suite,** with the coverage minimum from `tools.md`.
 - **Architecture tests,** from the Architecture section of `tools.md`, that
   enforce the dependency rules between the project's layers. When the
   project has a design document, such as the `design.md` the vibe workflow
@@ -94,14 +97,41 @@ that's **local and reasonably fast**:
   `Covers:` comment names a requirement its spec doesn't have, or one the
   spec marks as removed. Requirements without a test yet are allowed here,
   because a test-first build adds them one commit at a time.
+- **The fast tests,** with the coverage minimum from `tools.md`: every
+  test but the slow ones.
+
+**The slow tests** run only with `scripts/check --all`, which the builders
+run once at the end of each batch, the vibe workflow runs before it
+finishes, and `scripts/audit` runs. A test is slow when it takes more than
+about ten seconds, or needs a virtual machine, an emulator, a container or
+a browser, such as a boot or smoke test. Mark them with the test runner's
+own mechanism, such as a pytest marker, an ignored Rust test run with
+`--ignored`, Go's `testing.Short`, a ctest label or a directory of their
+own. The fast tests should take a few minutes at most, since every commit
+waits for them.
+
+`scripts/check` takes one optional argument:
+
+| Run as | Runs | Used by |
+| --- | --- | --- |
+| `scripts/check` | The static checks, then the fast tests | The gate, on every commit |
+| `scripts/check --static` | The static checks | The gate, on a commit of documents only |
+| `scripts/check --all` | The static checks, then every test | The end of each batch, the finish, and `scripts/audit` |
+
+Architecture rules and requirement markers count as static checks when
+they don't run the tests. Put an architecture rule that is itself a test
+with the fast tests. If the project's tests read its documents, such as
+doctests in `README.md`, run them under `--static` too.
 
 Rules for the script:
 
 - It's an executable Bash script that follows
   `${CLAUDE_PLUGIN_ROOT}/guides/languages/BASH/coding-style.md`, runs from
   the repository root, and exits non-zero when any check fails.
-- It runs every check even after one fails, then reports them all, so one
-  commit attempt shows every problem.
+- **It fails fast.** It runs every static check even after one fails, so
+  one commit attempt shows every problem, but if any failed it stops
+  there, without running the tests: they're the slow part, and the commit
+  is blocked anyway.
 - **Each check prints one line when it passes,** and its full output only
   when it fails. Agents read every line the gate prints, on every commit,
   so a passing check's output is wasted. The skeleton's `check` function
@@ -124,7 +154,11 @@ A skeleton to start from:
 ```bash
 #!/usr/bin/env bash
 #
-# Run every pre-commit check: formatting, lint, types and the full tests.
+# Run the pre-commit checks: formatting, lint and types, then the tests.
+#
+# Usage: scripts/check [--static | --all]
+#   --static  the static checks only, for a commit of documents
+#   --all     the slow tests too
 #
 # Guides: languages/BASH languages/Python
 # No guide: *.ipynb
@@ -145,25 +179,38 @@ check() {
   fi
 }
 
+# Prints the failed checks and exits, when any failed.
+stop_if_failed() {
+  if ((${#failed[@]} > 0)); then
+    printf 'Failed: %s\n' "${failed[*]}" >&2
+    exit 1
+  fi
+}
+
 main() {
+  local mode="${1:-}"
   cd -- "$(git rev-parse --show-toplevel)"
 
-  # One line per check, using the commands from each guide's tools.md.
+  # The static checks, one line each, using the commands from each guide's
+  # tools.md.
   check 'shell format' shfmt -d scripts/
-  check 'shell lint' shellcheck scripts/check scripts/audit \
-    scripts/check-requirements
+  check 'shell lint' shellcheck scripts/check scripts/check-file \
+    scripts/audit scripts/check-requirements
   check 'requirements' scripts/check-requirements docs/specs/*/spec.md \
     -- tests
   check 'format' ruff format --check .
   check 'lint' ruff check .
   check 'types' mypy .
-  check 'tests' coverage run -m pytest
-  check 'coverage' coverage report
+  # The tests are the slow part, so they run only when the rest pass.
+  stop_if_failed
+  [[ "${mode}" != --static ]] || exit 0
 
-  if ((${#failed[@]} > 0)); then
-    printf 'Failed: %s\n' "${failed[*]}" >&2
-    exit 1
+  check 'tests' coverage run -m pytest -m 'not slow'
+  check 'coverage' coverage report
+  if [[ "${mode}" == --all ]]; then
+    check 'slow tests' pytest -m slow
   fi
+  stop_if_failed
 }
 
 main "$@"
@@ -242,13 +289,14 @@ reports (lizard, jscpd), and mutation testing from the Mutation testing
 section of each guide's `tools.md`, which shows whether the tests would
 catch small changes to the code. It also runs
 `scripts/check-requirements --all`, which fails when any requirement in a
-spec has no test that names it. It follows the same rules as
+spec has no test that names it, and `scripts/check --all`, for the slow
+tests. It follows the same rules as
 `scripts/check`. The vibe workflow runs it before finishing a task, and CI
 should run it too.
 
 ## Step 5: install the hooks
 
-1. Make the scripts executable, then run `scripts/check` on the current
+1. Make the scripts executable, then run `scripts/check --all` on the current
    state of the project. Fix or report any failures before going on: a gate
    that already fails can't tell new problems from old ones.
 2. Install the git hooks, which link to this repo's copies so updates
@@ -265,6 +313,16 @@ should run it too.
    `scripts/check-requirements` if the project has specs, and the tool
    config files in one commit. The
    gate runs on that commit too.
+
+## When the gate is older than this skill
+
+A project whose gate has `scripts/check` but no `scripts/check-file` was
+set up before the steps above. Bring it up to date in one commit: write
+`scripts/check-file` as Step 3 says; make `scripts/check` fail fast, with
+its static checks before its tests; add its `--static` and `--all` modes;
+and move its slow tests under `--all`, telling the user which tests moved.
+Keep every check it already has. A script that ignores its arguments still
+works with the gate meanwhile: it runs everything every time.
 
 ## When the project needs a new guide
 
