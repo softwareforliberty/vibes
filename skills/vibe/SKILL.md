@@ -202,6 +202,22 @@ The user can ask for a run that never stops to ask them anything, such as
 The final report lists every unattended decision first, with the options
 not chosen, so the user can check them before anything else.
 
+## When you need the user
+
+A run takes hours, so the user is often away when it needs them, and a
+question left overnight stops the run. Whenever the run stops to wait for
+the user, such as for open questions, a decision only they can make or the
+finished report:
+
+- **Notify them first,** with the `PushNotification` tool if this session
+  has it, loading it with ToolSearch if it's listed as deferred. Send one
+  notification of under 200 characters, leading with what they need to do,
+  such as `vibe scene-workers: 3 spec questions need your answers`. Never
+  notify for progress, and in an unattended run, only when it finishes or
+  can't go on.
+- **Ask everything at once.** Gather every question you have at that point
+  into one ask, rather than asking one, waiting, then asking the next.
+
 ## Keep the state current
 
 Keep `.vibes/<name>/state.md` current, so an interrupted run can carry on
@@ -286,7 +302,9 @@ To resume:
      again, and tell it what already exists so it carries on rather than
      starting over;
    - in the build, give a fresh builder the next batch, starting from the
-     first entry in the test list that isn't ticked off.
+     first entry in the test list that isn't ticked off;
+   - when `state.md` names an audit that was running and its log has no
+     result, start it again, as Phase 7 says.
 
 ## Phase 0: Set up
 
@@ -600,7 +618,9 @@ below that mention one don't apply.
    truth: for a large task, as the spike phase left them.
 3. **Check each batch** before the next: its commits are on the rebuild
    branch, the working tree is clean, the plan's entries are ticked off,
-   and `scripts/check` passes. Check the guides on the branch's changes, as
+   and the builder's reply says `scripts/check --all` passed. Don't run
+   `scripts/check` yourself: the gate ran it on every commit, and the
+   builder ran the slow tests. Check the guides on the branch's changes, as
    [Keep the guides current](#keep-the-guides-current) describes, and
    update `state.md`.
 4. **Decide what the builder couldn't,** such as a spec change that alters
@@ -624,17 +644,36 @@ and the tests, if the project has it, and have a builder add a test for any
 requirement it reports. The spec reviewer's final verdict must be
 `APPROVED`, with every requirement met and tested.
 
+**Run the audit alongside the review.** If the project has `scripts/audit`,
+start it as round 1 starts, on the rebuild branch's head, in a worktree of
+its own so the fixers' commits don't change what it checks:
+
+```sh
+git worktree add --detach .vibes/<name>/audit <head>
+cd .vibes/<name>/audit && scripts/audit > ../audit.log 2>&1; echo "exit $?" >> ../audit.log
+```
+
+Run the second command in the background, record the audited commit in
+`state.md`, and carry on with the review. When it finishes, give its
+failures to the next builder in `fix` mode, with the round's findings, or
+to a builder of their own if the rounds are over, and remove the worktree
+with `git worktree remove --force .vibes/<name>/audit`.
+
 ## Phase 8: Finish
 
-1. Run `scripts/audit` if the project has one, and have a builder in `fix`
-   mode fix what it finds, with the audit's failures in its brief.
-2. Check `git status` is clean and `scripts/check` passes.
+1. **Finish the audit** from Phase 7: wait for it if it's still running,
+   and have its failures fixed if they haven't been. Run it again, the
+   same way, only when a commit since the audited one changed the
+   project's dependencies, such as a manifest or lock file. The review's
+   fixes went through the gate and the reviewers.
+2. Check `git status` is clean and `scripts/check --all` passes.
 3. Report to the user:
    - for an unattended run, every unattended decision first, with the
      options not chosen
    - the task's size, and any move to a larger size, with why
    - the guides the task added to the gate, and any files no guide covers
-   - the rebuild branch and its commits (`git log --oneline <base>..HEAD`)
+   - the rebuild branch and its commits (`git log --oneline <base>..HEAD`),
+     and the commit the audit checked
    - the spec and design in the spec directory, every change made to the
      spec after it was approved, and the spec reviewer's final coverage
    - every reviewer's final verdict, any reviewer left out of a phase's

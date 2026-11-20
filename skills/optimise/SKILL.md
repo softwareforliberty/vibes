@@ -153,6 +153,15 @@ rails, the candidates table, the phase and last step, and
 `status: running` until the end, then `status: done`. Update it after every
 step.
 
+## When you need the user
+
+Whenever the run stops to wait for the user, notify them first, as the
+vibe skill's
+[When you need the user](../vibe/SKILL.md#when-you-need-the-user) says:
+one `PushNotification` of under 200 characters, leading with what they
+need to do, if this session has the tool, and never for progress. Ask
+every question you have at that point together, in one ask.
+
 ## Resume an unfinished run
 
 Before Phase 0, look for `.vibes/optimise-*/optimise-state.md` with
@@ -164,6 +173,7 @@ the user, since both would use the working tree.
 To resume, read the state file, check the branches and commits agree with
 it (git wins), run `git worktree prune`, and carry on from the first
 unfinished step. A candidate with commits but no measurement is measured
+again, and an audit that was running with no result in its log is started
 again. If the machine, its power state or the toolchain has changed, have
 the profiler run aa mode again first, and measure the best version against
 the baseline again before trusting old gains.
@@ -342,8 +352,9 @@ benchmark is built like any other entry, with the language's own benchmark
 tool, never `bin/bench`, and the gate runs it only at its small size.
 
 After each batch, check its commits are on the rebuild branch, the tree is
-clean, the plan's entries are ticked off, and `scripts/check` passes, and
-check the guides.
+clean, the plan's entries are ticked off, and the builder's reply says
+`scripts/check --all` passed, and check the guides. Don't run
+`scripts/check` yourself: the gate ran it on every commit.
 
 ## Phase 7: Verify the rebuild
 
@@ -363,15 +374,19 @@ check the guides.
    builder add a test for any id it reports. The brief's `Measurements:`
    line gives the latest verify reports: the spec reviewer reads the
    targets' results there rather than timing anything, and the performance
-   reviewer also checks the committed benchmark's method.
+   reviewer also checks the committed benchmark's method. Run the audit
+   alongside the review, as the vibe skill's
+   [Phase 7](../vibe/SKILL.md#phase-7-review-the-rebuild) says, in
+   `.vibes/optimise-<slug>/audit`.
 4. **Measure again** after the last round that changed code, as step 1
    says, and fix the same way if it fails.
 
 ## Phase 8: Finish
 
-1. Run `scripts/audit` if the project has one, and have a builder in `fix`
-   mode fix what it finds.
-2. Check `git status` is clean and `scripts/check` passes.
+1. **Finish the audit** from Phase 7, as the vibe skill's Phase 8 says:
+   wait for it, have its failures fixed, and run it again only when a
+   commit since the audited one changed the project's dependencies.
+2. Check `git status` is clean and `scripts/check --all` passes.
 3. Report to the user:
    - for an unattended run, every unattended decision first;
    - the workload, and a table of the baseline against the final rebuild:

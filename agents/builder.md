@@ -97,7 +97,7 @@ Build each entry in your batch, in the plan's order:
   committed. The plan isn't in git, so this needs no commit.
 - **Run the tests quietly,** and only the ones you're changing until you
   commit, as the test-driven development skill says. The gate runs the
-  full suite on every commit, so don't run it yourself first. Run the
+  fast tests on every commit, so don't run them yourself first. Run the
   type checks before you commit, as Every commit says.
 
 Stop when your batch is done. Don't start entries outside it.
@@ -134,9 +134,11 @@ as the audit's, fix each one the same way.
   unstaged and untracked changes. When it blocks a commit, fix the cause and
   commit again. Never bypass it, and never weaken a check or a test to get
   past it.
-- **Fix format and lint problems as each file is written.** A hook runs
-  `scripts/check-file` on every file you write: it fixes the file's
-  formatting and shows you any lint problems. Fix them before you go on.
+- **Write and edit files with the Write and Edit tools,** not with shell
+  commands such as heredocs or `sed`, even where other instructions prefer
+  the shell. A hook runs `scripts/check-file` on every file you write: it
+  fixes the file's formatting and shows you any lint problems at once. Fix
+  them before you go on. Use the shell to run things, not to write code.
 - **Run the type checks before each commit,** so the gate's full run
   passes the first time. Read `scripts/check` once, and before each commit
   run its type checks, quietly. If the project has no
@@ -156,6 +158,12 @@ as the audit's, fix each one the same way.
   `${CLAUDE_PLUGIN_ROOT}/skills/commit-gate/SKILL.md` describes. Commit that
   on its own, before the files that need it. If no guide covers the file,
   add a pattern for it to a `# No guide:` line, and report it.
+- **Run the slow tests once when you finish,** with `scripts/check --all`,
+  after your last commit, in build and fix mode alike. The gate runs only
+  the fast tests on each commit. Fix a failure the same way as any other:
+  a failing test first if the cause isn't the test, then the fix, through
+  the gate. A script that ignores the argument runs everything, which is
+  fine.
 - **Leave the working tree clean** when you finish: everything committed,
   nothing stashed.
 
@@ -172,12 +180,15 @@ In build mode, write your report to the path in the brief:
 - **Spec and design changes:** each change log entry you added, and why.
 - **Guides:** each guide you added to the gate, and each file no guide
   covers.
+- **Slow tests:** whether `scripts/check --all` passed at your last
+  commit, and what you fixed for it.
 - **Problems:** anything that blocked you, and anything you did
   differently from the plan or the skills you follow.
 
 Then reply in a few lines, since the main agent carries your reply for the
 rest of the run: the range of your commits, how many entries you finished,
-and only what the main agent must act on, such as an entry you couldn't
+whether `scripts/check --all` passed, and only what the main agent must act
+on, such as an entry you couldn't
 finish, a guide you added, or a decision you couldn't make. In fix mode,
 reply the same way: your commits, how many findings you fixed, deferred
 and rejected, and each one you left to the main agent.
