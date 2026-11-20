@@ -239,9 +239,10 @@ isn't in `state.md` yet:
    writes or reviews those files reads it.
 2. **Have the gate extended** on the rebuild branch, before the commit that
    needs it. Tell the next builder the gate doesn't check the guide yet: it
-   adds the checks from the guide's `tools.md` to `scripts/check`, and the
-   guide to the `# Guides:` line, in a commit of its own. The builder also
-   does this itself when it's the first to write a new kind of file.
+   adds the checks from the guide's `tools.md` to `scripts/check` and
+   `scripts/check-file`, and the guide to the `# Guides:` line, in a
+   commit of its own. The builder also does this itself when it's the
+   first to write a new kind of file.
 
 For every file listed as `no guide:`, tell the user that no vibes guide
 covers it, and add a pattern for it to a `# No guide:` line in
@@ -321,8 +322,8 @@ To resume:
    Then write `.vibes/<name>/state.md`, as
    [Keep the state current](#keep-the-state-current) describes.
 7. **Start the commit gate setup.** If the project has no executable
-   `scripts/check`, or its `# Guides:` line doesn't name every guide the
-   project already needs, spawn a `general-purpose` subagent in the
+   `scripts/check` or `scripts/check-file`, or the `# Guides:` line
+   doesn't name every guide the project already needs, spawn a `general-purpose` subagent in the
    background, with `medium` effort, to follow the
    `${CLAUDE_PLUGIN_ROOT}/skills/commit-gate/SKILL.md` skill on the base
    branch, with the guides and any rules the user gave about installing

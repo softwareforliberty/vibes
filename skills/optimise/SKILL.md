@@ -183,7 +183,8 @@ the baseline again before trusting old gains.
    ```
 
 5. **Set up the commit gate,** if the project has no executable
-   `scripts/check` or its `# Guides:` line misses a guide: spawn a
+   `scripts/check` or `scripts/check-file`, or the `# Guides:` line misses
+   a guide: spawn a
    `general-purpose` subagent with `medium` effort to follow
    `${CLAUDE_PLUGIN_ROOT}/skills/commit-gate/SKILL.md` on the base branch,
    committing the setup on its own. **Wait for it,** so nothing else runs

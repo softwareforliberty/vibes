@@ -2,8 +2,9 @@
 name: commit-gate
 description: >-
   Sets up the vibes commit gate in a project: writes scripts/check (format,
-  lint and full tests) and scripts/audit from the guides' tools.md, and
-  installs the git hook so no commit lands unless every check passes. Use when
+  lint and full tests), scripts/check-file (each file's format and lint, as
+  it's written) and scripts/audit from the guides' tools.md, and installs
+  the git hook so no commit lands unless every check passes. Use when
   starting the vibe workflow in a project, or when asked to add a commit gate.
 ---
 
@@ -18,6 +19,12 @@ same logic:
 - **Git:** `hooks/git_pre_commit` and `hooks/git_commit_msg` in this repo,
   installed as the project's pre-commit and commit-msg hooks, run it for
   every commit, including commits made by people and by other agents.
+
+A third hook catches the small mistakes earlier: after each file an agent
+writes, the plugin's `PostToolUse` hook runs `scripts/check-file` on it,
+which formats the file and shows the agent any lint problems at once,
+rather than at the commit. It skips `spike/*` branches and the spiker,
+whose code is thrown away, and files git ignores.
 
 ## What the gate does
 
@@ -162,7 +169,71 @@ main() {
 main "$@"
 ```
 
-## Step 3: write scripts/audit
+## Step 3: write scripts/check-file
+
+`scripts/check-file` runs the **per-file** checks from `scripts/check` on
+the files it's given, as paths from the repository root. The plugin's hook
+runs it on each file an agent writes, so it must take a second or two:
+
+- **Formatting,** in rewrite mode, such as `ruff format <file>` or
+  `shfmt -w <file>`. Unlike `scripts/check`, it fixes the formatting rather
+  than reporting it.
+- **Linting** of that file, with the same config and the same
+  warnings-as-errors as `scripts/check`. It reports problems and never
+  rewrites the code to fix them.
+- **Nothing that needs the whole project:** no type checker, tests,
+  coverage or architecture tests. Changing one file can break another, so
+  those stay with `scripts/check`, which runs them on every commit.
+- A file no check covers passes. It prints nothing when every check
+  passes, and each failing check's output otherwise, and exits non-zero
+  when any fails.
+- It follows the same rules as `scripts/check`: Bash, run from the
+  repository root, no network.
+
+A skeleton to start from:
+
+```bash
+#!/usr/bin/env bash
+#
+# Format and lint the files given, as each one is written. The per-file
+# checks from scripts/check; formatting is rewritten, not reported.
+
+set -euo pipefail
+
+failed=0
+
+# Runs one check, printing its output only when it fails.
+check() {
+  local output
+  if ! output="$("$@" 2>&1)"; then
+    printf '==> %s failed:\n%s\n' "$*" "${output}"
+    failed=1
+  fi
+}
+
+main() {
+  cd -- "$(git rev-parse --show-toplevel)"
+  local path
+  for path in "$@"; do
+    case "${path}" in
+      *.py)
+        check ruff format --quiet -- "${path}"
+        check ruff check --quiet -- "${path}"
+        ;;
+      *.sh | scripts/*)
+        check shfmt -w -- "${path}"
+        check shellcheck -- "${path}"
+        ;;
+      *) ;;
+    esac
+  done
+  exit "${failed}"
+}
+
+main "$@"
+```
+
+## Step 4: write scripts/audit
 
 `scripts/audit` holds the checks that are **slow or need the network**, such
 as dependency vulnerability scans (OSV-Scanner and the guide's own audit
@@ -175,9 +246,9 @@ spec has no test that names it. It follows the same rules as
 `scripts/check`. The vibe workflow runs it before finishing a task, and CI
 should run it too.
 
-## Step 4: install the hooks
+## Step 5: install the hooks
 
-1. Make both scripts executable, then run `scripts/check` on the current
+1. Make the scripts executable, then run `scripts/check` on the current
    state of the project. Fix or report any failures before going on: a gate
    that already fails can't tell new problems from old ones.
 2. Install the git hooks, which link to this repo's copies so updates
@@ -190,8 +261,9 @@ should run it too.
 
    If the project already has either hook, ask the user before replacing
    it.
-3. Commit `scripts/check`, `scripts/audit`, `scripts/check-requirements`
-   if the project has specs, and the tool config files in one commit. The
+3. Commit `scripts/check`, `scripts/check-file`, `scripts/audit`,
+   `scripts/check-requirements` if the project has specs, and the tool
+   config files in one commit. The
    gate runs on that commit too.
 
 ## When the project needs a new guide
@@ -202,8 +274,8 @@ first Dockerfile, the gate blocks the commit and names the guide. Then:
 1. Read the guide's `coding-style.md`, `idioms.md` and `tools.md`, and make
    the new files follow them.
 2. Add the checks from its `tools.md` to `scripts/check` (and
-   `scripts/audit`), copy its config files, and add the guide to the
-   `# Guides:` line.
+   `scripts/audit`), and its formatter and linter to `scripts/check-file`,
+   copy its config files, and add the guide to the `# Guides:` line.
 3. Run `scripts/check`, fix what it finds, and commit the gate change on
    its own, before the files that need it.
 

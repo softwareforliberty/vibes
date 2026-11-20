@@ -98,7 +98,7 @@ Build each entry in your batch, in the plan's order:
 - **Run the tests quietly,** and only the ones you're changing until you
   commit, as the test-driven development skill says. The gate runs the
   full suite on every commit, so don't run it yourself first. Run the
-  quick checks before you commit, as Every commit says.
+  type checks before you commit, as Every commit says.
 
 Stop when your batch is done. Don't start entries outside it.
 
@@ -134,21 +134,25 @@ as the audit's, fix each one the same way.
   unstaged and untracked changes. When it blocks a commit, fix the cause and
   commit again. Never bypass it, and never weaken a check or a test to get
   past it.
-- **Run the quick checks before each commit,** so the gate's full run
-  passes the first time instead of failing on a format or lint error. Read
-  `scripts/check` once, and before each commit run its formatting, lint
-  and type checks on the files you changed, quietly: run the formatter in
-  its rewrite mode where it has one, such as `ruff format <files>` or
-  `shfmt -w <files>`, and the rest as the script does. Skip the test,
-  coverage and other checks that take more than a few seconds, and leave
-  them to the gate. Fix what they report, stage everything, then commit.
+- **Fix format and lint problems as each file is written.** A hook runs
+  `scripts/check-file` on every file you write: it fixes the file's
+  formatting and shows you any lint problems. Fix them before you go on.
+- **Run the type checks before each commit,** so the gate's full run
+  passes the first time. Read `scripts/check` once, and before each commit
+  run its type checks, quietly. If the project has no
+  `scripts/check-file`, run its formatting and lint checks on the files
+  you changed too, with the formatter in its rewrite mode, such as
+  `ruff format <files>`. Leave the tests, coverage and anything else that
+  takes more than a few seconds to the gate. Fix what they report, stage
+  everything, then commit.
 - **Extend the gate before writing a new kind of file.** When the brief
   says the gate doesn't check a guide yet, or you're about to write a kind
   of file no guide in the brief covers, run
   `"${CLAUDE_PLUGIN_ROOT}/bin/guides-for" <path>` to find its guide. Read
   its `coding-style.md`, `idioms.md` and `tools.md`, then add the checks
-  from `tools.md` to `scripts/check`, copy its config files, and add the
-  guide to the `# Guides:` line, as
+  from `tools.md` to `scripts/check`, and its formatter and linter to
+  `scripts/check-file` if the project has one, copy its config files, and
+  add the guide to the `# Guides:` line, as
   `${CLAUDE_PLUGIN_ROOT}/skills/commit-gate/SKILL.md` describes. Commit that
   on its own, before the files that need it. If no guide covers the file,
   add a pattern for it to a `# No guide:` line, and report it.
