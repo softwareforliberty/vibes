@@ -1,0 +1,64 @@
+#!/usr/bin/env bash
+#
+# Claude Code PostToolUse hook that formats and lints each file an agent
+# writes, as soon as it's written, so a format or lint error is fixed then
+# rather than failing the commit gate later.
+#
+# It runs the project's scripts/check-file on the file, and does nothing in
+# projects without one. scripts/check-file rewrites the file's formatting and
+# prints any lint problems, which this hook shows the agent (exit 2). The
+# spike is never checked: not on spike/* branches, where the gate doesn't run
+# either, and not for the spiker, whose code is thrown away.
+
+set -euo pipefail
+
+LIB="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/lib"
+readonly LIB
+# shellcheck source=hooks/lib/hook_input.sh
+source "${LIB}/hook_input.sh"
+
+readonly CHECK_FILE_SCRIPT='scripts/check-file'
+# The most lines of a failing check's output to show.
+readonly OUTPUT_LINES=40
+
+main() {
+  local input path cwd agent root relative branch output
+  input="$(cat)"
+  agent="$(hook::json_field "${input}" '.agent_type')"
+  [[ "${agent#vibes:}" != spiker ]] || exit 0
+
+  path="$(hook::json_field "${input}" '.tool_input.file_path')"
+  [[ -n "${path}" ]] \
+    || path="$(hook::json_field "${input}" '.tool_input.notebook_path')"
+  [[ -n "${path}" ]] || exit 0
+  cwd="$(hook::json_field "${input}" '.cwd')"
+  [[ "${path}" == /* || -z "${cwd}" ]] || path="${cwd}/${path}"
+  [[ -f "${path}" ]] || exit 0
+
+  root="$(git -C "$(dirname -- "${path}")" rev-parse --show-toplevel \
+    2>/dev/null || true)"
+  [[ -n "${root}" && -x "${root}/${CHECK_FILE_SCRIPT}" ]] || exit 0
+  path="$(realpath -- "${path}")"
+  root="$(realpath -- "${root}")"
+  [[ "${path}" == "${root}/"* ]] || exit 0
+  relative="${path#"${root}/"}"
+
+  branch="$(git -C "${root}" symbolic-ref --quiet --short HEAD || true)"
+  [[ "${branch}" != spike/* ]] || exit 0
+  # The workflow's own files, such as .vibes/, aren't the project's code.
+  ! git -C "${root}" check-ignore --quiet -- "${relative}" || exit 0
+
+  if output="$(cd -- "${root}" && "./${CHECK_FILE_SCRIPT}" "${relative}" \
+    2>&1)"; then
+    exit 0
+  fi
+  {
+    printf 'vibes: %s found problems in %s. Fix them now; the commit gate' \
+      "${CHECK_FILE_SCRIPT}" "${relative}"
+    printf ' runs the same checks.\n'
+    tail -n "${OUTPUT_LINES}" <<<"${output}"
+  } >&2
+  exit 2
+}
+
+main "$@"
