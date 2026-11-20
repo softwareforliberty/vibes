@@ -294,6 +294,8 @@ The plugin provides:
   `vibes:project-docs-reviewer`.
 - **The commit gate hook,** which runs before every `git commit` the agent
   makes.
+- **The check-file hook,** which formats and lints each file an agent
+  writes, as soon as it's written, in projects with `scripts/check-file`.
 - **The guide check hook.** The first time an agent, or each subagent, writes a
   kind of file in a conversation without having read its guide, it names the
   guide for it, and warns when the project's gate doesn't check that guide yet.
@@ -354,6 +356,13 @@ Once it exists, the gate:
 - blocks a commit whose subject is longer than 50 characters
 - runs no checks on `spike/*` branches, apart from the subject's length
 - in Claude Code, also blocks `git commit -a` and `--no-verify`
+
+Alongside it, `scripts/check-file` runs the per-file checks, formatting in
+rewrite mode and linting, on the files it's given. The plugin runs it on
+each file an agent writes, except on `spike/*` branches and for the
+spiker, so a format or lint error is fixed straight away rather than at
+the commit. Type checks and tests need the whole project, so they stay in
+`scripts/check`.
 
 For a project with specs, `scripts/check` also checks the tests'
 requirement markers. Each test names the requirements it covers, such as

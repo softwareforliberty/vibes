@@ -34,6 +34,13 @@ guides behave, and says so under **Changed**.
   project has documents.
 - **Evals** for the project docs reviewer and the commit message
   suggester.
+- **Each file is formatted and linted as it's written.** A new
+  `PostToolUse` hook runs the project's `scripts/check-file` on every file
+  an agent writes: it fixes the formatting and shows the agent any lint
+  problems at once, rather than when the commit gate fails. It skips
+  `spike/*` branches, the spiker and files git ignores, and does nothing
+  in projects without `scripts/check-file`. The commit-gate skill writes
+  it, and the vibe and optimise workflows add it to a gate that lacks it.
 
 ### Changed
 
@@ -41,10 +48,9 @@ guides behave, and says so under **Changed**.
   72 at most. The Claude Code gate hook reads the subject from
   `git commit`'s `-m`, heredoc or `-F` message and blocks a longer one
   before running the checks, on every branch.
-- **The builder runs the quick checks before each commit:** formatting,
-  lint and types from `scripts/check`, on the files it changed, so the
-  gate's full run seldom fails on a small mistake and runs again. Tests
-  and coverage stay with the gate.
+- **The builder runs the type checks before each commit,** so the gate's
+  full run seldom fails on a small mistake and runs again. Tests and
+  coverage stay with the gate.
 
 ### Fixed
 
