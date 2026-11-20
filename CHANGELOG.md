@@ -41,6 +41,10 @@ guides behave, and says so under **Changed**.
   72 at most. The Claude Code gate hook reads the subject from
   `git commit`'s `-m`, heredoc or `-F` message and blocks a longer one
   before running the checks, on every branch.
+- **The builder runs the quick checks before each commit:** formatting,
+  lint and types from `scripts/check`, on the files it changed, so the
+  gate's full run seldom fails on a small mistake and runs again. Tests
+  and coverage stay with the gate.
 
 ### Fixed
 

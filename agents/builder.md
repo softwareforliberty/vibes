@@ -97,7 +97,8 @@ Build each entry in your batch, in the plan's order:
   committed. The plan isn't in git, so this needs no commit.
 - **Run the tests quietly,** and only the ones you're changing until you
   commit, as the test-driven development skill says. The gate runs the
-  full suite on every commit, so don't run it yourself first.
+  full suite on every commit, so don't run it yourself first. Run the
+  quick checks before you commit, as Every commit says.
 
 Stop when your batch is done. Don't start entries outside it.
 
@@ -133,6 +134,14 @@ as the audit's, fix each one the same way.
   unstaged and untracked changes. When it blocks a commit, fix the cause and
   commit again. Never bypass it, and never weaken a check or a test to get
   past it.
+- **Run the quick checks before each commit,** so the gate's full run
+  passes the first time instead of failing on a format or lint error. Read
+  `scripts/check` once, and before each commit run its formatting, lint
+  and type checks on the files you changed, quietly: run the formatter in
+  its rewrite mode where it has one, such as `ruff format <files>` or
+  `shfmt -w <files>`, and the rest as the script does. Skip the test,
+  coverage and other checks that take more than a few seconds, and leave
+  them to the gate. Fix what they report, stage everything, then commit.
 - **Extend the gate before writing a new kind of file.** When the brief
   says the gate doesn't check a guide yet, or you're about to write a kind
   of file no guide in the brief covers, run
