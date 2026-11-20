@@ -6,6 +6,7 @@ scripts/check --static, and any other commit runs all of it.
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
@@ -80,6 +81,64 @@ class DocsOnlyTest(unittest.TestCase):
             with self.subTest(path=path):
                 self.assertEqual(self.gate(path), "<none>")
                 os.remove(self.log)
+
+
+class ClaudeHookTest(unittest.TestCase):
+    """The Claude Code hook, with a gate that always fails."""
+
+    def setUp(self) -> None:
+        self.repo = os.path.realpath(tempfile.mkdtemp())
+        self.git("init", "-q", "-b", "main")
+        self.write("scripts/check",
+                   "#!/bin/sh\n# Guides: languages/BASH\nexit 1\n")
+        os.chmod(os.path.join(self.repo, "scripts", "check"), 0o755)
+        self.git("add", ".")
+        self.git("-c", "user.name=t", "-c", "user.email=t@example.com",
+                 "commit", "-q", "--no-verify", "-m", "Add the checks")
+        self.write("scripts/build.sh", "true\n")
+        self.git("add", "scripts/build.sh")
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.repo)
+
+    git = DocsOnlyTest.git
+    write = DocsOnlyTest.write
+
+    def hook(self, command: str) -> subprocess.CompletedProcess:
+        event = {"tool_name": "Bash", "cwd": self.repo,
+                 "tool_input": {"command": command}}
+        return subprocess.run(
+            [os.path.join(ROOT, "hooks", "claude_commit_gate")],
+            input=json.dumps(event), text=True, capture_output=True,
+            check=False)
+
+    def test_finds_a_commit_behind_a_wrapper(self) -> None:
+        for command in ("git commit -q -m 'Add the build'",
+                        "time git commit -q -F - <<'EOF' 2>&1 | tail -60\n"
+                        "Add the build\nEOF",
+                        "time -p git commit -m x",
+                        "(time git commit -q -m x) 2>&1 | tail -15",
+                        "env GIT_EDITOR=true git commit",
+                        "nice -n 5 git commit -m x",
+                        "command git commit -m x",
+                        "timeout 900 /usr/bin/git commit -m x",
+                        "sudo -u git git commit -m x"):
+            with self.subTest(command=command):
+                self.assertEqual(self.hook(command).returncode, 2)
+
+    def test_leaves_other_commands_alone(self) -> None:
+        for command in ("git log --oneline | head", "time make test",
+                        "echo 'git commit' > notes.txt", "git status"):
+            with self.subTest(command=command):
+                self.assertEqual(self.hook(command).returncode, 0)
+
+    def test_refuses_while_a_vibes_hook_link_is_broken(self) -> None:
+        hook = os.path.join(self.repo, ".git", "hooks", "pre-commit")
+        os.symlink("/gone/vibes/0.3.0/hooks/git_pre_commit", hook)
+        result = self.hook("git commit -m x")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("no longer exists", result.stderr)
+        self.assertIn("install-git-hooks", result.stderr)
 
 
 if __name__ == "__main__":

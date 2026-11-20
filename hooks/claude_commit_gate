@@ -20,6 +20,7 @@ readonly VALUE_OPTIONS='CcFmStu'
 readonly GROUPING='[(){}]'
 # The longest commit subject allowed, as hooks/lib/commit_subject.py checks.
 readonly SUBJECT_LIMIT=50
+readonly INSTALL_HOOKS="${LIB%/hooks/lib}/bin/install-git-hooks"
 
 # Prints a path resolved against a directory, or nothing when either is
 # unknown.
@@ -61,47 +62,53 @@ commits() {
       dir="$(resolve "${dir}" "${target}")"
       continue
     fi
-    [[ "${word}" == git || "${word}" == */git ]] || continue
-    target="${dir}"
-    ((i += 1))
+    # git may follow a wrapper, such as time, env, nice, command or xargs,
+    # so look for it anywhere in the command, not only as its first word.
     while ((i < n)); do
       word="${words[i]}"
-      case "${word}" in
-        -C | -c | --git-dir | --work-tree | --namespace | --exec-path | \
-          --config-env | --super-prefix)
-          # A quoted value is stripped, which leaves the next option or the
-          # subcommand in its place.
-          if ((i + 1 >= n)) || [[ "${words[i + 1]}" == commit ]] \
-            || [[ "${words[i + 1]}" == -* ]]; then
+      ((i += 1))
+      [[ "${word}" == git || "${word}" == */git ]] || continue
+      target="${dir}"
+      while ((i < n)); do
+        word="${words[i]}"
+        case "${word}" in
+          -C | -c | --git-dir | --work-tree | --namespace | --exec-path | \
+            --config-env | --super-prefix)
+            # A quoted value is stripped, which leaves the next option or the
+            # subcommand in its place.
+            if ((i + 1 >= n)) || [[ "${words[i + 1]}" == commit ]] \
+              || [[ "${words[i + 1]}" == -* ]]; then
+              case "${word}" in
+                -C | --git-dir | --work-tree) target="" ;;
+                *) ;;
+              esac
+              ((i += 1))
+              continue
+            fi
             case "${word}" in
-              -C | --git-dir | --work-tree) target="" ;;
+              -C) target="$(resolve "${target}" "${words[i + 1]}")" ;;
+              --git-dir | --work-tree) target="" ;;
               *) ;;
             esac
+            ((i += 2))
+            ;;
+          --git-dir=* | --work-tree=*)
+            target=""
             ((i += 1))
-            continue
-          fi
-          case "${word}" in
-            -C) target="$(resolve "${target}" "${words[i + 1]}")" ;;
-            --git-dir | --work-tree) target="" ;;
-            *) ;;
-          esac
-          ((i += 2))
-          ;;
-        --git-dir=* | --work-tree=*)
-          target=""
-          ((i += 1))
-          ;;
-        -*) ((i += 1)) ;;
-        *) break ;;
-      esac
-    done
-    if ((i < n)) && [[ "${words[i]}" == commit ]]; then
-      args=""
-      if ((i + 1 < n)); then
-        args="${words[*]:i+1}"
+            ;;
+          -*) ((i += 1)) ;;
+          *) break ;;
+        esac
+      done
+      if ((i < n)) && [[ "${words[i]}" == commit ]]; then
+        args=""
+        if ((i + 1 < n)); then
+          args="${words[*]:i+1}"
+        fi
+        printf 'd:%s\t%s\n' "${target}" "${args}"
+        break
       fi
-      printf 'd:%s\t%s\n' "${target}" "${args}"
-    fi
+    done
   done <<<"${1//[;&|]/$'\n'}"
 }
 
@@ -144,6 +151,26 @@ long_subjects() {
     <<<"${command}" || true
 }
 
+# Returns 1, explaining, when a vibes git hook is a link that no longer
+# resolves, such as one to a plugin version that's been removed: git skips
+# it without a word, so the gate and the subject check would silently stop.
+hooks_resolve() {
+  local name hook
+  for name in pre-commit commit-msg; do
+    hook="$(git rev-parse --git-path "hooks/${name}" 2>/dev/null)" || continue
+    [[ -L "${hook}" && ! -e "${hook}" ]] || continue
+    case "$(readlink -- "${hook}")" in
+      */hooks/git_pre_commit | */hooks/git_commit_msg) ;;
+      *) continue ;;
+    esac
+    gate::err "the git ${name} hook links to $(readlink -- "${hook}"),"
+    gate::err "which no longer exists, so git skips it. Reinstall the hooks:"
+    gate::err "  \"${INSTALL_HOOKS}\""
+    gate::err "then commit again."
+    return 1
+  done
+}
+
 # Returns 0 when the project's own git hook is the vibes gate.
 git_hook_is_gate() {
   local hook
@@ -174,6 +201,7 @@ check_commit() {
   fi
   (
     cd -- "${dir}" || exit 1
+    hooks_resolve || exit 1
     # Git runs the gate itself when its hook is installed, so don't run twice.
     git_hook_is_gate || gate::run
   )
