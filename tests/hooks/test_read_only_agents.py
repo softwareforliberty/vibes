@@ -211,5 +211,29 @@ class PrWriterTest(unittest.TestCase):
                         hook(self.AGENT, tool, file_path=path), 2)
 
 
+class IssueReaderTest(unittest.TestCase):
+    AGENT = "vibes:issue-reader"
+
+    def test_writes_its_brief_and_triage(self) -> None:
+        for name in ("brief.md", "triage.md"):
+            for tool in ("Write", "Edit"):
+                with self.subTest(name=name, tool=tool):
+                    self.assertEqual(hook(self.AGENT, tool, file_path=(
+                        f"/p/.vibes/issues/123/{name}")), 0)
+
+    def test_never_writes_anything_else(self) -> None:
+        for path in ("/p/.github/workflows/ci.yml", "/p/scripts/check",
+                     "/p/.vibes/issues/123/issue.json",
+                     "/p/.vibes/issues/approved.tsv",
+                     "/p/.vibes/issues/abc/brief.md",
+                     "/p/.vibes/issues/123/x/brief.md",
+                     "/p/.vibes/issues/123/../../../CLAUDE.md",
+                     ".vibes/issues/123/brief.md"):
+            for tool in ("Write", "Edit"):
+                with self.subTest(path=path, tool=tool):
+                    self.assertEqual(
+                        hook(self.AGENT, tool, file_path=path), 2)
+
+
 if __name__ == "__main__":
     unittest.main()
