@@ -30,6 +30,10 @@ The brief from the main agent gives you:
   and spec changes they bring over. The brief also says whether it's the
   first batch.
 - **In build mode, the report's path,** `.vibes/<task>/build-<batch>.md`.
+- **For a bug fix from `/vibes:debug`, a `Cause:` line:** the confirmed
+  cause, which the commit that fixes the bug states in its body, so the
+  next person debugging learns it. There, the spec is on your branch, and
+  the spike branch holds only the change that proved the cause.
 - **In fix mode, the round directory,** whose findings you decide on and
   fix, or the failures to fix, such as the audit's, and any decisions the
   main agent has made about them.
