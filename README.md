@@ -50,7 +50,8 @@ while holding it to the standards of careful, experienced developers.
   profilers and benchmark tools for each guide, for the profiler and the
   optimiser.
 - **`agents/`:** the designer, the spike agent, the builder, twelve
-  reviewer agents, the profiler and optimiser, the diagnoser, the surveyor
+  reviewer agents, the profiler and optimiser, the diagnoser, the
+  researcher, the surveyor
   and interface designer, the commit message suggester and the
   retrospective.
 - **`hooks/`:** the commit gate, for Claude Code and for git; a guide
@@ -97,16 +98,26 @@ corrected to follow the document. If the task seems meant to change what a
 document says, you're asked, and if it is, the task updates the document
 too. A project with no documents never runs it.
 
+You're asked only for decisions, never for facts. Each open question is
+marked one or the other. A fact, such as what an outside API allows or
+how a library behaves at the version the project pins, goes to a
+researcher subagent. It answers from primary sources, the dependency's
+own code at that version first, and writes a dated note citing a source
+for each claim, which is committed with the spec that relies on it. Each
+decision comes with a recommended answer worded so "yes" accepts it, so
+you can answer by number, or reply "yes" to accept them all.
+
 Add `unattended` to run it without stopping to ask you anything, such as
-`/vibes:vibe unattended: <task>`. The main agent then makes the narrowest
-choice for each open question, records it, and lists every such decision
-first in its final report. It still stops rather than touch anything that
+`/vibes:vibe unattended: <task>`. The main agent then takes each
+decision's recommended answer, or the narrowest choice when the
+recommendation does more than you asked, records it, and lists every
+such decision first in its final report. It still stops rather than touch anything that
 could lose your work.
 
 1. **Spec.** A designer subagent writes a complete spec: every requirement,
-   error and edge case, each testable, in proportion to the task. You
-   answer any open questions, and a spec reviewer checks it until it's
-   complete. The spec uses the project's glossary, and each new term the
+   error and edge case, each testable, in proportion to the task. Its
+   factual questions are researched, you answer the decisions, and a spec
+   reviewer checks it until it's complete. The spec uses the project's glossary, and each new term the
    task brings is added to it. Meanwhile, another subagent sets up the
    commit gate.
 2. **Design.** The designer writes the design to the spec, and the
@@ -406,7 +417,8 @@ The plugin provides:
   plus `vibes:test-driven-development`, `vibes:atomic-commits` and
   `vibes:commit-gate`, which agents use on their own when they apply.
 - **Agents:** `vibes:designer`, `vibes:spiker`, `vibes:builder`,
-  `vibes:profiler`, `vibes:optimiser`, `vibes:diagnoser`, `vibes:surveyor`,
+  `vibes:profiler`, `vibes:optimiser`, `vibes:diagnoser`, `vibes:researcher`,
+  `vibes:surveyor`,
   `vibes:interface-designer`, `vibes:commit-message-suggester`,
   `vibes:retrospective` and the reviewers, such as `vibes:security-reviewer` and
   `vibes:project-docs-reviewer`.

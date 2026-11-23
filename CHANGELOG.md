@@ -25,6 +25,12 @@ guides behave, and says so under **Changed**.
     breaking a record as a BLOCKER and using a word the glossary says to
     avoid as MAJOR.
   - **The final report** lists the terms and records the task added.
+- **Facts are researched, not asked.** Open questions are marked a fact
+  or a decision. The new researcher answers each fact from primary
+  sources, the dependency's own code at the pinned version first, in a
+  dated note citing a source for every claim, committed with the spec
+  that relies on it. It works in `/vibes:vibe`, `/vibes:optimise` and
+  `/vibes:debug`.
 - **`/vibes:survey` looks across the codebase for modules worth
   deepening.** The new surveyor starts where `bin/hotspots` shows recent
   commits keep landing, and writes ranked candidates, each with the code
@@ -61,6 +67,12 @@ guides behave, and says so under **Changed**.
 
 ### Changed
 
+- **Every decision you're asked comes with a recommended answer,** worded
+  so "yes" accepts it, so you can accept them all at once. Unattended runs
+  take the recommendation, unless it does more than you asked.
+- **The spec reviewer checks outside facts are sourced,** and the project
+  docs reviewer treats a research note as a record of its date, not a
+  rule.
 - **The commit gate asks before it's loosened.** In Claude Code, a commit
   that deletes `scripts/check` or `scripts/check-file`, makes either not
   executable, removes or changes a line of either so that a word is lost,
