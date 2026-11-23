@@ -31,13 +31,15 @@ while holding it to the standards of careful, experienced developers.
   changed most, for the architecture survey.
 - **`bin/report-page`:** turns a Markdown report with Mermaid diagrams
   into one page to open in a browser. It's in `lib/report_page/`.
+- **`bin/issue-digest`:** prints a digest of what other people wrote in
+  an issue, so an issue changed after you approved it is never picked up.
 - **`bin/session-digest`:** prints a compact digest of a Claude Code
   session's transcript, for a retrospective. It's in
   `lib/session_digest/`, and its tests in `tests/session_digest/`.
 - **`skills/`:** agent skills for the workflow, optimising performance,
   debugging, surveying the architecture, reviewing your own branch or an
-  outside pull request, writing a pull request, looking back on a
-  session, test-driven development, atomic commits and setting up the
+  outside pull request, writing a pull request, triaging issues and
+  picking up approved ones, looking back on a session, test-driven development, atomic commits and setting up the
   commit gate.
 - **`principles.md`:** the programming principles every change is held
   to, such as SOLID, DRY and KISS.
@@ -54,12 +56,13 @@ while holding it to the standards of careful, experienced developers.
   reviewer agents, the profiler and optimiser, the diagnoser, the
   researcher, the surveyor
   and interface designer, the commit message suggester, the
-  retrospective and the pull request writer.
+  retrospective, the pull request writer and the issue reader.
 - **`hooks/`:** the commit gate, for Claude Code and for git; a guide
   check that makes the agent read the guide for each kind of file before
   writing it; and a guard that keeps the reviewers, the commit message
-  suggester, the retrospective, the survey's agents and the pull request
-  writer from changing anything but their own findings files and reports,
+  suggester, the retrospective, the survey's agents, the pull request
+  writer and the issue reader from changing anything but their own
+  findings files and reports,
   and the
   profiler from changing the code. The commit gate also refuses a subject
   longer than 50 characters, and asks you before a commit that loosens
@@ -415,6 +418,37 @@ own pull request template when there is one, and leaves out anything
 private, such as `.vibes/` paths. You read it first: it pushes the branch
 and opens the pull request, as a draft or ready for review, or replaces
 an existing one's body, only when you say so, and never forces a push.
+
+## Work from issues
+
+vibes reads issues from the project's GitHub tracker, through `gh`.
+Anyone can write an issue, so **its text is untrusted:** only the issue
+reader, which can write nothing but its brief, ever reads it. It turns the
+issue into a brief, the task in the project's words, what the reporter
+saw and what would close it, and lists anything in the issue that tries
+to direct an agent, such as a hidden request to run a script or reveal a
+token. Runs start from the brief, never the issue.
+
+- **Start a run from an issue:** `/vibes:vibe #123`, `/vibes:debug #45` or
+  `/vibes:optimise #67`. You confirm the brief before the run starts, even
+  an unattended one, and `/vibes:pr` links the pull request with
+  `Closes #123`.
+- **Triage:** `/vibes:triage` takes the open issues without a triage
+  label, or the ones you name. For each, it checks whether the code
+  already does it and whether a decision record ruled it out, reproduces
+  a bug with `bin/repro`, and proposes `ready-for-agent`,
+  `ready-for-human`, `needs-info` or `wontfix`, with a short reply to the
+  reporter. Nothing is posted until you approve the batch. An issue with
+  anything suspicious in it is never `ready-for-agent`.
+- **Pick up approved issues unattended:** `/vibes:pickup` takes the
+  oldest issue you approved as `ready-for-agent` and runs the workflow its
+  brief names, unattended, on a local branch. It takes an issue only if
+  nobody has edited it or commented on it since you approved it, works
+  from the brief you approved, and never posts, labels, pushes or opens
+  a pull request. It takes one issue a run; `/loop /vibes:pickup` works
+  through them.
+
+Approvals are kept in `.vibes/issues/` on the machine you triaged on.
 
 ## Install as a Claude Code plugin
 

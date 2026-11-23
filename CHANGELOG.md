@@ -39,6 +39,19 @@ guides behave, and says so under **Changed**.
   you pick, three new interface designers each design it under a
   different constraint, and the surveyor compares them and recommends
   one, as a task for `/vibes:vibe`. It changes nothing.
+- **Work from GitHub issues.** `/vibes:vibe`, `/vibes:debug` and
+  `/vibes:optimise` take an issue, such as `#123`. The new issue reader is
+  the only agent that reads an issue's text, which anyone could have
+  written: it writes a brief, lists anything that tries to direct an
+  agent, and the run starts from the brief once you confirm it.
+  `/vibes:pr` closes the issue in the pull request's body.
+- **`/vibes:triage`** proposes a label and a reply for each open issue,
+  checking the code and the decision records and reproducing bugs, and
+  posts nothing until you approve the batch.
+- **`/vibes:pickup`** works on the next issue you approved as ready for an
+  agent, unattended, on a local branch. It takes only issues unchanged
+  since you approved them, which the new `bin/issue-digest` checks, and
+  posts, pushes and opens nothing.
 - **`/vibes:pr` writes the pull request for a branch,** only when you ask.
   The new pull request writer gives the smallest view that makes the
   change clear, the evidence before and after quoted from the run's
