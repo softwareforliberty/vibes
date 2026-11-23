@@ -10,7 +10,9 @@
 # write and edit only its own files in an optimise run's state directory,
 # never the project's code, so this blocks its other writes and edits. The
 # retrospective may write only its report, and may run commands that read
-# but none that change files or git. It
+# but none that change files or git. The surveyor may likewise write only
+# its survey and comparison, and the interface designer only its design.
+# It
 # guards against mistakes, not a determined attacker: a program an agent runs
 # can still write files.
 
@@ -29,8 +31,11 @@ readonly REVIEWERS
 readonly PROFILERS=" profiler "
 # Agents that may write only their report in a retrospective's directory.
 readonly RETROSPECTIVES=" retrospective "
+# Agents that may write only their own files in a survey's directory.
+readonly SURVEYORS=" interface-designer surveyor "
 # Agents whose Bash commands may not change files or git state.
-READ_ONLY_SHELL=" commit-message-suggester retrospective spec-reviewer "
+READ_ONLY_SHELL=" commit-message-suggester retrospective spec-reviewer"
+READ_ONLY_SHELL+=" surveyor "
 readonly READ_ONLY_SHELL
 # git subcommands that only read.
 GIT_READERS=" blame cat-file describe diff grep log ls-files ls-tree"
@@ -73,12 +78,30 @@ is_retro_file() {
     && [[ "${path#*/.vibes/retro-}" != */*/* ]]
 }
 
+# Succeeds when the path is one the survey agent may write: the surveyor's
+# .vibes/survey-<slug>/survey.md or comparison.md, or an interface
+# designer's .vibes/survey-<slug>/designs/<letter>.md.
+is_survey_file() {
+  local path="$1" agent="$2" rest
+  [[ "${path}" == /* && "${path}" != *"/../"* \
+    && "${path}" == */.vibes/survey-*/* ]] || return 1
+  rest="${path#*/.vibes/survey-}"
+  rest="${rest#*/}"
+  case "${agent}" in
+    surveyor) [[ "${rest}" == survey.md || "${rest}" == comparison.md ]] ;;
+    interface-designer) [[ "${rest}" == designs/*.md && "${rest}" != */*/* ]] ;;
+    *) return 1 ;;
+  esac
+}
+
 # Succeeds when the path is the one file a read-only agent may write: a
-# reviewer's findings file, or the retrospective's report.
+# reviewer's findings file, the retrospective's report, or a survey's.
 is_own_file() {
   local path="$1" agent="$2"
   if [[ "${RETROSPECTIVES}" == *" ${agent} "* ]]; then
     is_retro_file "${path}"
+  elif [[ "${SURVEYORS}" == *" ${agent} "* ]]; then
+    is_survey_file "${path}" "${agent}"
   else
     is_findings_file "${path}" "${agent}"
   fi
@@ -216,6 +239,13 @@ main() {
     if ! is_findings_file "${path}" "${agent}"; then
       printf 'vibes: %s is read-only. It may write only ' "${agent}" >&2
       printf '%s.md in the review directory.\n' "${agent}" >&2
+      exit 2
+    fi
+  elif [[ "${SURVEYORS}" == *" ${agent} "* ]]; then
+    path="$(hook::json_field "${input}" '.tool_input.file_path')"
+    if ! is_survey_file "${path}" "${agent}"; then
+      printf 'vibes: %s is read-only. It may write only ' "${agent}" >&2
+      printf 'its own files in .vibes/survey-<slug>/.\n' >&2
       exit 2
     fi
   elif [[ "${RETROSPECTIVES}" == *" ${agent} "* ]]; then

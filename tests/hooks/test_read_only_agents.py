@@ -119,5 +119,43 @@ class RetrospectiveTest(unittest.TestCase):
                 self.assertEqual(hook(self.AGENT, "Bash", command=command), 2)
 
 
+class SurveyTest(unittest.TestCase):
+    RUN = "/p/.vibes/survey-orders/"
+
+    def test_the_surveyor_writes_its_survey_and_comparison(self) -> None:
+        for name in ("survey.md", "comparison.md"):
+            with self.subTest(name=name):
+                self.assertEqual(hook("vibes:surveyor", "Write",
+                                      file_path=self.RUN + name), 0)
+
+    def test_a_designer_writes_only_its_design(self) -> None:
+        self.assertEqual(hook("vibes:interface-designer", "Write",
+                              file_path=self.RUN + "designs/a.md"), 0)
+        for path in (self.RUN + "survey.md", self.RUN + "designs/x/a.md",
+                     "/p/src/orders.py"):
+            with self.subTest(path=path):
+                self.assertEqual(hook("vibes:interface-designer", "Write",
+                                      file_path=path), 2)
+
+    def test_the_surveyor_never_writes_the_code_or_designs(self) -> None:
+        for path in ("/p/src/orders.py", "/p/GLOSSARY.md",
+                     "/p/docs/adr/0002-x.md", self.RUN + "designs/a.md",
+                     self.RUN + "../../src/orders.py", self.RUN + "x.md"):
+            for tool in ("Write", "Edit"):
+                with self.subTest(path=path, tool=tool):
+                    self.assertEqual(hook("surveyor", tool,
+                                          file_path=path), 2)
+
+    def test_the_surveyor_reads_history_but_changes_nothing(self) -> None:
+        self.assertEqual(hook("surveyor", "Bash",
+                              command="git log --oneline -- src/a.py"), 0)
+        self.assertEqual(hook("surveyor", "Bash",
+                              command=f"cat x > {self.RUN}survey.md"), 0)
+        for command in ("git checkout -b x", "echo x > src/a.py",
+                        "rm src/a.py"):
+            with self.subTest(command=command):
+                self.assertEqual(hook("surveyor", "Bash", command=command), 2)
+
+
 if __name__ == "__main__":
     unittest.main()
