@@ -76,6 +76,16 @@ project's modules or packages, and a boundary rule keeps other components
 and the tests to them. Run it with `--tag design` and the research cases'
 `--allow-tools`.
 
+**`pr-writer-cites-the-run`** gives the pull request writer a finished
+vibe run on a branch of the same project, with each new test's failing
+line, the last review round's verdicts and coverage, a decision record
+making the CSV's columns a public format, and no audit. It passes when
+the body has its summary, evidence and merge risk, quotes a failing test
+line, calls the column format a one-way door, claims no audit or manual
+check, names no `.vibes/` path, and nothing outside `.vibes/` changed.
+Run it with `--tag pr-body --allow-tools Write "Bash(*/tree-check)"
+"Bash(cat *)" "Bash(ls *)"`.
+
 The **`survey`** cases work on orders, a small Python library whose
 pricing is split into one-line modules that three callers sequence
 themselves, one in the wrong order, beside a deep storage module a
@@ -110,6 +120,7 @@ suggestions, cites the calls behind each one, and leaves the tree clean.
 | `docs_cases.py` | The project docs reviewer's and commit message suggester's projects and cases, which `generate.py` writes too |
 | `research_cases.py` | The research project and cases, which `generate.py` writes too |
 | `design_cases.py` | The designer's design case, on the research project, which `generate.py` writes too |
+| `prbody_cases.py` | The pull request writer's branch, run records and case, which `generate.py` writes too |
 | `survey_cases.py` | The survey's project, history and cases, which `generate.py` writes too |
 | `retro_cases.py` | The retrospective's project, session and case, which `generate.py` writes too |
 | `fixtures/` | Each variant's project and review directory, generated |
