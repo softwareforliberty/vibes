@@ -675,9 +675,10 @@ below that mention one don't apply.
 1. **The first batch enforces the boundaries.** Where the task has a
    design, it starts by adding the design's boundary rules to
    `scripts/check`, as architecture tests or build structure from each
-   guide's `tools.md`, so the gate holds every later commit to them. Where
-   the spike needed guides the gate doesn't check yet, it extends the gate
-   for them first too.
+   guide's `tools.md`, so the gate holds every later commit to them: the
+   layer rules, and each component's entry points. The builder proves each
+   rule bites by breaking it once on purpose. Where the spike needed guides
+   the gate doesn't check yet, it extends the gate for them first too.
 2. **Spawn a fresh `vibes:builder` in `build` mode for each batch,** one
    at a time, on the rebuild branch. Its brief gives the task, the
    branches, the paths of the spec, design and rebuild plan, the batch's
@@ -687,7 +688,9 @@ below that mention one don't apply.
    truth: for a large task, as the spike phase left them.
 3. **Check each batch** before the next: its commits are on the rebuild
    branch, the working tree is clean, the plan's entries are ticked off,
-   and the builder's reply says `scripts/check --all` passed. Don't run
+   and the builder's reply says `scripts/check --all` passed. After the
+   first batch, check its report proves each boundary rule with the line
+   its breach failed on. Don't run
    `scripts/check` yourself: the gate ran it on every commit, and the
    builder ran the slow tests. Check the guides on the branch's changes, as
    [Keep the guides current](#keep-the-guides-current) describes, and

@@ -97,9 +97,9 @@ the tests:
 - **Static security checks that run locally,** such as the guide's
   security linter and Opengrep rules from `tools.md`.
 - **Architecture tests,** from the Architecture section of `tools.md`, that
-  enforce the dependency rules between the project's layers. When the
-  project has a design document, such as the `design.md` the vibe workflow
-  writes, the rules come from it.
+  enforce the dependency rules between the project's layers, and each
+  component's entry points. When the project has a design document, such
+  as the `design.md` the vibe workflow writes, the rules come from it.
 - **Requirement markers,** when the project keeps specs with requirement
   ids, such as the vibe workflow's. Copy
   `${CLAUDE_PLUGIN_ROOT}/skills/commit-gate/templates/check-requirements`
@@ -309,6 +309,12 @@ should run it too.
 1. Make the scripts executable, then run `scripts/check --all` on the current
    state of the project. Fix or report any failures before going on: a gate
    that already fails can't tell new problems from old ones.
+   Then prove each check bites: break it once on purpose, such as with a
+   misformatted line, a lint error, a failing test or a forbidden import,
+   run `scripts/check`, and see that check fail. Undo each breach before
+   the next. A check that can't fail, because its pattern matches no files
+   or its tool found nothing to check, looks just like one that passes:
+   fix it before you install the hooks.
 2. Install the git hooks:
 
    ```sh

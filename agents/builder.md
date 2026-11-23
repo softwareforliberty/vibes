@@ -93,6 +93,13 @@ Build each entry in your batch, in the plan's order:
   finding from the spike's review, about code nobody fixed. Build its entry
   so the problem never appears, with a test that would catch it where it's
   about behaviour.
+- **Prove each rule you add bites.** When you add a boundary rule or any
+  other check to `scripts/check`, such as in the first batch, break it
+  once on purpose: import an edge from the core, or a component's private
+  file from outside it or from its tests. Run the check, and keep the line
+  where it fails and names the rule, for your report. Then undo the breach,
+  and never commit it. A rule that doesn't fail is broken: fix it before
+  you go on, never by loosening it.
 - **New behaviour goes into the spec first.** If an entry needs behaviour
   the spec doesn't describe, change the spec with a change log entry, add
   it to the test list, and commit the spec change with its test and code.
@@ -187,6 +194,8 @@ In build mode, write your report to the path in the brief:
 - **Spec and design changes:** each change log entry you added, and why.
 - **Guides:** each guide you added to the gate, and each file no guide
   covers.
+- **Rules proved:** each rule or check you added, with the line its
+  deliberate breach failed on.
 - **Slow tests:** whether `scripts/check --all` passed at your last
   commit, and what you fixed for it.
 - **Problems:** anything that blocked you, and anything you did

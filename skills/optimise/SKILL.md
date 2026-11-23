@@ -356,7 +356,8 @@ whether it's the first batch, and its report's path,
 `.vibes/optimise-<slug>/build-<batch>.md`.
 
 The first batch extends the gate for any new guide, and adds the design's
-boundary rules to `scripts/check` if there's a design. The committed
+boundary rules to `scripts/check` if there's a design, proving each one
+bites as the vibe skill's first batch does. The committed
 benchmark is built like any other entry, with the language's own benchmark
 tool, never `bin/bench`, and the gate runs it only at its small size.
 
