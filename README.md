@@ -24,12 +24,15 @@ while holding it to the standards of careful, experienced developers.
 - **`bin/bench`:** measures whether a change made a program faster, in
   interleaved A/B runs with a verdict beyond the noise. It's in
   `lib/bench/`, and its tests in `tests/bench/`.
+- **`bin/repro`:** runs a bug's reproduction several times and says
+  whether it fails reliably and fast. It's in `lib/repro/`, and its tests
+  in `tests/repro/`.
 - **`bin/session-digest`:** prints a compact digest of a Claude Code
   session's transcript, for a retrospective. It's in
   `lib/session_digest/`, and its tests in `tests/session_digest/`.
 - **`skills/`:** agent skills for the workflow, optimising performance,
-  reviewing your own branch or an outside pull request, looking back on a
-  session, test-driven development, atomic commits and setting up the
+  debugging, reviewing your own branch or an outside pull request, looking
+  back on a session, test-driven development, atomic commits and setting up the
   commit gate.
 - **`principles.md`:** the programming principles every change is held
   to, such as SOLID, DRY and KISS.
@@ -42,8 +45,8 @@ while holding it to the standards of careful, experienced developers.
   profilers and benchmark tools for each guide, for the profiler and the
   optimiser.
 - **`agents/`:** the designer, the spike agent, the builder, twelve
-  reviewer agents, the profiler and optimiser, the commit message
-  suggester and the retrospective.
+  reviewer agents, the profiler and optimiser, the diagnoser, the commit
+  message suggester and the retrospective.
 - **`hooks/`:** the commit gate, for Claude Code and for git; a guide
   check that makes the agent read the guide for each kind of file before
   writing it; and a guard that keeps the reviewers, the commit message
@@ -269,6 +272,36 @@ can't weaken it, and a pull request that changes it is HIGH.
 - Merge with `gh pr merge --squash --match-head-commit <head>`, so what you
   merge is what was reviewed, and no commit's history comes with it.
 
+## Debug a bug
+
+`/vibes:debug <symptom>` finds and fixes a bug whose cause isn't known,
+such as `/vibes:debug invoices issued on the 31st show as overdue a day
+early`. It's separate from `/vibes:vibe`, which builds what's already
+understood, and `/vibes:optimise`, which takes a symptom that's only
+slowness.
+
+1. **Reproduce.** The diagnoser builds `repro.sh`, one command that fails
+   on the exact symptom, and shrinks it into `minimal.sh`. Nobody guesses
+   at the cause until `bin/repro` runs each several times and says `RED`
+   every time, in seconds. When it can't be reproduced, you're asked for
+   what would make it possible, such as a log or access.
+2. **Diagnose.** It ranks three to five hypotheses, each with a prediction
+   that could prove it wrong, and you can re-rank or rule any out. It
+   tests them one change at a time on a throwaway `spike/debug-<slug>`
+   branch, tagging every debug log `vibes-debug-<slug>`, until one holds
+   and a quick change makes both commands pass.
+3. **Fix.** A short bug spec, the symptom, the cause and the correct
+   behaviour, is reviewed and committed on `debug/<slug>`. A builder then
+   rebuilds the fix test-first, starting from a regression test that fails
+   on the bug, and the fix commit says what the cause was. The reviewers
+   check it, and the original `repro.sh` must pass on the fix.
+
+The gate refuses any commit carrying the debug tag, so no debug log
+reaches the fix. When no test can reach the bug the way it really
+happens, the report says so, as a finding about the code's structure.
+`/vibes:debug unattended: <symptom>` runs without stopping to ask, and
+stops and reports when it needs something only you can give.
+
 ## Look back on a session
 
 `/vibes:retro` looks back on a session, this one unless you name another by
@@ -321,16 +354,16 @@ If you run sessions in git worktrees, install it at user scope, the
 default for `claude plugin install vibes@vibes` in a shell, or enable it in
 each worktree. A plugin enabled only for the main checkout can load its
 skills in a worktree session but not its agents. `/vibes:vibe`,
-`/vibes:optimise`, `/vibes:review`, `/vibes:review-pr` and `/vibes:retro`
-then stop and say so, rather than run without them.
+`/vibes:optimise`, `/vibes:debug`, `/vibes:review`, `/vibes:review-pr` and
+`/vibes:retro` then stop and say so, rather than run without them.
 
 The plugin provides:
 
-- **Skills:** `/vibes:vibe`, `/vibes:optimise`, `/vibes:review`,
-  `/vibes:review-pr` and `/vibes:retro`, plus `vibes:test-driven-development`, `vibes:atomic-commits` and
+- **Skills:** `/vibes:vibe`, `/vibes:optimise`, `/vibes:debug`,
+  `/vibes:review`, `/vibes:review-pr` and `/vibes:retro`, plus `vibes:test-driven-development`, `vibes:atomic-commits` and
   `vibes:commit-gate`, which agents use on their own when they apply.
 - **Agents:** `vibes:designer`, `vibes:spiker`, `vibes:builder`,
-  `vibes:profiler`, `vibes:optimiser`, `vibes:commit-message-suggester`,
+  `vibes:profiler`, `vibes:optimiser`, `vibes:diagnoser`, `vibes:commit-message-suggester`,
   `vibes:retrospective` and the reviewers, such as `vibes:security-reviewer` and
   `vibes:project-docs-reviewer`.
 - **The commit gate hook,** which runs before every `git commit` the agent
@@ -399,6 +432,8 @@ Once it exists, the gate:
 - refuses to commit while there are unstaged changes or untracked files, so
   the checks test exactly what's being committed
 - blocks a commit whose subject is longer than 50 characters
+- blocks a commit that adds a line carrying a `/vibes:debug` run's debug
+  tag, such as `vibes-debug-month-end`
 - runs no checks on `spike/*` branches, apart from the subject's length
 - in Claude Code, also blocks `git commit -a` and `--no-verify`
 - in Claude Code, asks you to confirm a commit that loosens the gate

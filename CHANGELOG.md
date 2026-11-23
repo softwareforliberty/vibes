@@ -31,6 +31,19 @@ guides behave, and says so under **Changed**.
   it. It changes nothing. A change that would loosen a check is listed
   apart and applied only when named on its own, and the review rounds,
   the gate and the tests are never counted as waste.
+- **`/vibes:debug` finds and fixes a bug whose cause isn't known.** The
+  new diagnoser builds a command that fails on the exact symptom, which
+  `bin/repro` must judge `RED` before anyone guesses at the cause, shrinks
+  it, ranks hypotheses with predictions that could prove them wrong, and
+  tests them one change at a time on a spike branch until a quick change
+  makes the command pass. The fix is rebuilt test-first from a short bug
+  spec, reviewed, and checked against the original reproduction, and its
+  commit states the cause. Unattended runs are optional.
+- **`bin/repro`** runs a reproduction several times and prints `RED`,
+  `GREEN`, `FLAKY` or `CAN'T TELL`, with the median time, and `SLOW` when
+  it's too slow for a debugging loop.
+- **The gate refuses a commit that keeps a debug run's logs:** a line
+  tagged `vibes-debug-<slug>`.
 - **`bin/session-digest`** prints a compact digest of a session's
   transcript and its subagents': every tool call on one line with a
   reference, and the failures, hook blocks, retries, repeated calls and

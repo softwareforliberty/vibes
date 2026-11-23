@@ -8,7 +8,7 @@
     {
       "name": "vibes",
       "source": "./",
-      "description": "Clean vibe coding: write a complete spec and design, spike to them, review with a panel of critic agents, then rebuild test-first in atomic, gated commits. Also profile-driven optimisation, branch review, malicious pull request review and session retrospectives.",
+      "description": "Clean vibe coding: write a complete spec and design, spike to them, review with a panel of critic agents, then rebuild test-first in atomic, gated commits. Also profile-driven optimisation, reproduction-first debugging, branch review, malicious pull request review and session retrospectives.",
       "homepage": "https://github.com/softwareforliberty/vibes",
       "repository": "https://github.com/softwareforliberty/vibes"
     }
