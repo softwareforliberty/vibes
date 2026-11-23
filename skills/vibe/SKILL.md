@@ -128,7 +128,8 @@ code.
   spec yourself, from the template in
   `${CLAUDE_PLUGIN_ROOT}/skills/vibe/templates/spec.md`, writing "None."
   under the sections that don't apply. Its constraints section names the
-  code the change touches.
+  code the change touches. Use the glossary's terms, as the designer's
+  spec mode says.
 - **The review panel depends on the size.** Medium and large tasks get every
   reviewer. A small task gets `vibes:spec-reviewer`, `vibes:bug-reviewer`,
   `vibes:cleanliness-reviewer` and `vibes:test-reviewer`, and also:
@@ -226,7 +227,8 @@ round, and after every commit. It holds:
 
 - the task as the user gave it, their answers to open questions, the
   task's name and size, and whether the run is unattended;
-- the base branch, the spec directory and the guides that apply;
+- the base branch, the spec directory, the glossary, the decision records
+  directory and the guides that apply;
 - the current phase and round, and the last step finished;
 - `status: running` until Phase 8 ends, then `status: done`.
 
@@ -326,7 +328,19 @@ To resume:
    `design.md` will live in the repository. If the project already keeps
    specs or design documents somewhere, use a directory for the task there.
    Otherwise use `docs/specs/<name>/`.
-6. **Create the task's state directory** `.vibes/<name>/` for the
+6. **Find the glossary and the decision records,** the project's terms and
+   its architecture decision records, which the designer keeps up to date.
+   - **The glossary:** use the one the project has, such as `GLOSSARY.md`,
+     `CONTEXT.md` or `docs/glossary.md`. If a `GLOSSARY-MAP.md` lists one
+     for each part of the project, use the one for the part the task
+     changes. Otherwise it's `GLOSSARY.md` at the root, created when the
+     first term needs it.
+   - **The decision records:** use the directory the project keeps them
+     in, such as `docs/adr/`, `docs/decisions/` or `adr/`. Otherwise it's
+     `docs/adr/`, created when the first record needs it.
+
+   Give both, and whether each exists yet, in every designer brief.
+7. **Create the task's state directory** `.vibes/<name>/` for the
    workflow's own working files: the run's state, review rounds, the spike
    report and the rebuild plan. A `.gitignore` in `.vibes/` keeps it all out
    of git, without touching the project's own `.gitignore` or anything in
@@ -339,7 +353,7 @@ To resume:
 
    Then write `.vibes/<name>/state.md`, as
    [Keep the state current](#keep-the-state-current) describes.
-7. **Check the git hooks,** if the project has an executable
+8. **Check the git hooks,** if the project has an executable
    `scripts/check`: run `"${CLAUDE_PLUGIN_ROOT}/bin/install-git-hooks"`
    from the repository root. It's quick, and makes sure both hooks are
    installed and still find vibes, replacing a link to a removed plugin
@@ -348,7 +362,7 @@ To resume:
    an unattended run, leave it and report it. If it reports that
    `core.hooksPath` is set, tell the user that their hook manager needs to
    run the vibes hooks.
-8. **Start the commit gate setup.** If the project has no executable
+9. **Start the commit gate setup.** If the project has no executable
    `scripts/check` or `scripts/check-file`, or the `# Guides:` line
    doesn't name every guide the project already needs, spawn a
    `general-purpose` subagent in the background, with `medium` effort, to follow the
@@ -411,6 +425,10 @@ apply to it.
      paths of changes-since-<k>.patch and changed-files-since-<k>.txt for
      the round <k> this reviewer last reviewed>
    Project docs: <for the project docs reviewer: what project-docs printed>
+   Glossary: <for the spec reviewer in spec rounds: the glossary's path,
+     the draft copy in Phase 1, once it exists>
+   Decision records: <for the architecture reviewer in design rounds: the
+     decision records the designer wrote, by path>
    ```
 
 3. **Each reviewer writes its findings** to `<reviewer>.md` in the round
@@ -460,7 +478,9 @@ apply to it.
 1. Spawn `vibes:designer` in `spec` mode, with the task and the guides.
    Its spec directory is the draft directory `.vibes/<name>/draft/`, which
    git ignores, so the gate setup's commit isn't blocked by the new files.
-   For a small task, write the spec there yourself instead.
+   Its glossary is a copy there too, `.vibes/<name>/draft/glossary.md`:
+   copy the project's glossary to it first, if there is one. For a small
+   task, write the spec there yourself instead.
 2. **Resolve every open question.** Ask the user each one in the spec's
    open questions section, then have the designer write their answers into
    the spec as requirements, and empty the section.
@@ -472,15 +492,21 @@ apply to it.
    commit is on the base branch and `scripts/check` passes there.
 5. **Commit the approved spec** on the rebuild branch, so the spike and the
    rebuild both start from it: create the branch from the base branch with
-   `git switch -c vibe/<name>`, copy the draft into the spec directory, and
-   commit it on its own, through the gate. From here on, briefs give the
-   spec directory.
+   `git switch -c vibe/<name>`, copy the draft spec into the spec directory
+   and, if the designer changed or created it, the draft glossary to the
+   glossary's path, and commit them together, on their own, through the
+   gate. From here on, briefs give the spec directory and the glossary's
+   own path.
 
 ## Phase 2: Design
 
 Medium and large tasks only.
 
-1. Spawn `vibes:designer` in `design` mode, with the same brief.
+1. Spawn `vibes:designer` in `design` mode, with the same brief. Ask the
+   user each open question it reports, such as a decision record the task
+   can't keep to, and give the answers to a fresh designer in `revise`
+   mode. When the user agrees to replace a record, the designer writes a
+   new one that supersedes it.
 2. **Review the design** in rounds with `vibes:architecture-reviewer` and
    `vibes:project-docs-reviewer`, as [Size the task](#size-the-task) says,
    with the designer deciding on and fixing their findings, until they
@@ -488,8 +514,9 @@ Medium and large tasks only.
    finding that shows the spec is wrong or incomplete goes back into the
    spec first, and the spec reviewer approves the changed spec in a `spec`
    round before the design rounds go on.
-3. **Commit the approved design,** together with any spec changes the
-   design review made.
+3. **Commit the approved design,** together with any spec and glossary
+   changes the design review made, and the decision records the designer
+   wrote.
 
 ## Phase 3: Spike
 
@@ -685,6 +712,9 @@ with `git worktree remove --force .vibes/<name>/audit`.
      and the commit the audit checked
    - the spec and design in the spec directory, every change made to the
      spec after it was approved, and the spec reviewer's final coverage
+   - the terms the task added to or changed in the glossary, and the
+     decision records it wrote, so the user can check the project's
+     vocabulary and decisions read as they mean them
    - every reviewer's final verdict, any reviewer left out of a phase's
      reviews and why, and any deferred MINOR findings
    - for a large task, the spike branch, kept for reference: ask whether to

@@ -8,6 +8,24 @@ guides behave, and says so under **Changed**.
 
 ## [Unreleased]
 
+### Added
+
+- **The designer keeps the project's glossary and decision records.**
+  - **The glossary:** the spec uses its terms and none of the words it
+    says to avoid, and a clash between the task's words and the glossary
+    becomes an open question. Each new term the task brings into the
+    project is added, and `GLOSSARY.md` is created when the first one
+    needs it.
+  - **Decision records:** the design keeps to the existing records, and
+    asks before replacing one. Each new decision that is hard to reverse,
+    surprising without its reason and a real choice gets a short record
+    in `docs/adr/`, or wherever the project keeps them.
+  - **Reviews:** the spec reviewer checks the glossary, the architecture
+    reviewer checks the new records, and the project docs reviewer treats
+    breaking a record as a BLOCKER and using a word the glossary says to
+    avoid as MAJOR.
+  - **The final report** lists the terms and records the task added.
+
 ## [0.6.1] - 2026-11-20
 
 ### Fixed

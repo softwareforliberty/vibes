@@ -5,8 +5,10 @@ In one, the project's architecture notes say money is whole cents and the
 spec stores the fee as a float of dollars, a contradiction it must find. In
 the other, the project's only documents are about releases and branding,
 which a late fee doesn't touch, so it must stop early and say they don't
-apply. The suggester case stages a change and checks the subject it suggests
-fits in 50 characters.
+apply. In the third, the spec charges the fee from a nightly job, which a
+decision record rules out, and calls the customer a client, a word the
+glossary says to avoid; it must find both. The suggester case stages a
+change and checks the subject it suggests fits in 50 characters.
 
 generate.py calls build() after clearing the generated files.
 """
@@ -89,6 +91,53 @@ pay for the cost of chasing them.
 None.
 """
 
+GLOSSARY = """# Glossary
+
+An invoicing library that issues invoices and records payments.
+
+## Terms
+
+**Customer:**
+A person or company that is sent invoices.
+_Avoid:_ client, account holder
+
+**Invoice:**
+A request for payment for one sale, with a total in cents.
+_Avoid:_ bill
+
+**Payment:**
+Money a Customer pays against one Invoice.
+_Avoid:_ remittance
+"""
+
+DECISION = """# 1. Work out overdue state when an invoice is read
+
+The library is embedded in hosts that have no scheduler, so nothing in it
+runs on a timer: whether an invoice is overdue, and any charge that follows
+from it, is worked out from the dates when the invoice is read.
+"""
+
+SCHEDULED_SPEC = """# Late fees
+
+## Summary
+
+Charge a late fee on invoices that are overdue, so clients who pay late
+pay for the cost of chasing them.
+
+## Requirements
+
+- **R1:** A job runs every night at 02:00 and marks each invoice overdue
+  once 30 days have passed since its issue date and it isn't fully paid.
+- **R2:** When the job marks an invoice overdue, it adds a late fee of
+  1.5% of the unpaid total, in whole cents rounded half up, to the
+  invoice's `late_fee_cents`, and emails the client.
+- **R3:** The fee is charged once per invoice.
+
+## Open questions
+
+None.
+"""
+
 CODE = """\"\"\"Invoices and their payments.\"\"\"
 
 from dataclasses import dataclass
@@ -110,6 +159,7 @@ class Variant:
     docs: Tuple[Tuple[str, str], ...]
     verdict: str
     graders: Dict[str, str]
+    spec: str = SPEC
 
 
 def llm(criterion: str) -> str:
@@ -134,6 +184,22 @@ VARIANTS = (
         {"exits-early": "---\ntype: regex\n"
                         "pattern: 'file_path\\W+[^\"]*docs/(release|branding)\\.md'\n"
                         "target: trace\nmatch: not_contains\n---\n"},
+    ),
+    Variant(
+        "glossary-and-decision",
+        (("README.md", README), ("GLOSSARY.md", GLOSSARY),
+         ("docs/adr/0001-overdue-on-read.md", DECISION),
+         ("docs/release.md", RELEASE)),
+        "CHANGES REQUESTED",
+        {"finds-decision": llm(
+            "a BLOCKER or MAJOR finding says the spec's nightly job (R1 or "
+            "R2) goes against docs/adr/0001-overdue-on-read.md, because "
+            "overdue state and fees must be worked out when the invoice is "
+            "read, not on a schedule"),
+         "finds-avoided-term": llm(
+            "a finding says the spec calls the customer a client, a word "
+            "GLOSSARY.md says to avoid, and asks for Customer instead")},
+        SCHEDULED_SPEC,
     ),
 )
 
@@ -225,7 +291,7 @@ def write(root: Path, files: Tuple[Tuple[str, str], ...]) -> None:
 
 def build_fixture(variant: Variant) -> None:
     write(FIXTURES / f"docs-{variant.name}",
-          variant.docs + ((f"{SPEC_DIR}/spec.md", SPEC),
+          variant.docs + ((f"{SPEC_DIR}/spec.md", variant.spec),
                           ("invoices/models.py", CODE)))
 
 

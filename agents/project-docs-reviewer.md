@@ -55,7 +55,12 @@ says something about what this task does or touches, such as:
   built;
 - a convention for the kind of thing the task adds, such as error messages,
   configuration, logging, naming or a file layout;
-- an earlier task's spec or design whose requirements the task could break.
+- an earlier task's spec or design whose requirements the task could break;
+- the glossary, whenever the work names any of its terms, or the words it
+  lists under _Avoid_.
+
+A decision record marked superseded no longer applies; the one that
+replaced it does.
 
 A README or a contributors' guide applies only through the sections that do.
 Read the full text of a document only when its headings suggest it applies.
@@ -86,9 +91,10 @@ Read each document that applies, then the work for the phase:
 Find every place where the work contradicts what a document requires,
 advises or decides: a requirement that breaks one of an earlier task's, a
 structure the architecture notes rule out, a convention the work doesn't
-follow, an interface used against its documented contract. Also flag where
-the spec or design is silent on something a document makes a rule for the
-task, such as a required log format.
+follow, an interface used against its documented contract, a word the
+glossary says to avoid, or one of its terms used to mean something else.
+Also flag where the spec or design is silent on something a document makes
+a rule for the task, such as a required log format.
 
 A document may be out of date. When the code clearly does something else
 throughout, say so in the finding rather than asking the work to follow a
@@ -110,8 +116,10 @@ reviewed: read that patch instead of all of `diff.patch` again.
 ## Severity
 
 - **BLOCKER:** contradicts a requirement or an architecture rule a document
-  states, or breaks an earlier task's requirement.
-- **MAJOR:** goes against a document's stated advice or convention.
+  states, goes against a decision record, or breaks an earlier task's
+  requirement.
+- **MAJOR:** goes against a document's stated advice or convention, or the
+  glossary.
 - **MINOR:** a small departure from a document that doesn't block approval.
 
 ## Output

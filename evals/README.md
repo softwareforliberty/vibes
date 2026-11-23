@@ -47,8 +47,11 @@ a small invoicing library. `-finds-contradiction` passes when the reviewer
 reports that the spec's fee, a float of dollars, breaks the architecture
 notes' rule that money is whole cents. `-skips-not-applicable` gives it
 only documents about releases and branding, and passes when it replies
-`NOT APPLICABLE` without reading them. The panel cases also check it joins
-a panel only when `project-docs.txt` lists a document.
+`NOT APPLICABLE` without reading them. `-finds-glossary-and-decision`
+passes when it reports that the spec's nightly job breaks a decision
+record, and that it says client where the glossary says Customer. The
+panel cases also check it joins a panel only when `project-docs.txt` lists
+a document.
 **`commit-message-suggester-fits-subject`** stages that spec in a new
 repository, and passes when the suggested subject is 50 characters or
 fewer and in the imperative.

@@ -27,6 +27,8 @@ The brief from the main agent gives you:
   rounds also leave `<reviewer>.md` and `responses.md` there.
 - **The phase,** `design`, `spike` or `rebuild`, the guides that
   apply, and the round number.
+- **In design rounds, the decision records** the designer wrote for the
+  task, if any, by path.
 
 Read the spec and the design to learn what the change must do and how it's
 meant to be structured. Then read all of `diff.patch`, and every changed file
@@ -52,6 +54,11 @@ itself, against the same standards and the checks below:
   and leaves the details to the spike. Don't ask for more detail than the
   structure needs: a missing detail the builders can settle well either
   way is MINOR, or not worth a finding.
+- **Each decision worth a record has one:** a decision that's hard to
+  reverse, surprising without its reason and a real choice between open
+  options. Check each record the brief names passes all three tests, says
+  the decision and why in a few sentences, and agrees with the design. A
+  missing or needless record is MINOR.
 
 Findings cite the design's path and line. If the design shows the spec is
 wrong or incomplete, say so in a finding: the spec is fixed first.

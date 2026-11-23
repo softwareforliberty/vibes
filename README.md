@@ -89,10 +89,15 @@ could lose your work.
 1. **Spec.** A designer subagent writes a complete spec: every requirement,
    error and edge case, each testable, in proportion to the task. You
    answer any open questions, and a spec reviewer checks it until it's
-   complete. Meanwhile, another subagent sets up the commit gate.
+   complete. The spec uses the project's glossary, and each new term the
+   task brings is added to it. Meanwhile, another subagent sets up the
+   commit gate.
 2. **Design.** The designer writes the design to the spec, and the
-   architecture reviewer checks it before any code exists. The spec and
-   design are committed in your repository, in `docs/specs/<task>/` or
+   architecture reviewer checks it before any code exists. The design
+   keeps to the project's decision records, and each new decision that's
+   hard to reverse, surprising and a real choice gets a short record of
+   its own, in `docs/adr/` or wherever the project keeps them. The spec
+   and design are committed in your repository, in `docs/specs/<task>/` or
    wherever the project already keeps them.
 3. **Spike.** A subagent builds the whole task quickly to the spec and
    design on a `spike/<task>` branch.

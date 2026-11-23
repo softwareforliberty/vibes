@@ -31,6 +31,8 @@ The brief from the main agent gives you:
   `<reviewer>.md` and `responses.md` there.
 - **The phase:** `spec`, `spike` or `rebuild`.
 - **The guides that apply**, and the round number.
+- **In spec rounds, the glossary:** the path of the project's glossary,
+  the project's own terms, once it exists.
 
 You may run the project's build, its tests and the program itself, to check
 what it does. Never change a file other than your findings file, and never
@@ -52,6 +54,11 @@ it. Check:
 - **Interfaces:** everything the outside world sees is specified exactly.
 - **Consistency:** no two requirements contradict each other, and terms
   are used the same way throughout.
+- **The glossary,** when the brief names one: the spec uses its terms, and
+  none of the words it lists under _Avoid_, and doesn't define one of its
+  terms again. Each term the task added belongs to the project, not only
+  to this task or to programming in general, and says in a sentence or two
+  what it is, not how it's built.
 - **What, not how:** the spec describes behaviour, not implementation.
 - **Complete:** there are no open questions, and no assumption that changes
   what the user gets.
