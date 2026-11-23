@@ -39,6 +39,18 @@ guides behave, and says so under **Changed**.
   you pick, three new interface designers each design it under a
   different constraint, and the surveyor compares them and recommends
   one, as a task for `/vibes:vibe`. It changes nothing.
+- **A guide for the instructions agents read:** `CLAUDE.md`, `AGENTS.md`,
+  rules, skills and subagents. It covers their layout, and how to word
+  them so an agent takes the same path every run: pointers that decide
+  what gets read, steps before reference, a checkable end to every step,
+  the behaviour wanted rather than a ban, one word for one idea, each rule
+  in one place, and cutting what changes nothing. Agents read it before
+  writing one of these files, and the retrospective words its
+  suggestions by it.
+- **`/vibes:questionnaire`** turns a decision only someone else can make
+  into a questionnaire for them, asking you only who it's for and what
+  you need back. A run offers one for such a decision and waits for the
+  answers.
 - **Work from GitHub issues.** `/vibes:vibe`, `/vibes:debug` and
   `/vibes:optimise` take an issue, such as `#123`. The new issue reader is
   the only agent that reads an issue's text, which anyone could have
@@ -88,6 +100,9 @@ guides behave, and says so under **Changed**.
 
 ### Changed
 
+- **Committing `CLAUDE.md`, `AGENTS.md`, a skill or a subagent needs the
+  new `tools/Agent-instructions` guide** on `scripts/check`'s
+  `# Guides:` line. It adds no checks.
 - **Each component has a front door.** The design names each component's
   entry points, and the gate enforces them: code outside a component, and
   its own tests, use only those, while what's behind them can be

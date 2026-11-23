@@ -40,7 +40,8 @@ while holding it to the standards of careful, experienced developers.
 - **`skills/`:** agent skills for the workflow, optimising performance,
   debugging, surveying the architecture, reviewing your own branch or an
   outside pull request, writing a pull request, triaging issues and
-  picking up approved ones, looking back on a session, test-driven development, atomic commits and setting up the
+  picking up approved ones, asking someone else through a questionnaire,
+  looking back on a session, test-driven development, atomic commits and setting up the
   commit gate.
 - **`principles.md`:** the programming principles every change is held
   to, such as SOLID, DRY and KISS.
@@ -450,6 +451,19 @@ token. Runs start from the brief, never the issue.
   through them.
 
 Approvals are kept in `.vibes/issues/` on the machine you triaged on.
+
+## Ask someone else
+
+Some questions only someone else can answer, such as a client, a domain
+expert or another team. `/vibes:questionnaire` writes a questionnaire for
+them to fill in on their own or with you in a meeting. It asks you only
+who it's for and what you need back, then writes one question per idea,
+most important first, with the options known so far and room to answer,
+and nothing the recipient shouldn't see, such as secrets or file paths.
+
+A vibes run offers one when a decision in its spec needs someone else:
+it waits for the answers as it would for yours, and the spec records who
+gave them. An unattended run takes its recommended answers instead.
 
 ## Install as a Claude Code plugin
 

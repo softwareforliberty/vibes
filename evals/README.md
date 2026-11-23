@@ -99,6 +99,15 @@ project's decision record rules out, and passes when the proposal isn't
 without mentioning agents. Run them with `--tag issues --allow-tools
 Write "Bash(*/tree-check)" "Bash(cat *)" "Bash(ls *)"`.
 
+**`questionnaire-asks-the-gap`** has the eval's own agent follow the
+questionnaire skill, with the user's answers given up front, for three
+data protection decisions in a spec that only the data protection
+officer can make. It passes when the questionnaire settles all three,
+asks one idea per question for someone outside the project, leaves room
+to answer, and carries none of the project's token, `.env` or code
+paths. Run it with `--tag questionnaire --allow-tools Write Edit
+"Bash(ls *)" "Bash(mkdir *)"`.
+
 The **`survey`** cases work on orders, a small Python library whose
 pricing is split into one-line modules that three callers sequence
 themselves, one in the wrong order, beside a deep storage module a
@@ -135,6 +144,7 @@ suggestions, cites the calls behind each one, and leaves the tree clean.
 | `design_cases.py` | The designer's design case, on the research project, which `generate.py` writes too |
 | `prbody_cases.py` | The pull request writer's branch, run records and case, which `generate.py` writes too |
 | `issue_cases.py` | The issues and their cases, which `generate.py` writes too |
+| `questionnaire_cases.py` | The questionnaire's project and case, which `generate.py` writes too |
 | `survey_cases.py` | The survey's project, history and cases, which `generate.py` writes too |
 | `retro_cases.py` | The retrospective's project, session and case, which `generate.py` writes too |
 | `fixtures/` | Each variant's project and review directory, generated |
