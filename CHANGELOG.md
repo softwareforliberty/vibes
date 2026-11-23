@@ -25,6 +25,24 @@ guides behave, and says so under **Changed**.
     breaking a record as a BLOCKER and using a word the glossary says to
     avoid as MAJOR.
   - **The final report** lists the terms and records the task added.
+- **`/vibes:retro` looks back on a session** and suggests changes to the
+  project that would make the next one go better, such as a check, a
+  coding standard or a pointer to a file, each citing the calls behind
+  it. It changes nothing. A change that would loosen a check is listed
+  apart and applied only when named on its own, and the review rounds,
+  the gate and the tests are never counted as waste.
+- **`bin/session-digest`** prints a compact digest of a session's
+  transcript and its subagents': every tool call on one line with a
+  reference, and the failures, hook blocks, retries, repeated calls and
+  largest results.
+
+### Changed
+
+- **The commit gate asks before it's loosened.** In Claude Code, a commit
+  that deletes `scripts/check` or `scripts/check-file`, makes either not
+  executable, or removes or changes a line of either so that a word is
+  lost now needs your confirmation, and is refused where nobody can give
+  it. Builders report a check they think must change instead.
 
 ## [0.6.1] - 2026-11-20
 

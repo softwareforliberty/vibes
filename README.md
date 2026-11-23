@@ -24,9 +24,13 @@ while holding it to the standards of careful, experienced developers.
 - **`bin/bench`:** measures whether a change made a program faster, in
   interleaved A/B runs with a verdict beyond the noise. It's in
   `lib/bench/`, and its tests in `tests/bench/`.
+- **`bin/session-digest`:** prints a compact digest of a Claude Code
+  session's transcript, for a retrospective. It's in
+  `lib/session_digest/`, and its tests in `tests/session_digest/`.
 - **`skills/`:** agent skills for the workflow, optimising performance,
-  reviewing your own branch or an outside pull request, test-driven
-  development, atomic commits and setting up the commit gate.
+  reviewing your own branch or an outside pull request, looking back on a
+  session, test-driven development, atomic commits and setting up the
+  commit gate.
 - **`principles.md`:** the programming principles every change is held
   to, such as SOLID, DRY and KISS.
 - **`architecture/`:** how to structure software: rules for every kind,
@@ -38,21 +42,24 @@ while holding it to the standards of careful, experienced developers.
   profilers and benchmark tools for each guide, for the profiler and the
   optimiser.
 - **`agents/`:** the designer, the spike agent, the builder, twelve
-  reviewer agents, the profiler and optimiser, and the commit message
-  suggester.
+  reviewer agents, the profiler and optimiser, the commit message
+  suggester and the retrospective.
 - **`hooks/`:** the commit gate, for Claude Code and for git; a guide
   check that makes the agent read the guide for each kind of file before
-  writing it; and a guard that keeps the reviewers and the commit message
-  suggester from changing anything but the reviewers' own findings files,
-  and the profiler from changing the code. The commit gate also refuses a
-  subject longer than 50 characters.
+  writing it; and a guard that keeps the reviewers, the commit message
+  suggester and the retrospective from changing anything but the
+  reviewers' own findings files and the retrospective's report, and the
+  profiler from changing the code. The commit gate also refuses a subject
+  longer than 50 characters, and asks you before a commit that loosens
+  the gate itself.
 - **`evals/`:** evals that check each reviewer agent finds the defects in
   its area and approves clean code, that the workflow picks the right
   reviewers for a change, that a pull request review catches malicious
   changes, that the profiler and optimiser find and measure the hot spot,
   that the project docs reviewer finds a contradiction and skips documents
-  that don't apply, and that suggested commit subjects fit in 50
-  characters, run with `claude plugin eval`.
+  that don't apply, that suggested commit subjects fit in 50 characters,
+  and that a retrospective suggests a check without loosening one, run
+  with `claude plugin eval`.
 
 ## The workflow
 
@@ -262,6 +269,35 @@ can't weaken it, and a pull request that changes it is HIGH.
 - Merge with `gh pr merge --squash --match-head-commit <head>`, so what you
   merge is what was reviewed, and no commit's history comes with it.
 
+## Look back on a session
+
+`/vibes:retro` looks back on a session, this one unless you name another by
+its id or transcript, and suggests what in the project would have made it
+go better: a check that would have caught a mistake, a coding standard a
+reviewer needed, a pointer to a file an agent hunted for, or a fix for
+wasted calls. Give it a focus, such as
+`/vibes:retro the commit gate blocks`, to look there first.
+
+A read-only agent works from a digest of the transcript that
+`bin/session-digest` writes, which numbers every tool call, such as `a3.7`
+for the third subagent's seventh. Each suggestion cites the calls and
+messages behind it, and says when it rests on a single moment. The report,
+`.vibes/retro-<date>-<n>/retro.md`, is shown to you.
+
+It changes nothing, and it only ever tightens:
+
+- **A change that would loosen a check,** such as dropping a lint rule,
+  excluding files or skipping a review round, is never a suggestion. It's
+  listed apart, under **Would loosen a check**, with what it would stop
+  catching, and is applied only when you name it on its own.
+- **Tool economy looks only for waste,** such as the same file read again
+  unchanged or a failing command retried as it was. The review rounds, the
+  gate and the tests cost a lot on purpose, and are never counted.
+- **The commit gate asks you** before any commit that loosens it, whoever
+  made the change.
+
+Name the suggestions you want, and each is applied as a commit of its own.
+
 ## Install as a Claude Code plugin
 
 This repository is its own plugin marketplace. In Claude Code 2.1.275 or
@@ -285,20 +321,20 @@ If you run sessions in git worktrees, install it at user scope, the
 default for `claude plugin install vibes@vibes` in a shell, or enable it in
 each worktree. A plugin enabled only for the main checkout can load its
 skills in a worktree session but not its agents. `/vibes:vibe`,
-`/vibes:optimise`, `/vibes:review` and `/vibes:review-pr` then stop and say
-so, rather than run without them.
+`/vibes:optimise`, `/vibes:review`, `/vibes:review-pr` and `/vibes:retro`
+then stop and say so, rather than run without them.
 
 The plugin provides:
 
-- **Skills:** `/vibes:vibe`, `/vibes:optimise`, `/vibes:review` and
-  `/vibes:review-pr`, plus `vibes:test-driven-development`, `vibes:atomic-commits` and
+- **Skills:** `/vibes:vibe`, `/vibes:optimise`, `/vibes:review`,
+  `/vibes:review-pr` and `/vibes:retro`, plus `vibes:test-driven-development`, `vibes:atomic-commits` and
   `vibes:commit-gate`, which agents use on their own when they apply.
 - **Agents:** `vibes:designer`, `vibes:spiker`, `vibes:builder`,
-  `vibes:profiler`, `vibes:optimiser`, `vibes:commit-message-suggester` and
-  the reviewers, such as `vibes:security-reviewer` and
+  `vibes:profiler`, `vibes:optimiser`, `vibes:commit-message-suggester`,
+  `vibes:retrospective` and the reviewers, such as `vibes:security-reviewer` and
   `vibes:project-docs-reviewer`.
 - **The commit gate hook,** which runs before every `git commit` the agent
-  makes.
+  makes, and asks you before one that loosens the gate.
 - **The check-file hook,** which formats and lints each file an agent
   writes, as soon as it's written, in projects with `scripts/check-file`.
   It also checks the files a shell command changes, except a command that
@@ -365,6 +401,12 @@ Once it exists, the gate:
 - blocks a commit whose subject is longer than 50 characters
 - runs no checks on `spike/*` branches, apart from the subject's length
 - in Claude Code, also blocks `git commit -a` and `--no-verify`
+- in Claude Code, asks you to confirm a commit that loosens the gate
+  itself: one that deletes `scripts/check` or `scripts/check-file`, makes
+  either not executable, or removes or changes a line so that a word of it
+  is lost, such as a check, an option or a guide. Extending the gate keeps
+  every word, so it goes through without asking. Where nobody can answer,
+  as in `claude -p`, the commit is refused
 
 `scripts/check` runs its static checks first, and stops before the tests
 if any fail, since the tests are the slow part. It runs only the fast
