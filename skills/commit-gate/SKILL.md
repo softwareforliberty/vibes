@@ -47,9 +47,12 @@ whose code is thrown away, and files git ignores.
    isn't a document.
 6. It blocks a commit whose subject is longer than 50 characters, before
    running anything else.
-7. In Claude Code it also blocks `git commit -a`, `--all`, `--no-verify` and
+7. It blocks a commit that adds a line carrying a `/vibes:debug` run's
+   debug tag, such as `vibes-debug-month-end`, so no temporary debug log
+   reaches a fix.
+8. In Claude Code it also blocks `git commit -a`, `--all`, `--no-verify` and
    `-n`. Each change is staged deliberately, and the gate is never bypassed.
-8. In Claude Code it has the user confirm a commit that loosens the gate
+9. In Claude Code it has the user confirm a commit that loosens the gate
    itself: one that deletes `scripts/check` or `scripts/check-file`, makes
    either not executable, removes or changes a line of either so that a
    word of it is lost, such as a check, an option or a guide, or lets a

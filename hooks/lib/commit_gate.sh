@@ -14,6 +14,10 @@ source "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/guides.sh"
 
 readonly GATE_CHECK_SCRIPT="scripts/check"
 readonly GATE_OUTPUT_LINES=60
+# The tag /vibes:debug puts on its temporary debug logs, such as
+# vibes-debug-month-end, so none reaches a commit.
+readonly GATE_DEBUG_TAG_RE='vibes-debug-[a-z0-9]'
+readonly GATE_DEBUG_LINES=20
 
 gate::err() {
   printf 'vibes commit gate: %s\n' "$*" >&2
@@ -98,6 +102,30 @@ gate::check_guides() {
   return 1
 }
 
+# Returns 0 when no staged line adds a /vibes:debug run's debug tag.
+# Otherwise lists the lines, and returns 1.
+gate::check_debug_tags() {
+  local line path="" found="" count=0
+  while IFS= read -r line; do
+    case "${line}" in
+      '+++ b/'*) path="${line#+++ b/}" ;;
+      '+++ '*) path="" ;;
+      +*)
+        [[ "${line}" =~ ${GATE_DEBUG_TAG_RE} ]] || continue
+        ((count += 1))
+        ((count <= GATE_DEBUG_LINES)) \
+          && found+="  ${path}: ${line:1:100}"$'\n'
+        ;;
+      *) ;;
+    esac
+  done < <(git diff --cached -U0 --no-color --no-ext-diff)
+  ((count == 0)) && return 0
+  gate::err "${count} staged lines still carry a /vibes:debug run's debug tag:"
+  printf '%s' "${found}" >&2
+  gate::err "Remove the debug logging, then commit again."
+  return 1
+}
+
 # Runs the gate in the repository containing the current directory. Returns
 # 0 when the commit may go ahead, and 1 when it must be blocked.
 gate::run() {
@@ -130,6 +158,10 @@ gate::run() {
   fi
 
   if ! gate::check_guides; then
+    return 1
+  fi
+
+  if ! gate::check_debug_tags; then
     return 1
   fi
 

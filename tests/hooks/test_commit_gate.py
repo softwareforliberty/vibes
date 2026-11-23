@@ -75,6 +75,26 @@ class DocsOnlyTest(unittest.TestCase):
         self.assertEqual(self.gate("README.md", "scripts/build.sh"),
                          "<none>")
 
+    def test_refuses_a_debug_runs_tagged_logs(self) -> None:
+        self.write("scripts/build.sh",
+                   'echo "vibes-debug-month-end: due=$due" >&2\n')
+        self.git("add", "scripts/build.sh")
+        result = subprocess.run([HOOK], cwd=self.repo, capture_output=True,
+                                text=True, check=False,
+                                env={**os.environ, "ARGS_LOG": self.log})
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("scripts/build.sh: echo \"vibes-debug-month-end",
+                      result.stderr)
+
+    def test_a_mention_of_the_tag_is_not_a_tagged_log(self) -> None:
+        self.assertEqual(self.gate("docs/debugging.md"), "--static")
+        self.write("docs/debugging.md",
+                   "Logs are tagged vibes-debug-<slug>.\n")
+        self.git("add", "docs/debugging.md")
+        self.assertEqual(subprocess.run(
+            [HOOK], cwd=self.repo, capture_output=True, check=False,
+            env={**os.environ, "ARGS_LOG": self.log}).returncode, 0)
+
     def test_test_data_runs_everything(self) -> None:
         for path in ("tests/fixtures/input.md", "fixtures/a.md",
                      "pkg/testdata/case.md"):
