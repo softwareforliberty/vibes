@@ -5,7 +5,8 @@ description: >-
   command that fails on the user's exact symptom, reliably and in seconds,
   and shrinks it; then ranks falsifiable hypotheses; then tests them one
   change at a time, and proves the cause by making the command pass. Never
-  fixes the bug for real. Used only by /vibes:debug.
+  fixes the bug for real. Used by /vibes:debug, and by /vibes:triage to
+  reproduce a reported bug.
 tools: Bash, Read, Write, Edit, Grep, Glob
 model: inherit
 ---

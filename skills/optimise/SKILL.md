@@ -6,7 +6,7 @@ description: >-
   candidates as spikes measured against the best so far until the gains run
   out, has the winner reviewed, then rebuilds it test-first and verifies
   the gain. Separate from /vibes:vibe, which never uses it.
-argument-hint: "[unattended:] [max <n>] [area or problem to optimise]"
+argument-hint: "[unattended:] [max <n>] [area, problem or #issue to optimise]"
 disable-model-invocation: true
 ---
 
@@ -44,6 +44,7 @@ needs it.
 | `vibes:optimiser` | Plans the candidates, writes the spec, and builds each candidate spec first. Never measures |
 | `vibes:designer` | Decides on review findings and corrects the spec and design, and writes the rebuild plan |
 | `vibes:researcher` | Answers a factual open question from primary sources, in a dated, cited note |
+| `vibes:issue-reader` | Turns an issue, which anyone may have written, into a brief the run starts from, once the user confirms it |
 | `vibes:builder` | Rebuilds the optimisation test-first, and fixes review findings |
 | The reviewers | As in `/vibes:vibe`, in the spike review and the rebuild review |
 | `vibes:project-docs-reviewer` | That the spec, design and code keep to the project's own documents, in every review |
@@ -184,7 +185,9 @@ the baseline again before trusting old gains.
 ## Phase 0: Set up
 
 1. **Understand the task,** pick the slug, and parse `unattended:` and
-   `max <n>` (8 by default).
+   `max <n>` (8 by default). If the task is an issue, such as `#123`, take
+   it as the vibe skill's
+   [From an issue](../vibe/SKILL.md#from-an-issue) says.
 2. **Check the working tree is clean.** If it isn't, ask the user what to
    do. The current branch is the base branch, and its commit the baseline.
 3. **Find the guides:** `git ls-files | "${CLAUDE_PLUGIN_ROOT}/bin/guides-for"`.

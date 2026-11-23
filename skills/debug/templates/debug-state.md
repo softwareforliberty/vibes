@@ -7,6 +7,7 @@ each finished step, naming the commits or the file that holds the details.
 
 status: running
 unattended: <yes or no>
+issue: <#number, or none>
 
 ## Symptom
 

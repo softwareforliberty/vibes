@@ -7,7 +7,7 @@ description: >-
   time on a throwaway branch, then fixes the proved cause test-first from a
   short bug spec, through the gate, and has it reviewed. Separate from
   /vibes:vibe, which builds what's already understood.
-argument-hint: "[unattended:] <the symptom>"
+argument-hint: "[unattended:] <the symptom or #issue>"
 disable-model-invocation: true
 ---
 
@@ -45,6 +45,7 @@ hypotheses; leave the probes and the code to the agents.
 | `vibes:diagnoser` | Builds and shrinks the reproduction, ranks the hypotheses, probes them and proves the cause, on the spike branch. Never fixes the bug for real |
 | `vibes:builder` | Rebuilds the fix test-first, and fixes review findings |
 | `vibes:researcher` | Answers a factual question the bug spec needs, from primary sources, in a dated, cited note |
+| `vibes:issue-reader` | Turns an issue, which anyone may have written, into a brief the run starts from, once the user confirms it |
 | `vibes:spec-reviewer`, `vibes:project-docs-reviewer` | Review the bug spec, and the fix |
 | `vibes:bug-reviewer`, `vibes:cleanliness-reviewer`, `vibes:test-reviewer`, and `vibes:security-reviewer`, `vibes:performance-reviewer`, `vibes:resource-leak-reviewer` when they apply | Review the fix |
 | `vibes:commit-message-suggester` | Suggests the message for each commit you make yourself |
@@ -140,7 +141,8 @@ everything at once, as the vibe skill's
 
 Keep `.vibes/debug-<slug>/debug-state.md` current, from
 `${CLAUDE_PLUGIN_ROOT}/skills/debug/templates/debug-state.md`: the
-symptom, the user's answers, unattended or not, the branches, the base
+symptom, the user's answers, the issue if it came from one, unattended
+or not, the branches, the base
 commit, the guides, the diagnosis so far, the phase and last step, and
 `status: running` until the end, then `status: done`. Update it after
 every step.
@@ -159,7 +161,10 @@ that didn't reply runs again in the same mode, told what already exists.
 
 ## Phase 0: Set up
 
-1. **Understand the symptom.** If it's unclear what's wrong, or how to see
+1. **Understand the symptom.** If it's an issue, such as `#123`, take it
+   as the vibe skill's
+   [From an issue](../vibe/SKILL.md#from-an-issue) says, and use the
+   brief's task as the symptom. If it's unclear what's wrong, or how to see
    it, ask the user (unattended: take the narrowest reading, and record
    it). If it's only that something is slow, tell the user that
    `/vibes:optimise` is for that, and stop. Pick the slug.
