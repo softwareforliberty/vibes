@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+#
+# Prints a short digest of what other people wrote in an issue, so
+# /vibes:pickup can tell whether an issue changed after the user approved
+# it in /vibes:triage:
+#
+#   issue-digest <issue.json> <your login>
+#
+# The file is what `gh issue view <n> --json title,body,comments` writes.
+# The digest covers the title, the body and every comment by anyone but
+# you, so your own triage comments, labels and timestamps don't change it,
+# but an edit to the issue, or anyone else's new comment, does. Exits 2 on
+# bad input.
+
+set -euo pipefail
+
+if (($# != 2)) || [[ -z "$2" ]]; then
+  printf 'usage: issue-digest <issue.json> <your login>\n' >&2
+  exit 2
+fi
+
+exec python3 -I -S -c '
+import hashlib, json, sys
+
+try:
+    with open(sys.argv[1], encoding="utf-8") as stream:
+        issue = json.load(stream)
+    others = [c["body"] for c in issue.get("comments", [])
+              if c["author"]["login"] != sys.argv[2]]
+    text = json.dumps([issue["title"], issue["body"], others])
+except (OSError, ValueError, KeyError, TypeError) as error:
+    print(f"issue-digest: {error}", file=sys.stderr)
+    sys.exit(2)
+print(hashlib.sha256(text.encode("utf-8")).hexdigest()[:16])
+' "$@"
