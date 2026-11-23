@@ -8,7 +8,9 @@
 # blocks any Bash command of theirs that would, and any write of the
 # suggester's. The profiler may
 # write and edit only its own files in an optimise run's state directory,
-# never the project's code, so this blocks its other writes and edits. It
+# never the project's code, so this blocks its other writes and edits. The
+# retrospective may write only its report, and may run commands that read
+# but none that change files or git. It
 # guards against mistakes, not a determined attacker: a program an agent runs
 # can still write files.
 
@@ -25,8 +27,11 @@ REVIEWERS+=" style-reviewer supply-chain-reviewer test-reviewer "
 readonly REVIEWERS
 # Agents that may write and edit only in an optimise run's state directory.
 readonly PROFILERS=" profiler "
+# Agents that may write only their report in a retrospective's directory.
+readonly RETROSPECTIVES=" retrospective "
 # Agents whose Bash commands may not change files or git state.
-readonly READ_ONLY_SHELL=" commit-message-suggester spec-reviewer "
+READ_ONLY_SHELL=" commit-message-suggester retrospective spec-reviewer "
+readonly READ_ONLY_SHELL
 # git subcommands that only read.
 GIT_READERS=" blame cat-file describe diff grep log ls-files ls-tree"
 GIT_READERS+=" merge-base rev-parse shortlog show status "
@@ -59,14 +64,34 @@ is_profiler_file() {
     && [[ "${path#*/.vibes/optimise-*/}" != wt/* ]]
 }
 
+# Succeeds when the path is the retrospective's report,
+# .vibes/retro-<slug>/retro.md.
+is_retro_file() {
+  local path="$1"
+  [[ "${path}" == /* && "${path}" != *"/../"* ]] \
+    && [[ "${path}" == */.vibes/retro-*/retro.md ]] \
+    && [[ "${path#*/.vibes/retro-}" != */*/* ]]
+}
+
+# Succeeds when the path is the one file a read-only agent may write: a
+# reviewer's findings file, or the retrospective's report.
+is_own_file() {
+  local path="$1" agent="$2"
+  if [[ "${RETROSPECTIVES}" == *" ${agent} "* ]]; then
+    is_retro_file "${path}"
+  else
+    is_findings_file "${path}" "${agent}"
+  fi
+}
+
 # Prints why a redirection in the command writes to a file, or nothing. The
-# reviewer may redirect into its own findings file: Claude Code gives an agent
-# with Bash no Write tool.
+# agent may redirect into its own file: Claude Code gives an agent with Bash
+# no Write tool.
 redirect_reason() {
   local rest="$1" reviewer="$2"
   while [[ "${rest}" =~ ${REDIRECT_RE} ]]; do
     if [[ "${BASH_REMATCH[1]}" != "/dev/null" ]] \
-      && ! is_findings_file "${BASH_REMATCH[1]}" "${reviewer}"; then
+      && ! is_own_file "${BASH_REMATCH[1]}" "${reviewer}"; then
       printf 'it redirects output to %s\n' "${BASH_REMATCH[1]}"
       return 0
     fi
@@ -191,6 +216,13 @@ main() {
     if ! is_findings_file "${path}" "${agent}"; then
       printf 'vibes: %s is read-only. It may write only ' "${agent}" >&2
       printf '%s.md in the review directory.\n' "${agent}" >&2
+      exit 2
+    fi
+  elif [[ "${RETROSPECTIVES}" == *" ${agent} "* ]]; then
+    path="$(hook::json_field "${input}" '.tool_input.file_path')"
+    if ! is_retro_file "${path}"; then
+      printf 'vibes: %s is read-only. It may write only ' "${agent}" >&2
+      printf 'its report, .vibes/retro-<slug>/retro.md.\n' >&2
       exit 2
     fi
   elif [[ "${READ_ONLY_SHELL}" == *" ${agent} "* ]]; then

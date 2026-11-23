@@ -87,5 +87,37 @@ class SuggesterTest(unittest.TestCase):
         self.assertEqual(hook(self.AGENT, "Write", file_path="/p/msg"), 2)
 
 
+class RetrospectiveTest(unittest.TestCase):
+    AGENT = "vibes:retrospective"
+    REPORT = "/p/.vibes/retro-2026-11-23-1/retro.md"
+
+    def test_writes_its_report(self) -> None:
+        self.assertEqual(hook(self.AGENT, "Write", file_path=self.REPORT), 0)
+        self.assertEqual(
+            hook(self.AGENT, "Bash", command=f"cat notes > {self.REPORT}"), 0)
+
+    def test_never_writes_anything_else(self) -> None:
+        for path in ("/p/scripts/check", "/p/CLAUDE.md",
+                     "/p/.vibes/retro-1/digest.md",
+                     "/p/.vibes/retro-1/x/retro.md",
+                     "/p/.vibes/retro-1/../../scripts/check",
+                     ".vibes/retro-1/retro.md"):
+            for tool in ("Write", "Edit"):
+                with self.subTest(path=path, tool=tool):
+                    self.assertEqual(
+                        hook(self.AGENT, tool, file_path=path), 2)
+
+    def test_reads_but_never_changes_files_or_git(self) -> None:
+        for command in ("/v/bin/session-digest --show m4 /t.jsonl",
+                        "git log -5 --stat", "cat scripts/check"):
+            with self.subTest(command=command):
+                self.assertEqual(hook(self.AGENT, "Bash", command=command), 0)
+        for command in ("sed -i 's/ruff//' scripts/check",
+                        "echo x >> CODING_STANDARDS.md", "git commit -m x",
+                        "rm scripts/check-file"):
+            with self.subTest(command=command):
+                self.assertEqual(hook(self.AGENT, "Bash", command=command), 2)
+
+
 if __name__ == "__main__":
     unittest.main()
