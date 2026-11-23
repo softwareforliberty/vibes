@@ -69,6 +69,13 @@ the choice is a `(decision)` with a recommended answer. Run them with
 "Bash(cat *)" "Bash(ls *)" "Bash(grep *)" "Bash(head *)" "Bash(sed -n *)"
 "Bash(pip show *)"`.
 
+**`designer-names-entry-points`** gives the designer an approved spec for
+a command that writes the day's sales as a CSV, in the same project, and
+passes when every component in the design names its entry points as the
+project's modules or packages, and a boundary rule keeps other components
+and the tests to them. Run it with `--tag design` and the research cases'
+`--allow-tools`.
+
 The **`survey`** cases work on orders, a small Python library whose
 pricing is split into one-line modules that three callers sequence
 themselves, one in the wrong order, beside a deep storage module a
@@ -102,6 +109,7 @@ suggestions, cites the calls behind each one, and leaves the tree clean.
 | `optimise_cases.py` | The optimise candidates and cases, which `generate.py` writes too |
 | `docs_cases.py` | The project docs reviewer's and commit message suggester's projects and cases, which `generate.py` writes too |
 | `research_cases.py` | The research project and cases, which `generate.py` writes too |
+| `design_cases.py` | The designer's design case, on the research project, which `generate.py` writes too |
 | `survey_cases.py` | The survey's project, history and cases, which `generate.py` writes too |
 | `retro_cases.py` | The retrospective's project, session and case, which `generate.py` writes too |
 | `fixtures/` | Each variant's project and review directory, generated |

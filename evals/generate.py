@@ -26,6 +26,7 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
+import design_cases
 import docs_cases
 import optimise_cases
 import pr_cases
@@ -844,6 +845,7 @@ def main() -> None:
     retro_cases.build()
     survey_cases.build()
     research_cases.build()
+    design_cases.build()
 
 
 if __name__ == "__main__":
