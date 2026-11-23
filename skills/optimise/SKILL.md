@@ -43,6 +43,7 @@ needs it.
 | `vibes:profiler` | Agrees the workload, builds the harness, profiles, and measures each candidate. Never changes the code |
 | `vibes:optimiser` | Plans the candidates, writes the spec, and builds each candidate spec first. Never measures |
 | `vibes:designer` | Decides on review findings and corrects the spec and design, and writes the rebuild plan |
+| `vibes:researcher` | Answers a factual open question from primary sources, in a dated, cited note |
 | `vibes:builder` | Rebuilds the optimisation test-first, and fixes review findings |
 | The reviewers | As in `/vibes:vibe`, in the spike review and the rebuild review |
 | `vibes:project-docs-reviewer` | That the spec, design and code keep to the project's own documents, in every review |
@@ -118,9 +119,11 @@ to ask the user:
   and record each as an `Unattended decision:` in the state file, with the
   options not chosen.
 - **Open questions in the spec, or a change that would alter what the user
-  asked for:** choose the option that does the least the user didn't ask
-  for and is easiest to change later, and record it in the spec's
-  assumptions the same way.
+  asked for:** research the facts as usual. For a decision, take its
+  recommended answer unless it does more than the user asked, and then
+  choose the option that does the least the user didn't ask for and is
+  easiest to change later. Record it in the spec's assumptions the same
+  way.
 - **A trade-off,** such as a candidate that fails a guard rail: reject it.
 - **Anything that could lose the user's work:** stop, and report it.
 - **A round limit:** stop, and report the outstanding findings.
@@ -222,8 +225,11 @@ the baseline again before trusting old gains.
 
 1. **Spawn `vibes:optimiser` in `plan` mode** with the baseline profile.
 2. **Create the rebuild branch:** `git switch -c optimise/<slug>`.
-3. **Spawn `vibes:optimiser` in `spec` mode,** to write the goal. Ask the
-   user each open question it reports, and have it write the answers in.
+3. **Spawn `vibes:optimiser` in `spec` mode,** to write the goal. Resolve
+   each open question it reports as the vibe skill's
+   [Open questions](../vibe/SKILL.md#open-questions) describes, with notes
+   in `.vibes/optimise-<slug>/research/`, and have it write the answers
+   in.
 4. **Review the spec** in `spec` rounds with `vibes:spec-reviewer` and
    `vibes:project-docs-reviewer`, as [Review rounds](#review-rounds)
    describes, with `vibes:designer` in `revise` mode fixing the findings,

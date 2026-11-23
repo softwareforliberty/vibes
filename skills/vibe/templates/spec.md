@@ -87,14 +87,26 @@ measurable target. Leave out the ones that don't apply.
 <!--
 Each decision made where the task was silent, in a line or two: the
 decision, why, and any options not chosen. Keep these to details: anything
-that changes what the user gets is an open question.
+that changes what the user gets is an open question. A fact a researcher
+settled names its note, such as "(source: research/pagination.md)".
 -->
 
 ## Open questions
 
 <!--
-Each question only the user can answer, with the options. The spec isn't
-complete until this section says "None.".
+Each question the spec can't settle yet, numbered, and marked as one of:
+
+- A fact, which sources can settle, such as what an API allows or how a
+  library behaves at the version the project uses. A researcher answers
+  it, so the user isn't asked:
+  "- **Q1 (fact):** How many orders does the export API return per page?"
+- A decision, which only the user can make. Word it so "yes" accepts the
+  recommended answer, and give the other options:
+  "- **Q2 (decision):** Export cancelled orders too? Recommended: yes,
+  marked as cancelled, since refunds need them. Otherwise: leave them
+  out."
+
+The spec isn't complete until this section says "None.".
 -->
 
 ## Change log

@@ -62,6 +62,13 @@ says something about what this task does or touches, such as:
 A decision record marked superseded no longer applies; the one that
 replaced it does.
 
+A research note, a document headed with a `Checked:` line and kept in a
+spec's `research/` directory, records outside facts as they were on that
+date. It applies only when the work relies on the same fact. If the work
+contradicts it, say whether the note may simply be out of date, such as
+when the project now uses a newer version than the note checked, rather
+than hold the work to an old fact.
+
 A README or a contributors' guide applies only through the sections that do.
 Read the full text of a document only when its headings suggest it applies.
 

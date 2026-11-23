@@ -42,6 +42,7 @@ carries every phase, and the details belong in theirs.
 | Agent | Role |
 | --- | --- |
 | `vibes:designer` | Writes the spec, then the design, decides on their review findings and revises them, and writes the rebuild plan |
+| `vibes:researcher` | Answers a factual open question from primary sources, in a dated, cited note |
 | `vibes:spiker` | Builds the spike to the spec and design, and tries out a design change the spike review makes |
 | `vibes:builder` | Builds the task test-first, a batch at a time, and decides on and fixes its review findings |
 | `vibes:spec-reviewer` | The spec's completeness, then whether the code meets it |
@@ -181,10 +182,12 @@ The user can ask for a run that never stops to ask them anything, such as
 `/vibes:vibe unattended: <task>` or by saying so in the task. Record it in
 `state.md`. Then, wherever this skill says to ask the user:
 
-- **Open questions in the spec:** decide each one yourself. Choose the
-  option that does the least the user didn't ask for, and is easiest to
-  change later. Record it in the spec's assumptions, marked
-  `Unattended decision:`, with the options you didn't choose.
+- **Open questions in the spec:** research the facts as usual. Decide
+  each decision yourself: take its recommended answer, unless it does
+  more than the user asked, and then choose the option that does the
+  least the user didn't ask for and is easiest to change later. Record it
+  in the spec's assumptions, marked `Unattended decision:`, with the
+  options you didn't choose.
 - **A spec change that would alter what the user asked for:** make the
   narrower choice the same way, and record it the same way.
 - **An unclear task:** take the narrowest reading that still does something
@@ -218,6 +221,36 @@ finished report:
   can't go on.
 - **Ask everything at once.** Gather every question you have at that point
   into one ask, rather than asking one, waiting, then asking the next.
+  Number them, and give each your recommended answer, worded so "yes"
+  accepts it, so the user can reply "yes" to all, or answer by number.
+
+## Open questions
+
+Whenever a spec or design lists open questions, the spec template marks
+each one a fact or a decision. The user is asked only for decisions.
+
+1. **Research the facts first,** before asking anything, so the decisions
+   come in one ask. Spawn a `vibes:researcher` for each `(fact)` question,
+   all in one message. Each brief gives the question and why the spec
+   needs it, the project's languages and where its dependency versions
+   are pinned, such as a lock file, today's date, and the note's path,
+   `.vibes/<name>/research/<topic>.md`. Each replies:
+   - `ANSWERED`: the fact is settled, in its note.
+   - `UNSETTLED`: the sources don't settle it. It becomes a decision, and
+     the note's findings go with it.
+   - `A DECISION`: it was a choice after all, and becomes a decision.
+
+   Give the designer the notes, in the mode it was in, to write each
+   answer into the spec, citing its note. For a small task's spec, which
+   you wrote, do the same yourself.
+2. **Ask the decisions,** all at once, numbered, each with its
+   recommended answer worded so "yes" accepts it, and the other options.
+   Tell the user they can answer by number, or reply "yes" to accept every
+   recommendation. Then have the designer write the answers in, and empty
+   the section.
+3. **Keep the notes with the spec.** When you commit the spec or design,
+   copy each note it cites into `<spec directory>/research/`, and commit
+   them with it, so the facts and their sources stay in the project.
 
 ## Keep the state current
 
@@ -481,9 +514,9 @@ apply to it.
    Its glossary is a copy there too, `.vibes/<name>/draft/glossary.md`:
    copy the project's glossary to it first, if there is one. For a small
    task, write the spec there yourself instead.
-2. **Resolve every open question.** Ask the user each one in the spec's
-   open questions section, then have the designer write their answers into
-   the spec as requirements, and empty the section.
+2. **Resolve every open question,** as [Open questions](#open-questions)
+   describes: the facts researched, the decisions asked, and the answers
+   written into the spec as requirements.
 3. **Review the spec** in rounds with `vibes:spec-reviewer` and
    `vibes:project-docs-reviewer`, as [Size the task](#size-the-task) says,
    with the designer deciding on and fixing their findings, until they
@@ -492,20 +525,20 @@ apply to it.
    commit is on the base branch and `scripts/check` passes there.
 5. **Commit the approved spec** on the rebuild branch, so the spike and the
    rebuild both start from it: create the branch from the base branch with
-   `git switch -c vibe/<name>`, copy the draft spec into the spec directory
-   and, if the designer changed or created it, the draft glossary to the
-   glossary's path, and commit them together, on their own, through the
-   gate. From here on, briefs give the spec directory and the glossary's
+   `git switch -c vibe/<name>`, copy the draft spec into the spec directory,
+   the research notes it cites into its `research/` directory, and, if the
+   designer changed or created it, the draft glossary to the glossary's
+   path, and commit them together, on their own, through the gate. From here on, briefs give the spec directory and the glossary's
    own path.
 
 ## Phase 2: Design
 
 Medium and large tasks only.
 
-1. Spawn `vibes:designer` in `design` mode, with the same brief. Ask the
-   user each open question it reports, such as a decision record the task
-   can't keep to, and give the answers to a fresh designer in `revise`
-   mode. When the user agrees to replace a record, the designer writes a
+1. Spawn `vibes:designer` in `design` mode, with the same brief. Resolve
+   each open question it reports, such as a decision record the task
+   can't keep to, as [Open questions](#open-questions) describes, and give
+   the answers to a fresh designer in `revise` mode. When the user agrees to replace a record, the designer writes a
    new one that supersedes it.
 2. **Review the design** in rounds with `vibes:architecture-reviewer` and
    `vibes:project-docs-reviewer`, as [Size the task](#size-the-task) says,
@@ -515,8 +548,8 @@ Medium and large tasks only.
    spec first, and the spec reviewer approves the changed spec in a `spec`
    round before the design rounds go on.
 3. **Commit the approved design,** together with any spec and glossary
-   changes the design review made, and the decision records the designer
-   wrote.
+   changes the design review made, the decision records the designer
+   wrote, and the research notes it cites.
 
 ## Phase 3: Spike
 
@@ -712,6 +745,8 @@ with `git worktree remove --force .vibes/<name>/audit`.
      and the commit the audit checked
    - the spec and design in the spec directory, every change made to the
      spec after it was approved, and the spec reviewer's final coverage
+   - the research notes the spec and design cite, each with its answer in
+     a line, so the user can check the facts the task rests on
    - the terms the task added to or changed in the glossary, and the
      decision records it wrote, so the user can check the project's
      vocabulary and decisions read as they mean them

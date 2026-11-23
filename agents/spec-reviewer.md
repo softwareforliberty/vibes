@@ -62,6 +62,11 @@ it. Check:
 - **What, not how:** the spec describes behaviour, not implementation.
 - **Complete:** there are no open questions, and no assumption that changes
   what the user gets.
+- **Sourced:** a requirement or assumption that rests on a fact from
+  outside the project, such as what an API allows or how a library
+  behaves, cites the research note that settled it, and says what the
+  note says. A wrong or unsourced fact of that kind is MAJOR when a build
+  that trusted it would break.
 - **In proportion:** the spec specifies what users and callers would
   notice. Don't ask for detail they wouldn't notice, or for what a
   platform convention the spec says it follows already settles, such as

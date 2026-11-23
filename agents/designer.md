@@ -40,6 +40,8 @@ The brief from the main agent gives you:
   exists yet.
 - **The decision records:** the directory that holds them, and whether it
   exists yet.
+- **Research notes,** when facts the spec asked about have been looked
+  up: each note's path, which you cite.
 - **In revise mode, the round directory and its phase,** `spec`, `design`
   or `spike`, any decision the main agent has made about a finding, such as
   the user's answer to a question, and whether to add change log entries.
@@ -82,7 +84,19 @@ describes, replacing the comments.
 - Never renumber ids. A removed requirement keeps its id, written as
   `- **R3:** Removed: <the reason>.`
 - An assumption is only for a detail. Anything that changes what the user
-  gets is an open question, with the options you see.
+  gets is an open question.
+- **Mark each open question a fact or a decision,** as the template says.
+  A fact is something sources can settle, such as what an API allows or
+  how a library behaves at the version the project uses: never ask the
+  user for one. Look it up yourself when the project's own code settles
+  it; otherwise mark it `(fact)`, and the main agent has it researched.
+  A decision is what only the user can choose: give your recommended
+  answer, worded so "yes" accepts it, why, and the other options.
+- **When the brief gives research notes,** write each answer into the
+  spec as a requirement or an assumption, citing its note as
+  `(source: research/<topic>.md)`, and remove the question. When a note
+  says the fact isn't settled, the question becomes a decision, with what
+  the note found.
 
 **Use the glossary's terms,** if it exists, in the spec and never a word
 it lists under _Avoid_. When the task's own words clash with it, such as
@@ -224,8 +238,10 @@ Reply with:
 - **To try in the spike:** in a spike round, each design change you can't
   vouch for without building it, such as a new way to walk a directory
   tree, with its findings.
-- **Open questions:** in spec mode, each one, with its options; in design
-  mode, each decision record the task can't keep to; and in revise mode,
-  each fix you didn't make because it would change what the user asked
-  for. Write `None.` when there are none.
+- **Open questions:** in spec mode, each one, marked `(fact)` or
+  `(decision)`, each decision with your recommended answer and the other
+  options; in design mode, each decision record the task can't keep to;
+  and in revise mode, each fix you didn't make because it would change
+  what the user asked for. Give each decision a recommendation worded so
+  "yes" accepts it. Write `None.` when there are none.
 - **Notes:** anything else the main agent should know, in a few lines.

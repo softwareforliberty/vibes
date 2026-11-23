@@ -44,6 +44,7 @@ hypotheses; leave the probes and the code to the agents.
 | --- | --- |
 | `vibes:diagnoser` | Builds and shrinks the reproduction, ranks the hypotheses, probes them and proves the cause, on the spike branch. Never fixes the bug for real |
 | `vibes:builder` | Rebuilds the fix test-first, and fixes review findings |
+| `vibes:researcher` | Answers a factual question the bug spec needs, from primary sources, in a dated, cited note |
 | `vibes:spec-reviewer`, `vibes:project-docs-reviewer` | Review the bug spec, and the fix |
 | `vibes:bug-reviewer`, `vibes:cleanliness-reviewer`, `vibes:test-reviewer`, and `vibes:security-reviewer`, `vibes:performance-reviewer`, `vibes:resource-leak-reviewer` when they apply | Review the fix |
 | `vibes:commit-message-suggester` | Suggests the message for each commit you make yourself |
@@ -116,8 +117,10 @@ to ask the user:
 
 - **The hypotheses:** keep the diagnoser's ranking.
 - **Open questions in the bug spec, or a fix that would alter what the
-  user expects:** choose the option that does the least the user didn't
-  ask for and is easiest to change later, and record it in the spec's
+  user expects:** research the facts as usual. For a decision, take its
+  recommended answer unless it does more than the user asked, and then
+  choose the option that does the least the user didn't ask for and is
+  easiest to change later, and record it in the spec's
   assumptions, marked `Unattended decision:`, with the options not
   chosen.
 - **No reproduction, every hypothesis refuted three rounds running, a fix
@@ -238,15 +241,17 @@ that didn't reply runs again in the same mode, told what already exists.
    cause. Its requirements say what the correct behaviour is, for the
    minimal scenario and for every case the cause also reaches, never how
    the fix works. Its constraints name the code the fix touches. Use the
-   glossary's terms, if the project has one.
+   glossary's terms, if the project has one. Resolve its open questions
+   as the vibe skill's [Open questions](../vibe/SKILL.md#open-questions)
+   describes, with notes in `.vibes/debug-<slug>/research/`.
 4. **Review it** in `spec` rounds with `vibes:spec-reviewer` and, when
    `bin/project-docs` lists a document, `vibes:project-docs-reviewer`, as
    the vibe skill's [Review rounds](../vibe/SKILL.md#review-rounds)
    describe, in `.vibes/debug-<slug>/review/`. Decide on and fix their
    findings yourself, as for a small task's spec. Ask the user about a
    requirement that would change what they expect.
-5. **Commit the approved spec** on the fix branch, on its own, through the
-   gate.
+5. **Commit the approved spec** on the fix branch, with the research notes
+   it cites in its `research/` directory, on its own, through the gate.
 
 ## Phase 5: Fix test-first
 
