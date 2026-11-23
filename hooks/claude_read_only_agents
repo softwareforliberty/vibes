@@ -11,8 +11,9 @@
 # never the project's code, so this blocks its other writes and edits. The
 # retrospective may write only its report, and may run commands that read
 # but none that change files or git. The surveyor may likewise write only
-# its survey and comparison, the interface designer only its design, and
-# the researcher only its note. It
+# its survey and comparison, the interface designer only its design, the
+# researcher only its note, and the pull request writer only its body and
+# the list of its sources. It
 # guards against mistakes, not a determined attacker: a program an agent runs
 # can still write files.
 
@@ -35,6 +36,9 @@ readonly RETROSPECTIVES=" retrospective "
 readonly SURVEYORS=" interface-designer surveyor "
 # Agents that may write only a note in a run's research directory.
 readonly RESEARCHERS=" researcher "
+# Agents that may write only the body and its sources in a pull request's
+# directory.
+readonly PR_WRITERS=" pr-writer "
 # Agents whose Bash commands may not change files or git state.
 READ_ONLY_SHELL=" commit-message-suggester retrospective spec-reviewer"
 READ_ONLY_SHELL+=" researcher surveyor "
@@ -103,6 +107,16 @@ is_research_file() {
     && "${path}" == */.vibes/*/research/*.md ]] || return 1
   rest="${path#*/.vibes/}"
   [[ "${rest}" == */research/*.md && "${rest}" != */*/*/* ]]
+}
+
+# Succeeds when the path is a pull request's body or the list of its
+# sources, .vibes/pr-<slug>/pr.md or sources.md.
+is_pr_file() {
+  local path="$1"
+  [[ "${path}" == /* && "${path}" != *"/../"* ]] \
+    && [[ "${path}" == */.vibes/pr-*/pr.md \
+      || "${path}" == */.vibes/pr-*/sources.md ]] \
+    && [[ "${path#*/.vibes/pr-}" != */*/* ]]
 }
 
 # Succeeds when the path is the one file a read-only agent may write: a
@@ -274,6 +288,13 @@ main() {
     if ! is_retro_file "${path}"; then
       printf 'vibes: %s is read-only. It may write only ' "${agent}" >&2
       printf 'its report, .vibes/retro-<slug>/retro.md.\n' >&2
+      exit 2
+    fi
+  elif [[ "${PR_WRITERS}" == *" ${agent} "* ]]; then
+    path="$(hook::json_field "${input}" '.tool_input.file_path')"
+    if ! is_pr_file "${path}"; then
+      printf 'vibes: %s is read-only. It may write only ' "${agent}" >&2
+      printf 'pr.md and sources.md in .vibes/pr-<slug>/.\n' >&2
       exit 2
     fi
   elif [[ "${READ_ONLY_SHELL}" == *" ${agent} "* ]]; then

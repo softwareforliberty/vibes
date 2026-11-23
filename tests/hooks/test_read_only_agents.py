@@ -188,5 +188,28 @@ class ResearcherTest(unittest.TestCase):
                 self.assertEqual(hook(self.AGENT, "Bash", command=command), 2)
 
 
+class PrWriterTest(unittest.TestCase):
+    AGENT = "vibes:pr-writer"
+
+    def test_writes_its_body_and_sources(self) -> None:
+        for name in ("pr.md", "sources.md"):
+            for tool in ("Write", "Edit"):
+                with self.subTest(name=name, tool=tool):
+                    self.assertEqual(hook(self.AGENT, tool, file_path=(
+                        f"/p/.vibes/pr-vibe-sales-csv/{name}")), 0)
+
+    def test_never_writes_anything_else(self) -> None:
+        for path in ("/p/README.md", "/p/.github/pull_request_template.md",
+                     "/p/.vibes/pr-x/diff.patch",
+                     "/p/.vibes/pr-x/sub/pr.md",
+                     "/p/.vibes/sales-csv/pr.md",
+                     "/p/.vibes/pr-x/../../README.md",
+                     ".vibes/pr-x/pr.md"):
+            for tool in ("Write", "Edit"):
+                with self.subTest(path=path, tool=tool):
+                    self.assertEqual(
+                        hook(self.AGENT, tool, file_path=path), 2)
+
+
 if __name__ == "__main__":
     unittest.main()
