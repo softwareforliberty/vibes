@@ -114,7 +114,6 @@ PROJECT = {
     "invoices/models.py": MODELS,
     "invoices/export.py": EXPORT,
     "tests/test_export.py": TEST,
-    ".vibes/.gitignore": "*\n",
     ".vibes/csv-export/review/rebuild-1/cleanliness-reviewer.md":
         PRINT_FINDING.format(path="invoices/export.py", line=14,
                              name="rows"),
@@ -255,6 +254,7 @@ digest="$(cd -- "${{here}}/../../bin" && pwd)/session-digest"
 git init -q -b main .
 cp -R "${{here}}/../fixtures/retro-project/." .
 chmod +x scripts/check
+printf '*\\n' > .vibes/.gitignore
 git add -A
 git -c user.name=evals -c user.email=evals@example.invalid \\
   commit -q -m "Add the CSV export"

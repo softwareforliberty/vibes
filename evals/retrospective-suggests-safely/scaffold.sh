@@ -12,6 +12,7 @@ digest="$(cd -- "${here}/../../bin" && pwd)/session-digest"
 git init -q -b main .
 cp -R "${here}/../fixtures/retro-project/." .
 chmod +x scripts/check
+printf '*\n' > .vibes/.gitignore
 git add -A
 git -c user.name=evals -c user.email=evals@example.invalid \
   commit -q -m "Add the CSV export"
