@@ -72,6 +72,7 @@ build/Linker-GNU-ld	*.ld *.lds
 build/Make	Makefile makefile GNUmakefile *.mk
 
 tools/Docker	Dockerfile Dockerfile.* *.Dockerfile Containerfile .dockerignore compose.yaml compose.yml docker-compose.yaml docker-compose.yml
+tools/Agent-instructions	CLAUDE.md CLAUDE.local.md AGENTS.md GEMINI.md SKILL.md .claude/rules/*.md .claude/agents/*.md .claude/commands/*.md .github/copilot-instructions.md agents/*.md commands/*.md
 tools/GitHub-Actions	.github/workflows/*.yaml .github/workflows/*.yml action.yaml action.yml
 tools/Nix	*.nix flake.lock
 tools/OpenTofu	*.tf *.tofu *.tfvars *.tftest.hcl .terraform.lock.hcl *policy/opentofu/*.rego
