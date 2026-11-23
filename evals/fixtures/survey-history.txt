@@ -1,0 +1,8 @@
+Add tax for the EU|orders/pricing/tax.py orders/checkout.py
+Add the silver tier|orders/pricing/discount.py orders/invoice.py
+Price quotes|orders/quote.py orders/pricing/calculator.py
+Round invoice lines|orders/invoice.py orders/pricing/rounding.py
+Fix checkout rounding|orders/checkout.py orders/pricing/rounding.py
+Discount quotes|orders/quote.py orders/pricing/calculator.py orders/pricing/discount.py
+US orders pay no tax|orders/pricing/tax.py orders/checkout.py orders/invoice.py
+Gold tier is ten percent|orders/pricing/discount.py orders/checkout.py orders/quote.py

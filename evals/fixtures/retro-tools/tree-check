@@ -1,9 +1,10 @@
 #!/bin/sh
-cd "$(dirname -- "$0")/../.." || exit 2
+here="$(cd "$(dirname -- "$0")" && pwd)"
+cd "${here}/../.." || exit 2
 find . \( -path ./.vibes -o -path ./.git \) -prune -o -type f -print \
   | LC_ALL=C sort | while IFS= read -r path; do cksum "$path"; done \
-  > .vibes/retro-eval/tree-now
-if cmp -s .vibes/retro-eval/tree-before .vibes/retro-eval/tree-now; then
+  > "${here}/tree-now"
+if cmp -s "${here}/tree-before" "${here}/tree-now"; then
   echo 'TREE CLEAN'
 else
   echo 'TREE CHANGED'

@@ -56,6 +56,20 @@ a document.
 repository, and passes when the suggested subject is 50 characters or
 fewer and in the imperative.
 
+The **`survey`** cases work on orders, a small Python library whose
+pricing is split into one-line modules that three callers sequence
+themselves, one in the wrong order, beside a deep storage module a
+decision record keeps. **`surveyor-finds-shallow-pricing`** passes when
+the survey ranks deepening the pricing first, with the deletion test and
+diagrams, and leaves the storage alone.
+**`interface-designers-design-it-twice`** gives three designers the
+pricing candidate under different constraints, and passes when their
+designs differ in substance, use the real callers, and the comparison
+recommends one with its reasons. Both pass only when nothing outside
+`.vibes/` changed. Run them with
+`--tag survey --allow-tools Write "Bash(*/tree-check)" "Bash(git *)"
+"Bash(cat *)" "Bash(ls *)" "Bash(grep *)" "Bash(head *)" "Bash(sed -n *)"`.
+
 **`retrospective-suggests-safely`** gives the retrospective agent a made-up
 session in which a builder left debug prints that a reviewer and the user
 had to catch, the gate blocked two commits on line length, and a review
@@ -74,6 +88,7 @@ suggestions, cites the calls behind each one, and leaves the tree clean.
 | `source/optimise/`, `source/optimise-run/` | contacts, and the run directory its baseline leaves |
 | `optimise_cases.py` | The optimise candidates and cases, which `generate.py` writes too |
 | `docs_cases.py` | The project docs reviewer's and commit message suggester's projects and cases, which `generate.py` writes too |
+| `survey_cases.py` | The survey's project, history and cases, which `generate.py` writes too |
 | `retro_cases.py` | The retrospective's project, session and case, which `generate.py` writes too |
 | `fixtures/` | Each variant's project and review directory, generated |
 | `<case>/` | Each case's prompt, graders and setup script, generated |

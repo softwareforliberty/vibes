@@ -30,6 +30,7 @@ import docs_cases
 import optimise_cases
 import pr_cases
 import retro_cases
+import survey_cases
 
 EVALS = Path(__file__).resolve().parent
 GUIDES_FOR = EVALS.parent / "bin" / "guides-for"
@@ -840,6 +841,7 @@ def main() -> None:
     optimise_cases.build()
     docs_cases.build()
     retro_cases.build()
+    survey_cases.build()
 
 
 if __name__ == "__main__":

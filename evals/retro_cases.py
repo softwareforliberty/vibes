@@ -270,13 +270,16 @@ mv {retro}/tree-now {retro}/tree-before
 
 # git can't run in the eval's sandbox, so the scaffold records every file
 # outside .vibes/ and .git/ with its checksum, and this says whether any was
-# added, removed or changed since.
+# added, removed or changed since. It lives two levels below the project,
+# in .vibes/<run>/, beside the record it compares with; the survey evals
+# use it too.
 TREE_CHECK = """#!/bin/sh
-cd "$(dirname -- "$0")/../.." || exit 2
+here="$(cd "$(dirname -- "$0")" && pwd)"
+cd "${here}/../.." || exit 2
 find . \\( -path ./.vibes -o -path ./.git \\) -prune -o -type f -print \\
   | LC_ALL=C sort | while IFS= read -r path; do cksum "$path"; done \\
-  > .vibes/retro-eval/tree-now
-if cmp -s .vibes/retro-eval/tree-before .vibes/retro-eval/tree-now; then
+  > "${here}/tree-now"
+if cmp -s "${here}/tree-before" "${here}/tree-now"; then
   echo 'TREE CLEAN'
 else
   echo 'TREE CHANGED'
