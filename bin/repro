@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#
+# Decides whether a bug's reproduction fails reliably, and fast. It runs a
+# command that exits 1 while the bug is present, 0 once it's gone and 125
+# when it can't tell, several times, and prints one verdict:
+#
+#   repro run --out <dir> [--runs N] [--timeout S] [--tree <dir>] -- <command>
+#
+# lib/repro/cli.py describes the verdicts. Exits 0 when it worked and 2 on
+# an error. Needs Python 3.9 or later.
+
+set -euo pipefail
+
+ROOT="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/.."
+readonly ROOT
+
+# -I ignores PYTHON* variables and the user's site directory, and -S skips
+# site, so nothing outside the plugin is imported. -I also leaves the
+# script's own directory off the path, so lib/ is added here.
+exec python3 -I -S -c 'import sys; sys.path.insert(0, sys.argv.pop(1)); from repro.cli import main; sys.exit(main(sys.argv[1:]))' \
+  "${ROOT}/lib" "$@"
