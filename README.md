@@ -36,7 +36,8 @@ while holding it to the standards of careful, experienced developers.
   `lib/session_digest/`, and its tests in `tests/session_digest/`.
 - **`skills/`:** agent skills for the workflow, optimising performance,
   debugging, surveying the architecture, reviewing your own branch or an
-  outside pull request, looking back on a session, test-driven development, atomic commits and setting up the
+  outside pull request, writing a pull request, looking back on a
+  session, test-driven development, atomic commits and setting up the
   commit gate.
 - **`principles.md`:** the programming principles every change is held
   to, such as SOLID, DRY and KISS.
@@ -52,13 +53,14 @@ while holding it to the standards of careful, experienced developers.
 - **`agents/`:** the designer, the spike agent, the builder, twelve
   reviewer agents, the profiler and optimiser, the diagnoser, the
   researcher, the surveyor
-  and interface designer, the commit message suggester and the
-  retrospective.
+  and interface designer, the commit message suggester, the
+  retrospective and the pull request writer.
 - **`hooks/`:** the commit gate, for Claude Code and for git; a guide
   check that makes the agent read the guide for each kind of file before
   writing it; and a guard that keeps the reviewers, the commit message
-  suggester, the retrospective and the survey's agents from changing
-  anything but their own findings files and reports, and the
+  suggester, the retrospective, the survey's agents and the pull request
+  writer from changing anything but their own findings files and reports,
+  and the
   profiler from changing the code. The commit gate also refuses a subject
   longer than 50 characters, and asks you before a commit that loosens
   the gate itself.
@@ -388,6 +390,31 @@ It changes nothing, and it only ever tightens:
   made the change.
 
 Name the suggestions you want, and each is applied as a commit of its own.
+
+## Write a pull request
+
+`/vibes:pr` writes the body of a pull request for the checked-out branch,
+for a reviewer who hasn't seen the work. It runs only when you ask: a
+vibes run never opens or writes a pull request by itself.
+
+- **The summary** is the smallest view that makes the change clear, such
+  as a short diagram, a file tree or a few lines of pseudocode.
+- **The evidence** is before and after, quoted from the records: a
+  reproduction that went from `RED` to `GREEN`, measurements from an
+  optimise run, the line each new test failed on before its code existed,
+  each requirement with the test that covers it, and the reviewers'
+  verdicts. Without a vibes run, it uses the branch's commits and diff,
+  and runs `scripts/check --all` at the branch's head.
+- **The merge risk** says whether the change is a one-way door, such as
+  a decision record, a migration, a public format or a new dependency, or
+  a two-way door undone by a revert, and what calls the changed code.
+
+Every claim comes from a record, listed in `sources.md` beside the body,
+and what no record shows is marked unverified. It fills the repository's
+own pull request template when there is one, and leaves out anything
+private, such as `.vibes/` paths. You read it first: it pushes the branch
+and opens the pull request, as a draft or ready for review, or replaces
+an existing one's body, only when you say so, and never forces a push.
 
 ## Install as a Claude Code plugin
 

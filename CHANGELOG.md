@@ -39,6 +39,14 @@ guides behave, and says so under **Changed**.
   you pick, three new interface designers each design it under a
   different constraint, and the surveyor compares them and recommends
   one, as a task for `/vibes:vibe`. It changes nothing.
+- **`/vibes:pr` writes the pull request for a branch,** only when you ask.
+  The new pull request writer gives the smallest view that makes the
+  change clear, the evidence before and after quoted from the run's
+  records, such as a reproduction going from `RED` to `GREEN` or each new
+  test's failing line, and the merge risk: a one-way or two-way door, and
+  what calls the changed code. Every claim is listed with its source, and
+  what nothing shows is marked unverified. It pushes and opens a draft or
+  ready pull request only when you say so, and never forces a push.
 - **`architecture/deep-modules.md`:** depth, seams, leverage and locality,
   the deletion test, and designing it twice.
 - **`/vibes:retro` looks back on a session** and suggests changes to the
