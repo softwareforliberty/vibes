@@ -31,10 +31,12 @@ The brief from the main agent gives you:
 - **Your constraint,** such as:
   - **The smallest interface:** as few entry points, types and concepts
     as callers can possibly use;
-  - **The commonest caller:** the most frequent call site becomes one
-    call, with everything else still possible;
+  - **The most flexible:** callers can see and vary every part that the
+    code's history shows changing, without a new interface each time;
   - **A different seam:** put the boundary somewhere the current code
-    doesn't, such as around the data rather than the steps.
+    doesn't, such as around the data rather than the steps;
+  - **The caller decides:** the module takes what varies, such as rates
+    or rules, from its caller, and keeps only what never varies.
 - **The design path:** `.vibes/survey-<slug>/designs/<letter>.md`.
 - **The glossary** and **the decision records directory,** if the
   project has them, and **the guides** that apply.

@@ -108,15 +108,21 @@ For the candidate the user picks:
    guides, its design path, `designs/<letter>.md`, and its constraint:
    - **A, the smallest interface:** as few entry points, types and
      concepts as callers can possibly use;
-   - **B, the commonest caller:** the most frequent call site becomes one
-     call, with everything else still possible;
+   - **B, the most flexible:** callers can see and vary every part that
+     the code's history shows changing, without a new interface each
+     time;
    - **C, a different seam:** the boundary goes somewhere the current code
      doesn't put it, such as around the data rather than the steps.
 
    When the user names a constraint of their own, add a designer D for
    it.
 2. **Spawn `vibes:surveyor` in `compare` mode,** with the candidate's id,
-   the design files and the report path, `comparison.md`.
+   the design files and the report path, `comparison.md`. If it replies
+   `CONVERGED`, two designs came out the same: spawn a fresh designer for
+   the second of them, under a constraint no design has had yet, such as
+   **the caller decides:** the module takes what varies, such as rates or
+   rules, from its caller, and keeps only what never varies. Then compare
+   again. Do this at most twice.
 3. **Show the comparison.** Put it and the designs on one page:
 
    ```sh

@@ -96,7 +96,8 @@ C<n>: <why it's the one to do first, in two or three sentences>.
 - **Files:** <the modules involved, with paths>.
 - **Problem:** <the friction, citing files, lines and how often they
   change>.
-- **Deletion test:** <what deleting the shallow modules would do>.
+- **Deletion test:** <what deleting the suspect modules would do, ending
+  with a plain verdict: shallow, or not>.
 - **Proposal:** <what would change, in plain words, with no interface>.
 - **Benefits:** <in locality and leverage, and how the tests would
   improve>.
@@ -135,6 +136,14 @@ Several interface designers have each designed the candidate's deepened
 module under a different constraint, without seeing each other's. Read
 the candidate in `survey.md`, then every design, then the code they'd
 change.
+
+**First, check they differ.** Two designs that give callers essentially
+the same interface, the same entry points, types and seam under
+different names, are one design, and comparing them teaches nothing.
+If two have converged, write nothing, and reply only
+`CONVERGED: <letter> and <letter>, <the shared interface in a few
+words>`, so the main agent can have one redesigned under another
+constraint.
 
 Compare them on:
 
