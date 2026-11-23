@@ -6,7 +6,7 @@ description: >-
   merge risk, taken from the records a vibes run kept, or from the branch
   itself. Shows it, and opens or updates the pull request only when you
   say so.
-argument-hint: "[base branch]"
+argument-hint: "[base branch] [#issue]"
 disable-model-invocation: true
 ---
 
@@ -56,7 +56,9 @@ knows it only by its agent type.
    is `.vibes/debug-<slug>/` with `debug-state.md`. Any other branch, or a
    run directory that's gone, has no run. A run whose state isn't
    `status: done` hasn't finished: tell the user, and ask whether to write
-   the body anyway.
+   the body anyway. The issue the pull request closes is the one the
+   arguments name, such as `#123`, or else the run's `issue:` line, if
+   either.
 3. **Make the pull request's directory** from the repository root,
    `.vibes/pr-<slug>`, the branch name with each `/` made `-`, such as
    `.vibes/pr-vibe-sales-csv`. If it exists from an earlier run, empty
@@ -95,7 +97,8 @@ knows it only by its agent type.
    case.
 7. **Spawn `vibes:pr-writer`,** with the branch, the base, the pull
    request's directory, the run directory and its kind, or that there's
-   none, the template's path or that there's none, and the paths of
+   none, the issue it closes or that there's none, the template's path or
+   that there's none, and the paths of
    `pr.md` and `sources.md` in the directory, all as absolute paths.
 8. **Show the body.** Print `pr.md` in full. Then say, in a line each:
    the merge risk; anything the body says isn't verified; and that
