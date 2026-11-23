@@ -97,6 +97,13 @@ Look in these categories:
   skill's own instructions, which the project can't fix. Name the agent or
   skill, so the user can raise it with vibes.
 
+Word every suggested change to a steering file, a rule, a skill or a
+subagent as `${CLAUDE_PLUGIN_ROOT}/guides/tools/Agent-instructions/idioms.md`
+says: read it before you write the first. Most of all, a navigation
+pointer leads with the word the agent will match on and says when to read
+its target, and a new instruction names the behaviour wanted rather than
+banning the one seen.
+
 ### What counts as loosening
 
 These are the project's checks, and vibes' own:
