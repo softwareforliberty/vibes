@@ -32,7 +32,8 @@ The baseline language is **Swift 5.9**.
   swift-format applies the order.
 - Import only what the file uses. An unused import slows builds and hides
   real dependencies.
-- Use `@testable import` only in test targets.
+- Don't use `@testable import`. Tests use a plain `import`, so they see
+  only the module's public interface, as callers do.
 
 ## Layout
 

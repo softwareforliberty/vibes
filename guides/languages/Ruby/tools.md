@@ -320,6 +320,48 @@ dependencies:
   - lib/adapters
 ```
 
+Packwerk's privacy checker gives each package a front door. It now lives in
+a separate gem, so add `gem 'packwerk-extensions'` beside `packwerk`, and
+load the checker in `packwerk.yml`:
+
+```yaml
+require:
+  - packwerk/privacy/checker
+```
+
+Add `enforce_privacy: true` to every `package.yml`. Other packages may then
+use only the constants in files marked public, with a `pack_public: true`
+comment in their first five lines. Mark each entry point, such as
+`lib/core/cart.rb`, and keep the rest beside it or in a folder such as
+`lib/core/internal/`:
+
+```ruby
+# pack_public: true
+# frozen_string_literal: true
+
+module Core
+  # The core's entry point.
+  class Cart
+    # ...
+  end
+end
+```
+
+The package's own files may use any of its constants. `check` fails on a
+use of a private one from outside:
+
+```text
+Privacy violation: '::Core::Internal::Pricing' is private to 'lib/core' but referenced from 'lib/adapters'.
+```
+
+- Keep the tests in `test/`, outside the packages. They belong to the root
+  package, so the checker holds them to the entry points too, and reports
+  `referenced from '.'`. Tests inside a package's directory could use its
+  private constants.
+- Packwerk can also treat a folder as public, `app/public/` by default. Under
+  `lib`, Rails would add that folder's name to every constant in it, such as
+  `Core::Public::Cart`, so mark the files instead.
+
 `bin/packwerk update-todo` records existing violations in
 `package_todo.yml`, so `check` passes with them. Use it only when adopting
 Packwerk in existing code, never to let a new violation through.

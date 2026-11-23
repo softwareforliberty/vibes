@@ -312,6 +312,26 @@ The binary crate that wires the parts lists every layer. With the rules in
 each crate's `[dependencies]`, a change there is the only way to break them,
 so review each one.
 
+A crate's entry points are the `pub` items in its root, `src/lib.rs`.
+Declare its other modules without `pub`, such as `mod store;` for
+`src/store.rs`, and re-export what callers need with `pub use`. The crate's
+own modules can use each other, but an edge that names a private module,
+such as `app_core::store::names()`, fails with ``module `store` is
+private``.
+
+The crate's tests use the entry points too. Put them in its `tests/`
+directory, such as `crates/app-core/tests/greeting.rs`. Each file there
+builds as a separate crate, so it sees only what the edges see, and fails
+the same way. `cargo build` skips the tests, so build them too:
+
+```sh
+cargo build --workspace --all-targets
+```
+
+A `#[cfg(test)]` module inside `src/` can reach the crate's private items,
+and the compiler can't stop it. Only tests in `tests/` are held to the
+entry points, so test a crate's behaviour from there.
+
 ## Sources
 
 - [cargo-mutants: testing code changed in a diff](https://mutants.rs/in-diff.html)

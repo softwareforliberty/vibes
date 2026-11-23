@@ -310,6 +310,30 @@ end
 - Boundary also warns about any module that belongs to no boundary, so every
   module in `lib` sits under one.
 
+`exports` is each boundary's front door. A boundary always exports its own
+module, such as `MyApp.Core`, too. Keep the modules it doesn't export under
+an `Internal` namespace, such as `MyApp.Core.Internal.Format`. The
+boundary's own modules may call them, and a call from another boundary
+fails the build:
+
+```text
+warning: forbidden reference to MyApp.Core.Internal.Format
+  (module MyApp.Core.Internal.Format is not exported by its owner boundary MyApp.Core)
+```
+
+Boundary checks only the code in `lib`, not the test files, so it can't
+stop a test calling an internal module. The `Internal` namespace lets
+`scripts/check` catch that instead. This fails, and prints the line, when a
+test names an internal module:
+
+```sh
+! grep -rnw Internal test
+```
+
+To let calls to one module through, list it in the calling boundary's
+`dirty_xrefs`, such as `dirty_xrefs: [MyApp.Core.Internal.Format]`, with a
+comment naming the breach.
+
 ## Sources
 
 - [Muex documentation](https://hexdocs.pm/muex/)

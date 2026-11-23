@@ -330,6 +330,41 @@ A breach fails the build with `Unbound module App_adapters`, or with
 dune build @check
 ```
 
+A library's entry points are the modules other libraries may use. List every
+other module under `private_modules`. With `include_subdirs`, the private
+ones can live in a subdirectory, such as `lib/core/store/names.ml`:
+
+```lisp
+; Only Greeting is the core's entry point.
+
+(include_subdirs unqualified)
+
+(library
+ (name app_core)
+ (private_modules names))
+```
+
+The library's own modules can use each other, but an edge that uses
+`App_core.Names` fails with `The module App_core.Names is an alias for
+module App_core__Names, which is missing`. A main module file, such as
+`app_core.ml`, that re-exports only the entry points isn't enough: the
+others stay reachable as `App_core__Names`.
+
+The library's tests use the entry points too. Put them in a `test` stanza
+in their own directory, which lists the library like any other user, so a
+test that uses a private module fails the same way. `dune build @check`
+builds them. Inline tests are part of the library, so they can reach its
+private modules and dune can't stop them: don't use them for the library's
+tests.
+
+`test/core/dune`:
+
+```lisp
+(test
+ (name test_core)
+ (libraries app_core))
+```
+
 ## Sources
 
 - [mutaml](https://github.com/jmid/mutaml)

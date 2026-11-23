@@ -346,6 +346,23 @@ export default {
       to: { path: '^src/(adapters|cli)/' },
     },
     {
+      name: 'entry-points-only',
+      comment: 'Outside a component, import only its index.js.',
+      severity: 'error',
+      from: { path: '^src/([^/]+)', pathNot: '\\.test\\.js$' },
+      to: {
+        path: '^src/[^/]+/',
+        pathNot: ['^src/$1/', '^src/[^/]+/index\\.js$'],
+      },
+    },
+    {
+      name: 'tests-use-entry-points',
+      comment: 'Tests import only index.js files, as callers do.',
+      severity: 'error',
+      from: { path: '\\.test\\.js$' },
+      to: { path: '^src/[^/]+/', pathNot: '^src/[^/]+/index\\.js$' },
+    },
+    {
       name: 'no-circular',
       comment: 'Modules form no import cycles.',
       severity: 'error',
@@ -358,6 +375,21 @@ export default {
 
 The edges may import the core, and the report names each broken rule with
 the import that breaks it.
+
+Each component's entry point is the `index.js` in its directory, such as
+`src/core/index.js`. It can re-export what's kept in the folders behind it,
+such as `src/core/internal/`. `entry-points-only` lets code outside a
+component import only its `index.js`, and lets the component's own files
+import each other: `$1` stands for the component the importing file is in,
+the directory that `from.path` captures. `tests-use-entry-points` holds the
+tests to the `index.js` files too, even in their own component. Name them
+`*.test.js` and keep them in `src/`, so the check finds them. To give a
+component more entry points, add their paths to both `pathNot` lists. An
+import past the entry point prints:
+
+```text
+error entry-points-only: src/adapters/store.js → src/core/internal/line.js
+```
 
 ## Sources
 

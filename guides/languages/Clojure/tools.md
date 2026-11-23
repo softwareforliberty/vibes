@@ -214,17 +214,36 @@ core requiring the edges, which may require the core. The namespace names are
 examples: replace them with the layers in the project's `design.md`.
 
 ```clojure
-{:source-paths #{"src"}
+{:source-paths #{"src" "test"}
  :layers {:core {:defined-by "^app\\.core(\\.|$)"
                  :accesses-layers #{}}
           :adapters {:defined-by "^app\\.adapters(\\.|$)"
                      :accesses-layers #{:core}}
           :cli {:defined-by "^app\\.cli(\\.|$)"
-                :accesses-layers #{:adapters :core}}}}
+                :accesses-layers #{:adapters :core}}}
+ :rules [;; Only the core requires the core's impl namespaces.
+         {:defined-by "^(?!app\\.core(\\.|$))"
+          :should-not-depend-on ["^app\\.core\\.impl(\\.|$)"]}
+         ;; Tests require only the entry points.
+         {:defined-by "-test$"
+          :should-not-depend-on ["\\.impl(\\.|$)"]}]}
 ```
 
 `:defined-by` is a regular expression that may match anywhere in a namespace
 name, so anchor it with `^`.
+
+The `:rules` give each layer a front door. Keep the namespaces that code
+outside a layer mustn't require under `impl`, such as
+`app.core.impl.format`, and require the others, the entry points, from
+outside. A rule's `:defined-by` picks the namespaces it applies to, and
+`:should-not-depend-on` the namespaces they mustn't require. A breach
+prints `"app.adapters.console" should not depend on "app.core.impl.format"`.
+
+- The first rule applies to every namespace outside the core, so the
+  core's own namespaces may require its `impl` ones. Add one like it for
+  each layer that has `impl` namespaces.
+- The second applies to every test namespace, in any layer. `"test"` is in
+  `:source-paths` so that clj-depend reads the tests.
 
 `scripts/check` runs it from the repository root. It prints each breach, such
 as `"app.core.pricing" should not depend on "app.adapters.store"`, and exits

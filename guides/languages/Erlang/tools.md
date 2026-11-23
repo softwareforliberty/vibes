@@ -290,6 +290,48 @@ rebar3 xref
 - The second lists the groups of modules that call each other, directly or
   through others, and must find none.
 
+Give each layer a front door too: name its entry-point modules, and let
+code outside the layer call only those. Add a query per layer to
+`xref_queries`. This one lists every call into a core module other than
+`myapp_core_greeting` from outside the core, and must find none:
+
+```erlang
+    %% Code outside the core calls only its entry points.
+    {"Core := \"myapp_core_.*\" : Mod,"
+     " (ME - (ME ||| Core)) || (Core - [myapp_core_greeting] : Mod)", []}
+```
+
+- List every entry point in the brackets. A misspelt name fails the run
+  with `unknown_constant`.
+- A breach prints the call, such as
+  `did not match [{myapp_adapters_console,myapp_core_format}]`.
+- To let one call through, subtract it at the end of the query, as in
+  `" - (myapp_adapters_console -> myapp_core_format)"`, with a comment
+  naming the breach.
+
+`rebar3 xref` reads only the modules in `src`, so it can't see the tests.
+Check them from an EUnit test that runs the same kind of query over the test
+modules, `test/myapp_arch_tests.erl`:
+
+```erlang
+-module(myapp_arch_tests).
+-include_lib("eunit/include/eunit.hrl").
+
+%% The tests call only the core's entry points.
+tests_call_only_entry_points_test() ->
+    {ok, X} = xref:start([{xref_mode, modules}]),
+    [{ok, _} = xref:add_directory(X, filename:dirname(code:which(M)))
+     || M <- [myapp_core_greeting, ?MODULE]],
+    {ok, Calls} = xref:q(X,
+        "(ME | \".*_tests\" : Mod)"
+        " || (\"myapp_core_.*\" : Mod - [myapp_core_greeting] : Mod)"),
+    xref:stop(X),
+    ?assertEqual([], Calls).
+```
+
+`rebar3 eunit` then fails on a test that calls past the entry point, with
+`got: [{myapp_core_greeting_tests,myapp_core_format}]`.
+
 ## Sources
 
 - [rebar3_mutate documentation](https://hexdocs.pm/rebar3_mutate/)

@@ -330,19 +330,33 @@ directories are examples: replace them with the layers in the project's
 deptrac:
   paths:
     - src
+    - tests
   layers:
     - name: Core
       collectors:
         - type: directory
-          value: src/Core/.*
+          value: src/Core/[^/]+$
+        - type: directory
+          value: src/Core/.+/
+          private: true
     - name: Adapters
       collectors:
         - type: directory
-          value: src/Adapters/.*
+          value: src/Adapters/[^/]+$
+        - type: directory
+          value: src/Adapters/.+/
+          private: true
     - name: Cli
       collectors:
         - type: directory
-          value: src/Cli/.*
+          value: src/Cli/[^/]+$
+        - type: directory
+          value: src/Cli/.+/
+          private: true
+    - name: Tests
+      collectors:
+        - type: directory
+          value: tests/.*
   ruleset:
     Core: ~
     Adapters:
@@ -350,13 +364,31 @@ deptrac:
     Cli:
       - Core
       - Adapters
+    Tests:
+      - Core
+      - Adapters
+      - Cli
 ```
 
 Each layer in `ruleset` lists the layers it may depend on, and `~` means
-none: the core depends on nothing, and the edges may depend on the core.
-Deptrac has no cycle check of its own, but a ruleset that only allows
-dependencies in one direction keeps the layers from forming a cycle. Cycles
-between classes in the same layer aren't checked.
+none: the core depends on nothing, the edges may depend on the core, and
+the tests may depend on every layer. Deptrac has no cycle check of its own,
+but a ruleset that only allows dependencies in one direction keeps the
+layers from forming a cycle. Cycles between classes in the same layer
+aren't checked.
+
+A layer's entry points are the classes directly in its directory, such as
+`src/Core/Checkout.php`; `[^/]+$` matches only those files. The second
+collector, marked `private: true`, adds the classes in its subdirectories,
+such as `src/Core/Internal/Total.php`, to the layer, but only the layer's
+own classes may use them. Give each component's layer the same pair. The
+`Tests` layer brings the tests in `tests/` into the check, so they too can
+use only the entry points. A class that uses another layer's private class
+breaks `DependsOnPrivateLayer`:
+
+```text
+DependsOnPrivateLayer   MyApp\Adapters\Store must not depend on MyApp\Core\Internal\Total
+```
 
 Deptrac caches its results in `.deptrac.cache`; add it to `.gitignore`.
 

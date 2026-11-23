@@ -274,6 +274,48 @@ cmake -S . -B build
 cmake --build build
 ```
 
+Each layer's entry points are the headers in its `include` directory. Keep its
+other headers under `src`, such as `src/internal/parse.h`, and add `src` as a
+`PRIVATE` include directory, so only the layer's own files find them. Build
+its tests as a separate target that links the layer, so they see only the
+entry points, as callers do. `core/CMakeLists.txt`:
+
+```cmake
+add_library(app_core STATIC src/core.c src/internal/parse.c)
+target_include_directories(
+    app_core
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+
+add_executable(app_core_tests tests/core_test.c)
+target_link_libraries(app_core_tests PRIVATE app_core)
+add_test(NAME app_core_tests COMMAND app_core_tests)
+```
+
+The core's own files `#include "internal/parse.h"`. An edge or a core test
+that does fails to compile, and the compiler names the header it can't find. A
+public header includes only public headers, or its callers fail the same way.
+
+The compiler looks for a quoted header in the including file's own folder
+first, so a test's `"../src/internal/parse.h"` gets around all of this. Fail
+`scripts/check` on any include path that climbs with `..`. A breach prints the
+file, the line and the include:
+
+```sh
+if grep -rnE '#[[:space:]]*include[[:space:]]*["<][^">]*\.\./' \
+    core adapters cli; then
+  echo 'include headers through a target, not a relative path' >&2
+  exit 1
+fi
+```
+
+The build hides headers, not symbols: a file that declares a private function
+itself still links, so review must catch that. When existing code needs a
+private header, give that one target the layer's `src` directory, with a
+comment naming the breach and how to fix it; the build can't exempt a single
+include.
+
 ## Sources
 
 - [Mull setup and configuration](https://mull-project.com/getting-started/setup/)

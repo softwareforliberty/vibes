@@ -144,8 +144,11 @@ The rule is decided by what a name refers to:
 
 - Name each test with a sentence describing the behaviour:
   `test "parseSize rejects an unknown suffix" { ... }`.
-- Put tests at the end of the file they test, so they can reach private
-  declarations.
+- Test a module through its root file's `pub` declarations, from a
+  separate test module, as the Architecture section of
+  [tools.md](tools.md#architecture) shows. Put a test at the end of the
+  file it tests only for a private declaration that's hard to reach
+  through them, with a comment saying why.
 
 ## Third-party code
 

@@ -150,10 +150,12 @@ guide.
 
 ## Testing
 
-- Put unit tests in a `#[cfg(test)] mod tests` block at the end of the
-  module, so they can test private items.
-- Put tests of the public API in the `tests/` directory. They compile as a
-  separate crate, so they see exactly what users see.
+- Test a crate through its public API, in the `tests/` directory. Those
+  tests compile as a separate crate, so they see exactly what callers see,
+  and the inside can change without breaking them.
+- Keep a `#[cfg(test)] mod tests` block only for a private item that's
+  hard to reach through the API, with a comment saying why. A private item
+  that needs many tests of its own is usually a module of its own.
 - Doc examples are tests too. Keep them short and correct.
 - Test error paths, not just success. Assert on the error variant with
   `matches!`.

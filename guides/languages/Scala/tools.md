@@ -306,9 +306,16 @@ libraryDependencies ++= Seq(
 
 Write the rules as a test. This one, in [MUnit](https://scalameta.org/munit/),
 stops the core depending on the edges, which may depend on the core, and
-forbids cycles between the top-level packages. Any test framework works: a
-broken rule throws an `AssertionError`. The package names are examples:
-replace them with the layers in the project's `design.md`.
+forbids cycles between the top-level packages. It also gives each component
+a front door. Each top-level package, such as `com.example.app.core`, is a
+component, and the classes directly in it are its entry points. Its
+subpackages, such as `core.pricing`, are private: the component's own
+classes may use them, and other components may not. The tests use only the
+entry points too, so the suite imports them separately. Keep each test in
+its component's top-level package, beside the entry points it tests. Any
+test framework works: a broken rule throws an `AssertionError`. The package
+names are examples: replace them with the layers in the project's
+`design.md`.
 
 ```scala
 package com.example.app
@@ -317,6 +324,7 @@ import com.tngtech.archunit.core.domain.JavaClasses
 import com.tngtech.archunit.core.importer.ClassFileImporter
 import com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
 import com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices
+import com.tngtech.archunit.library.modules.syntax.ModuleRuleDefinition.modules
 
 /** The dependency rules between the layers in design.md. */
 class ArchitectureSuite extends munit.FunSuite:
@@ -325,6 +333,9 @@ class ArchitectureSuite extends munit.FunSuite:
   private val testCode = getClass.getProtectionDomain.getCodeSource.getLocation.getPath
   private val classes: JavaClasses = ClassFileImporter()
     .withImportOption(location => !location.contains(testCode))
+    .importPackages("com.example.app")
+  private val tests: JavaClasses = ClassFileImporter()
+    .withImportOption(location => location.contains(testCode))
     .importPackages("com.example.app")
 
   test("the core depends on no edge") {
@@ -344,19 +355,56 @@ class ArchitectureSuite extends munit.FunSuite:
       .beFreeOfCycles()
       .check(classes)
   }
+
+  test("other components use only the classes in a component's top-level package") {
+    modules()
+      .definedByPackages("com.example.app.(*)..")
+      .should()
+      .onlyDependOnEachOtherThroughClassesThat()
+      .resideInAPackage("com.example.app.*")
+      .check(classes)
+  }
+
+  test("the tests use only the classes in a component's top-level package") {
+    noClasses()
+      .should()
+      .dependOnClassesThat()
+      .resideInAPackage("com.example.app.*.*..")
+      .check(tests)
+  }
 end ArchitectureSuite
 ```
+
+ArchUnit marks `modules()` as experimental, so its syntax may change in a
+later release.
 
 ArchUnit's own `DoNotIncludeTests` option finds test classes by the output
 paths of Maven, Gradle and IntelliJ IDEA. sbt uses different paths, and sbt 2
 loads classes from its cache, so the suite skips its own location instead.
 
+Scala's qualified access also keeps the private parts in: declare
+`private[core] object Discounts` in `core.pricing`, and the compiler rejects
+its use outside `core`, though with an unclear message: `Expected a term,
+but found a type: Discounts`. The core's own tests still see it, so keep
+the suite's rule for tests.
+
 `scripts/check` runs it with the other tests. A broken rule fails the build
-and lists each dependency that breaks it, with its file and line:
+and lists each dependency that breaks it, with its file and line. sbt 2's
+`test` reruns only the suites whose code, or code they call, has changed.
+This suite reads the main code without calling it, so `test` skips it
+after a change to the main code alone: run `testFull`. sbt 1 has no
+`testFull`, and its `test` runs every suite.
 
 ```sh
-sbt test
+sbt testFull
 ```
+
+An edge that uses `core.pricing` fails with a line such as `Method
+<com.example.app.adapters.OrderStore$.save(int)> calls method
+<com.example.app.core.pricing.Discounts$.discount(int)> in
+(OrderStore.scala:6)`. To allow one known breach, add a regular expression
+matching that line to `src/test/resources/archunit_ignore_patterns.txt`,
+under a `#` comment naming the violation and how to fix it.
 
 ## Sources
 

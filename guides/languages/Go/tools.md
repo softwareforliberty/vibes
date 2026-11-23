@@ -280,23 +280,75 @@ components:
   main:
     in: cmd/**
 deps:
+  core:
+    mayDependOn:
+      - core
   adapters:
     mayDependOn:
+      - adapters
       - core
   cli:
     mayDependOn:
+      - cli
       - core
   main:
     anyProjectDeps: true
 ```
 
-- `core` has no entry under `deps`, so it may import no other component. An
-  import of `internal/adapters` or `internal/cli` fails the check.
+- Each component lists itself, so its own packages and its `_test` package
+  may import each other. Without that, the check fails on them.
+- `core` lists no other component, so an import of `internal/adapters` or
+  `internal/cli` fails the check.
 - Each edge may import the core, and `main`, which builds and wires the
   parts, may import any of them.
 - An import of a third-party module fails too, until the module is listed
   under `vendors` and the components that need it name it in `canUse`. The
   standard library is always allowed.
+
+Each component's top package, such as `internal/core`, is its entry point.
+Keep the rest of the component under its own `internal/` directory, such as
+`internal/core/internal/store`. Go lets only code inside `internal/core`
+import that, so an edge that imports it fails `go build` with `use of
+internal package example.com/app/internal/core/internal/store not allowed`.
+
+Tests go through the entry point too. Write them in an external test
+package (`package core_test`), which sees only exported names, and add
+`testpackage` to the linters `.golangci.yml` enables. A test written in the
+package itself then fails with `package should be core_test instead of core`.
+To exempt one file, end its `package` line with
+`//nolint:testpackage // <why, and how to fix it>`.
+
+Go still lets a test in `internal/core` import `internal/core/internal/store`.
+A second file, `.go-arch-lint-tests.yml`, checks only the test files, and
+lets them import each component's entry package and nothing behind it:
+
+```yaml
+---
+version: 3
+allow:
+  depOnAnyVendor: true
+# Check only the test files.
+excludeFiles:
+  - "([^t]|[^s]t|[^e]st|[^t]est|[^_]test)\\.go$"
+components:
+  entry:
+    in:
+      - internal/*
+      - cmd/*
+deps:
+  entry:
+    mayDependOn:
+      - entry
+```
+
+```sh
+go-arch-lint check --arch-file .go-arch-lint-tests.yml
+```
+
+A breach prints `Component entry shouldn't depend on
+example.com/app/internal/core/internal/store` with the test's file and line,
+and a test file kept behind an entry point fails as `not attached to any
+component`. go-arch-lint has no comment to exempt one import.
 
 ## Sources
 

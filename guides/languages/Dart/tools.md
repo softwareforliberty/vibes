@@ -272,11 +272,22 @@ import_lint:
       target: package:my_app/src/core/**
       from: package:my_app/src/{adapters,cli}/**
       except: []
+    core_entry_points_only:
+      target: package:my_app/{*.dart,src/{adapters,cli}/**}
+      from: package:my_app/src/core/*/**
+      except: []
 ```
 
 - Each rule forbids files matching `target` from importing files matching
   `from`. Here the core may import no edge, and the edges may import the
   core.
+- A component's entry points are the files directly in its directory, such
+  as `lib/src/core/core.dart`, which can export what's kept in its
+  subdirectories, such as `lib/src/core/internal/`. `core_entry_points_only`
+  keeps those subdirectories from every file outside the core, while the
+  core's own files import each other freely. import_lint can't say "any
+  other component", so write a rule like it for each component, listing the
+  others in `target`.
 - `severity: error` makes the command exit 1 on a breach. It prints the file,
   line and rule of each forbidden import:
 
@@ -286,6 +297,19 @@ import_lint:
 
 - The `plugins` entry also runs the rules inside the analyzer, so
   `dart analyze --fatal-infos` and the IDE report the same breaches.
+
+import_lint checks only the `import` lines of files in `lib/`. It skips the
+tests in `test/` and every `export` line, so a test or a top-level `lib/`
+file could reach past an entry point unseen. Add this check to
+`scripts/check` to hold them to the entry points too. It prints each
+offending line and fails:
+
+```sh
+if grep -rnE "^(import|export) .*src/[^/']+/[^/']+/" test lib/*.dart; then
+  echo 'Only entry points may be imported here.' >&2
+  exit 1
+fi
+```
 
 ## Sources
 

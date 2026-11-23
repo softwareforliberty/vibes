@@ -398,6 +398,23 @@ export default {
       to: { path: '^src/(adapters|cli)/' },
     },
     {
+      name: 'entry-points-only',
+      comment: 'Outside a component, import only its index.ts.',
+      severity: 'error',
+      from: { path: '^src/([^/]+)', pathNot: '\\.test\\.ts$' },
+      to: {
+        path: '^src/[^/]+/',
+        pathNot: ['^src/$1/', '^src/[^/]+/index\\.ts$'],
+      },
+    },
+    {
+      name: 'tests-use-entry-points',
+      comment: 'Tests import only index.ts files, as callers do.',
+      severity: 'error',
+      from: { path: '\\.test\\.ts$' },
+      to: { path: '^src/[^/]+/', pathNot: '^src/[^/]+/index\\.ts$' },
+    },
+    {
       name: 'no-circular',
       comment: 'Modules form no import cycles.',
       severity: 'error',
@@ -418,6 +435,21 @@ the import that breaks it.
 
 `tsPreCompilationDeps` keeps `import type` lines, which the compiler
 removes, in the graph. `tsConfig` lets it resolve any `paths` aliases.
+
+Each component's entry point is the `index.ts` in its directory, such as
+`src/core/index.ts`. It can re-export what's kept in the folders behind it,
+such as `src/core/internal/`. `entry-points-only` lets code outside a
+component import only its `index.ts`, and lets the component's own files
+import each other: `$1` stands for the component the importing file is in,
+the directory that `from.path` captures. `tests-use-entry-points` holds the
+tests to the `index.ts` files too, even in their own component. Name them
+`*.test.ts` and keep them in `src/`, so the check finds them. To give a
+component more entry points, add their paths to both `pathNot` lists. An
+import past the entry point prints:
+
+```text
+error entry-points-only: src/adapters/store.ts → src/core/internal/line.ts
+```
 
 ## Sources
 

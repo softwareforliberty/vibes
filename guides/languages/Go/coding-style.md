@@ -42,7 +42,9 @@ which this guide relies on. Set it with the `go` directive in `go.mod`.
 - Use UTF-8, LF line endings, and end every file with a newline. `gofmt`
   removes trailing whitespace.
 - File names are lowercase, with underscores between words:
-  `http_server.go`. Tests live beside the code in `_test.go` files.
+  `http_server.go`. Tests live beside the code in `_test.go` files, in
+  the external test package, such as `package core_test`, so they test
+  what callers see.
 - Order a file's contents: package comment, `package` clause, imports, then
   constants, variables, types and functions. Keep a type's methods together,
   right after the type.

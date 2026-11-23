@@ -373,6 +373,55 @@ let ``namespaces have no cycles`` () =
   xUnit v3 4.x, reference `xunit.v3.mtp-off` instead of `xunit.v3`, or the
   .NET 10 SDK refuses to run the tests that way.
 
+Give each layer a front door, as the
+[architecture guide](../../../architecture/README.md#enforce-it) asks. Its
+public modules and types are its entry points; make the rest `internal`,
+such as `module internal Example.Core.Internal.Pricing` in
+`Core/Internal/`. The core's own files can still use them.
+
+- Where a layer is its own project, the compiler stops other projects
+  using its internal modules and types: `error FS0039: The value,
+  namespace, type or module 'Pricing' is not defined.`
+- Where layers share a project, `internal` can't keep them apart, so the
+  first test below does, with one `InlineData` line for each layer.
+- Keep the tests in their own test projects, and never give one
+  `InternalsVisibleTo`: it would let the tests use the private parts. A
+  core test that uses `Pricing` then fails to build with the same FS0039.
+  The second test fails if any assembly grants `InternalsVisibleTo`.
+
+Add these tests to the module above, with
+`open System.Runtime.CompilerServices`. Load each layer's assembly into
+`architecture`, so the tests check them all.
+
+```fsharp
+/// Other layers use only a layer's public types.
+[<Theory>]
+[<InlineData("Example.Core")>]
+[<InlineData("Example.Adapters")>]
+[<InlineData("Example.Cli")>]
+let ``layers use only each other's entry points`` (layer: string) =
+    let privateParts =
+        Types().That().ResideInNamespaceOrBelow(layer).And().AreNotPublic().As($"non-public types in {layer}")
+
+    Types().That().DoNotResideInNamespaceOrBelow(layer).Should().NotDependOnAny(privateParts).Check(architecture)
+
+/// No assembly shows its internal types to another.
+[<Fact>]
+let ``assemblies share no internals`` () =
+    let grantsAccess (assembly: Assembly) =
+        assembly.AttributeInstances
+        |> Seq.exists (fun attribute -> attribute.Type.FullName = typeof<InternalsVisibleToAttribute>.FullName)
+
+    Assert.Empty(architecture.Assemblies |> Seq.filter grantsAccess |> Seq.map _.Name)
+```
+
+A breach names both types, such as `Example.Adapters.OrderStore does
+depend on "Example.Core.Internal.Pricing"`, or the assembly that grants
+`InternalsVisibleTo`. To let one type through while it's fixed, add
+`.And().DoNotHaveFullName("Example.Adapters.OrderStore")` after
+`DoNotResideInNamespaceOrBelow(layer)`, with a comment naming the breach
+and the fix.
+
 ## Sources
 
 - [Stryker.NET](https://stryker-mutator.io/docs/stryker-net/introduction/)

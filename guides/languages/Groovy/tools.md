@@ -266,14 +266,21 @@ tasks.test {
 
 Write the rules as a specification. This one stops the core depending on the
 edges, which may depend on the core, and forbids cycles between the
-top-level packages. The package names are examples: replace them with the
-layers in the project's `design.md`.
+top-level packages. It also gives each component a front door. Each
+top-level package, such as `com.example.app.core`, is a component, and the
+classes directly in it are its entry points. Its subpackages, such as
+`core.pricing`, are private: the component's own classes may use them, and
+other components may not. The tests use only the entry points too, so the
+specification imports them separately. Keep each test in its component's
+top-level package, beside the entry points it tests. The package names are
+examples: replace them with the layers in the project's `design.md`.
 
 ```groovy
 package com.example.app
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices
+import static com.tngtech.archunit.library.modules.syntax.ModuleRuleDefinition.modules
 
 import com.tngtech.archunit.core.domain.JavaClasses
 import com.tngtech.archunit.core.importer.ClassFileImporter
@@ -287,6 +294,11 @@ class ArchitectureSpec extends Specification {
     @Shared
     JavaClasses classes = new ClassFileImporter()
         .withImportOption(ImportOption.Predefined.DO_NOT_INCLUDE_TESTS)
+        .importPackages('com.example.app')
+
+    @Shared
+    JavaClasses tests = new ClassFileImporter()
+        .withImportOption(ImportOption.Predefined.ONLY_INCLUDE_TESTS)
         .importPackages('com.example.app')
 
     def 'the core depends on no edge'() {
@@ -309,8 +321,32 @@ class ArchitectureSpec extends Specification {
         noExceptionThrown()
     }
 
+    def 'other components use only the classes in a component\'s top-level package'() {
+        when:
+        modules().definedByPackages('com.example.app.(*)..')
+            .should().onlyDependOnEachOtherThroughClassesThat()
+            .resideInAPackage('com.example.app.*')
+            .check(classes)
+
+        then:
+        noExceptionThrown()
+    }
+
+    def 'the tests use only the classes in a component\'s top-level package'() {
+        when:
+        noClasses().should().dependOnClassesThat()
+            .resideInAPackage('com.example.app.*.*..')
+            .check(tests)
+
+        then:
+        noExceptionThrown()
+    }
+
 }
 ```
+
+ArchUnit marks `modules()` as experimental, so its syntax may change in a
+later release.
 
 `scripts/check` runs it with the other tests. A broken rule fails the build
 and lists each dependency that breaks it, with its file and line:
@@ -318,6 +354,13 @@ and lists each dependency that breaks it, with its file and line:
 ```sh
 ./gradlew test
 ```
+
+An edge that uses `core.pricing` fails the third feature with a line such as
+`Method <com.example.app.adapters.OrderStore.save(int)> references class
+object <com.example.app.core.pricing.Discounts> in (OrderStore.groovy:7)`.
+To allow one known breach, add a regular expression matching that line to
+`src/test/resources/archunit_ignore_patterns.txt`, under a `#` comment
+naming the violation and how to fix it.
 
 ## Sources
 

@@ -235,14 +235,19 @@ tasks.test {
 
 Write the rules as a test. This one stops the core depending on the edges,
 which may depend on the core, and forbids cycles between the top-level
-packages. The package names are examples: replace them with the layers in
-the project's `design.md`.
+packages. It also gives each component a front door. Each top-level
+package, such as `com.example.app.core`, is a component, and the classes
+directly in it are its entry points. Its subpackages, such as
+`core.pricing`, are private: the component's own classes may use them, and
+other components may not. The package names are examples: replace them with
+the layers in the project's `design.md`.
 
 ```java
 package com.example.app;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
+import static com.tngtech.archunit.library.modules.syntax.ModuleRuleDefinition.modules;
 
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.junit.AnalyzeClasses;
@@ -266,15 +271,65 @@ class ArchitectureTest {
   @ArchTest
   static final ArchRule NO_CYCLES =
       slices().matching("com.example.app.(*)..").should().beFreeOfCycles();
+
+  /** Other components use only the classes in a component's top-level package. */
+  @ArchTest
+  static final ArchRule ONLY_ENTRY_POINTS =
+      modules()
+          .definedByPackages("com.example.app.(*)..")
+          .should()
+          .onlyDependOnEachOtherThroughClassesThat()
+          .resideInAPackage("com.example.app.*");
 }
 ```
 
-`scripts/check` runs it with the other tests. A broken rule fails the build
-and lists each dependency that breaks it, with its file and line:
+ArchUnit marks `modules()` as experimental, so its syntax may change in a
+later release.
+
+That test skips the test classes, so a core test could still use
+`core.pricing`. Check the tests in a second class that imports only them.
+Keep each test in its component's top-level package, beside the entry
+points it tests.
+
+```java
+package com.example.app;
+
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+
+import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.junit.AnalyzeClasses;
+import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.lang.ArchRule;
+
+/** The tests use each component only through its entry points. */
+@AnalyzeClasses(packages = "com.example.app", importOptions = ImportOption.OnlyIncludeTests.class)
+class TestsUseEntryPointsTest {
+  /** No test uses a class in a component's subpackage. */
+  @ArchTest
+  static final ArchRule TESTS_USE_ONLY_ENTRY_POINTS =
+      noClasses().should().dependOnClassesThat().resideInAPackage("com.example.app.*.*..");
+}
+```
+
+Where each component is its own subproject with a `module-info.java`,
+exporting only the entry package (`exports com.example.app.core;`) makes
+the compiler reject the rest too: `package com.example.app.core.pricing is
+not visible`. The component's own tests still see every package, so keep
+the test rule.
+
+`scripts/check` runs them with the other tests. A broken rule fails the
+build and lists each dependency that breaks it, with its file and line:
 
 ```sh
 ./gradlew test
 ```
+
+An edge that uses `core.pricing` fails `ONLY_ENTRY_POINTS` with a line such
+as `Method <com.example.app.adapters.OrderStore.save(int)> calls method
+<com.example.app.core.pricing.Discounts.discount(int)> in
+(OrderStore.java:7)`. To allow one known breach, add a regular expression
+matching that line to `src/test/resources/archunit_ignore_patterns.txt`,
+under a `#` comment naming the violation and how to fix it.
 
 ## Sources
 

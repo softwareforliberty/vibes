@@ -256,6 +256,50 @@ Pkg only warns about a cycle in the declared dependencies, with
 pointing towards the core, and review a change to a layer's `[deps]` as a
 change to the architecture.
 
+A layer's front door is the names its package exports, or from Julia 1.11
+declares `public`. Julia doesn't stop code reaching past them, as in
+`AppCore.Format.title`, but
+[ExplicitImports.jl](https://github.com/JuliaTesting/ExplicitImports.jl)
+reports any import of, or qualified access to, a name that its module
+doesn't make public. Keep the rest of a layer in unexported names and
+submodules, such as `AppCore.Format`. Don't `export` from such a submodule:
+`using AppCore.Format` would then bring its names in unchecked.
+
+Run the checks in each layer's tests, over the package and over the test
+files, so the tests use only the entry points too. In
+`lib/AppAdapters/test/runtests.jl`:
+
+```julia
+using AppAdapters: AppAdapters
+using ExplicitImports: check_all_explicit_imports_are_public,
+    check_all_qualified_accesses_are_public
+using Test
+
+@testset "only entry points from outside" begin
+    for (mod, file) in ((AppAdapters, pathof(AppAdapters)), (@__MODULE__, @__FILE__))
+        @test check_all_explicit_imports_are_public(mod, file) === nothing
+        @test check_all_qualified_accesses_are_public(mod, file) === nothing
+    end
+end
+```
+
+List ExplicitImports and Test under the layer's `[extras]` and `[targets]`,
+with `[compat]` entries, and have `scripts/check` run every layer's tests:
+
+```sh
+julia --project -e 'using Pkg; Pkg.test(["AppCore", "AppAdapters"])'
+```
+
+A layer's own code may use its private names, and the checks follow the
+files the tests `include`. A breach names the access and where it is:
+
+```text
+- `Format` is not public in `AppCore` but it was imported from `AppCore` at `/app/lib/AppAdapters/src/AppAdapters.jl:5:33`
+```
+
+To let one access through, pass its names to the check, as in
+`ignore=(:Format, :title)`, with a comment naming the breach.
+
 ## Sources
 
 - [Gremlins.jl documentation](https://github.com/SuperSeriousLab/Gremlins.jl#readme)

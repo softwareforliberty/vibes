@@ -289,6 +289,24 @@ swift package clean
 swift build
 ```
 
+A target's entry points are its `public` declarations. Leave everything
+else `internal`, the default, wherever it lives: `Sources/Core/Store/` is
+as private as `Sources/Core/`. The target's own files see each other, but an
+edge that uses an internal type fails with `cannot find 'Names' in scope`.
+Don't use `package` access for a layer's inside: every target in the package
+can see it, so it breaks no build.
+
+The target's tests use the entry points too. Give each layer a test target
+that depends on it, such as
+`.testTarget(name: "CoreTests", dependencies: ["Core"])`, and use a plain
+`import Core`. `@testable import` opens the internal declarations to the
+tests, so turn it off when the tests run. A test that uses it then fails
+with `module 'Core' was not compiled for testing`:
+
+```sh
+swift test --disable-testable-imports
+```
+
 ## Sources
 
 - [swift-mutation-testing: usage and configuration](https://github.com/ericodx/swift-mutation-testing/blob/v1.7.1/Docs/USAGE.MD)

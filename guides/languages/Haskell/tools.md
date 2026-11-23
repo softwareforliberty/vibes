@@ -356,6 +356,39 @@ its `build-depends`:
 cabal build all --ghc-options=-Werror
 ```
 
+A library's `exposed-modules` are its entry points. List its other modules,
+wherever they live, under `other-modules`. The library's own modules can
+import them, but an edge that does fails with `it is a hidden module in the
+package`:
+
+```cabal
+library core
+    import:          shared
+    hs-source-dirs:  core
+    exposed-modules: App.Core.Greeting
+    other-modules:   App.Core.Store.Names
+```
+
+The library's tests use the entry points too. Give each layer a test suite
+that lists the library in `build-depends`, so a test that imports a hidden
+module fails the same way. Never add the library's source directory to the
+suite's `hs-source-dirs` and its modules to the suite's `other-modules`:
+the suite then compiles them as its own, and the build can't stop it. Build
+the tests with the rest:
+
+```cabal
+test-suite core-test
+    import:         shared
+    type:           exitcode-stdio-1.0
+    hs-source-dirs: test/core
+    main-is:        Main.hs
+    build-depends:  app:core
+```
+
+```sh
+cabal build all --enable-tests --ghc-options=-Werror
+```
+
 ## Sources
 
 - [universalmutator](https://github.com/agroce/universalmutator)

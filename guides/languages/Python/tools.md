@@ -294,7 +294,7 @@ project's `design.md`.
 
 ```toml
 [tool.importlinter]
-root_package = "app"
+root_packages = ["app", "tests"]
 
 [[tool.importlinter.contracts]]
 name = "The core doesn't depend on the edges"
@@ -306,12 +306,38 @@ forbidden_modules = ["app.adapters", "app.cli"]
 name = "No import cycles between packages"
 type = "acyclic_siblings"
 ancestors = ["app"]
+
+[[tool.importlinter.contracts]]
+name = "Only a package's own modules import its private modules"
+type = "private_modules"
 ```
 
 The `forbidden` contract also catches indirect imports, such as `app.core`
 importing a module that imports `app.adapters`. The edges may import the
 core. The `acyclic_siblings` contract fails when the packages under `app`
 import each other in a cycle.
+
+The `private_modules` contract gives each package a front door. It needs
+import-linter 2.17 or later. It follows Python's own convention: a module
+whose name starts with `_` is private to the package that holds it. Name the
+entry points plainly, such as `app/core/__init__.py` or
+`app/core/greeting.py`, and keep the rest behind an underscore, such as
+`app/core/_pricing.py` or a `_internal/` folder. The core's own modules may
+import them. The edges and the tests may not, and a breach prints the import
+and its line:
+
+```text
+- app.adapters.console -> app.core._pricing (l.1)
+```
+
+- One contract covers every package, so a new package needs no new rule.
+- It checks only the packages in `root_packages`, so `tests` is listed
+  there. Make it a package, with an `__init__.py` in `tests` and in each
+  folder under it, and run `lint-imports` from the repository root, where
+  it can import `tests`.
+- To let one import through, list it in the contract's `ignore_imports`,
+  such as `ignore_imports = ["app.adapters.console -> app.core._pricing"]`,
+  with a comment naming the breach.
 
 ## Sources
 

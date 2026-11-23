@@ -260,6 +260,16 @@ pub fn build(b: *std.Build) void {
         const tests = b.addTest(.{ .root_module = module });
         test_step.dependOn(&b.addRunArtifact(tests).step);
     }
+
+    // The core's tests are a module of their own, which sees only the
+    // core's root file.
+    const core_tests = b.addTest(.{ .root_module = b.createModule(.{
+        .root_source_file = b.path("tests/core.zig"),
+        .target = target,
+        .optimize = optimize,
+        .imports = &.{.{ .name = "core", .module = core }},
+    }) });
+    test_step.dependOn(&b.addRunArtifact(core_tests).step);
 }
 ```
 
@@ -268,6 +278,21 @@ A breach fails the tests with `no module named 'adapters' available`:
 ```sh
 zig build test
 ```
+
+A module's root file is its entry point: other modules see only its `pub`
+declarations. Keep the rest of the layer in files beside or below it, such
+as `src/core/store/names.zig`, imported with a non-`pub` `const`. The core's
+own files can import each other, but an edge fails with `import of file
+outside module path` if it imports one of them, and with `'names' is not
+marked 'pub'` if it reaches one through the root.
+
+The core's tests use the root file too. Put them in `tests/core.zig`, which
+imports the core as `@import("core")`, and build it as its own test module,
+as above. Its imports then fail the same way an edge's do. A `test` block
+inside the core's own files can reach its private declarations, and the
+compiler can't stop it, so keep only the `refAllDecls` test there, and a
+test of a private declaration that's hard to reach through the root, with
+a comment saying why.
 
 ## Sources
 

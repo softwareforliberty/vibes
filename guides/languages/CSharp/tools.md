@@ -575,6 +575,64 @@ public sealed class ArchitectureTests
   tests run no product code. `TngTech.ArchUnitNET.xUnitV3` depends only on
   xUnit's assertions, so it works under MTP.
 
+Give each layer a front door, as the
+[architecture guide](../../../architecture/README.md#enforce-it) asks. Its
+`public` types are its entry points; make the rest `internal`, such as the
+types in `Core/Internal/`. The core's own files can still use them.
+
+- Where a layer is its own project, the compiler stops other projects
+  using its internal types: `error CS0122: 'Pricing' is inaccessible due
+  to its protection level`.
+- Where layers share a project, `internal` can't keep them apart, so the
+  first test below does, with one `InlineData` line for each layer.
+- Keep the tests in their own test projects, and never give one
+  `InternalsVisibleTo`: it would let the tests use the private parts. A
+  core test that uses `Pricing` then fails to build with the same CS0122.
+  The second test fails if any assembly grants `InternalsVisibleTo`.
+
+Add these tests to the class above, with `using System.Linq;` and
+`using System.Runtime.CompilerServices;`. Load each layer's assembly into
+`s_architecture`, so the tests check them all.
+
+```csharp
+/// <summary>Other layers use only a layer's public types.</summary>
+/// <param name="layer">The layer's namespace.</param>
+[Theory]
+[InlineData("Example.Core")]
+[InlineData("Example.Adapters")]
+[InlineData("Example.Cli")]
+public void Layers_UseOnlyEachOthersEntryPoints(string layer) =>
+    Types()
+        .That()
+        .DoNotResideInNamespaceOrBelow(layer)
+        .Should()
+        .NotDependOnAny(
+            Types()
+                .That()
+                .ResideInNamespaceOrBelow(layer)
+                .And()
+                .AreNotPublic()
+                .As($"non-public types in {layer}"))
+        .Check(s_architecture);
+
+/// <summary>No assembly shows its internal types to another.</summary>
+[Fact]
+public void Assemblies_ShareNoInternals() =>
+    Assert.Empty(
+        s_architecture
+            .Assemblies.Where(assembly =>
+                assembly.AttributeInstances.Any(attribute =>
+                    attribute.Type.FullName == typeof(InternalsVisibleToAttribute).FullName))
+            .Select(assembly => assembly.Name));
+```
+
+A breach names both types, such as `Example.Adapters.OrderStore does
+depend on "Example.Core.Internal.Pricing"`, or the assembly that grants
+`InternalsVisibleTo`. To let one type through while it's fixed, add
+`.And().AreNot(typeof(OrderStore))` after
+`DoNotResideInNamespaceOrBelow(layer)`, with a comment naming the breach
+and the fix.
+
 ## Sources
 
 - [Stryker.NET getting started](https://stryker-mutator.io/docs/stryker-net/getting-started/)
