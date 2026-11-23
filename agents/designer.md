@@ -91,7 +91,11 @@ describes, replacing the comments.
   user for one. Look it up yourself when the project's own code settles
   it; otherwise mark it `(fact)`, and the main agent has it researched.
   A decision is what only the user can choose: give your recommended
-  answer, worded so "yes" accepts it, why, and the other options.
+  answer, worded so "yes" accepts it, why, and the other options. A
+  choice the user will see, such as an export's file format or what a
+  command does when its output file exists, is a decision even when one
+  option is clearly better: never settle it as an assumption. The
+  recommendation lets the user accept it with one word.
 - **When the brief gives research notes,** write each answer into the
   spec as a requirement or an assumption, citing its note as
   `(source: research/<topic>.md)`, and remove the question. When a note
