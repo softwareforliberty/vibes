@@ -159,8 +159,9 @@ def _reasons(calls: List[Call], status: str, title: str) -> List[str]:
 
 def _repeats(session: Session) -> List[str]:
     """Identical calls by one agent, and the ones retried unchanged after
-    failing. A repeated read says whether a Write or Edit changed the file
-    between the first read and the last: a shell command might have too."""
+    failing, with no Write or Edit in between. A repeated read says whether
+    a Write or Edit changed the file between the first read and the last: a
+    shell command might have too."""
     groups: Dict[str, List[Call]] = defaultdict(list)
     for call in session.calls:
         groups[call.key].append(call)
@@ -171,7 +172,9 @@ def _repeats(session: Session) -> List[str]:
         if len(group) < 2:
             continue
         for before, after in zip(group, group[1:]):
-            if before.failed:
+            changed = any(before.timestamp <= when <= after.timestamp
+                          for when, _ in writes)
+            if before.failed and not changed:
                 retried.append(f"- {after.tool} {after.summary} — "
                                f"{before.ref} {before.status}, retried "
                                f"unchanged as {after.ref}: {after.status}")

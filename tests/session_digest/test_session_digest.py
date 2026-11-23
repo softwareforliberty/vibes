@@ -170,6 +170,17 @@ class SessionDigestTest(unittest.TestCase):
         self.assertIn("- 2× Read /work/shop/app.py (no Write or Edit in "
                       "between) — m1, m3", text)
 
+    def test_a_retry_after_an_edit_is_not_unchanged(self) -> None:
+        write_lines(self.path, [
+            call("msg_1", "t1", "Bash", {"command": "make"}, 1),
+            result("t1", "Exit code 2", 2, error=True),
+            call("msg_2", "t2", "Edit", {"file_path": "/work/shop/a.c"}, 3),
+            result("t2", "Updated.", 4),
+            call("msg_3", "t3", "Bash", {"command": "make"}, 5),
+            result("t3", "Exit code 2", 6, error=True),
+        ])
+        self.assertNotIn("## Retried unchanged", self.digest())
+
     def test_lists_only_what_the_user_typed(self) -> None:
         text = self.digest()
         self.assertIn("- u1 11-23 10:00:00 Add a CSV export.\n"
