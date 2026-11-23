@@ -27,31 +27,37 @@ while holding it to the standards of careful, experienced developers.
 - **`bin/repro`:** runs a bug's reproduction several times and says
   whether it fails reliably and fast. It's in `lib/repro/`, and its tests
   in `tests/repro/`.
+- **`bin/hotspots`:** ranks the files and directories recent commits
+  changed most, for the architecture survey.
+- **`bin/report-page`:** turns a Markdown report with Mermaid diagrams
+  into one page to open in a browser. It's in `lib/report_page/`.
 - **`bin/session-digest`:** prints a compact digest of a Claude Code
   session's transcript, for a retrospective. It's in
   `lib/session_digest/`, and its tests in `tests/session_digest/`.
 - **`skills/`:** agent skills for the workflow, optimising performance,
-  debugging, reviewing your own branch or an outside pull request, looking
-  back on a session, test-driven development, atomic commits and setting up the
+  debugging, surveying the architecture, reviewing your own branch or an
+  outside pull request, looking back on a session, test-driven development, atomic commits and setting up the
   commit gate.
 - **`principles.md`:** the programming principles every change is held
   to, such as SOLID, DRY and KISS.
 - **`architecture/`:** how to structure software: rules for every kind,
-  and a guide each for web, desktop and mobile applications, command-line
-  tools, libraries, OS components and embedded systems.
+  a guide each for web, desktop and mobile applications, command-line
+  tools, libraries, OS components and embedded systems, and how to judge
+  whether a module is deep enough to pay for itself.
 - **`security/`:** how malicious changes hide, for the supply-chain
   reviewer.
 - **`performance/`:** how to measure and profile a program, and the
   profilers and benchmark tools for each guide, for the profiler and the
   optimiser.
 - **`agents/`:** the designer, the spike agent, the builder, twelve
-  reviewer agents, the profiler and optimiser, the diagnoser, the commit
-  message suggester and the retrospective.
+  reviewer agents, the profiler and optimiser, the diagnoser, the surveyor
+  and interface designer, the commit message suggester and the
+  retrospective.
 - **`hooks/`:** the commit gate, for Claude Code and for git; a guide
   check that makes the agent read the guide for each kind of file before
   writing it; and a guard that keeps the reviewers, the commit message
-  suggester and the retrospective from changing anything but the
-  reviewers' own findings files and the retrospective's report, and the
+  suggester, the retrospective and the survey's agents from changing
+  anything but their own findings files and reports, and the
   profiler from changing the code. The commit gate also refuses a subject
   longer than 50 characters, and asks you before a commit that loosens
   the gate itself.
@@ -61,8 +67,9 @@ while holding it to the standards of careful, experienced developers.
   changes, that the profiler and optimiser find and measure the hot spot,
   that the project docs reviewer finds a contradiction and skips documents
   that don't apply, that suggested commit subjects fit in 50 characters,
-  and that a retrospective suggests a check without loosening one, run
-  with `claude plugin eval`.
+  that a retrospective suggests a check without loosening one, and that
+  the survey finds the shallow module and designs it three different
+  ways, run with `claude plugin eval`.
 
 ## The workflow
 
@@ -302,6 +309,40 @@ happens, the report says so, as a finding about the code's structure.
 `/vibes:debug unattended: <symptom>` runs without stopping to ask, and
 stops and reports when it needs something only you can give.
 
+## Survey the architecture
+
+`/vibes:survey` looks across the existing codebase, not one change, for
+shallow modules worth deepening: places where an interface is nearly as
+complex as the code behind it, so callers repeat work, call things in the
+right order, or can't test the real behaviour. Name a focus, such as
+`/vibes:survey the order pipeline`, or let the history decide:
+`bin/hotspots` ranks the files recent commits changed most, since a better
+structure pays off where change keeps landing. It judges by
+[deep modules](architecture/deep-modules.md): depth, seams, locality, and
+whether deleting a module would concentrate its complexity or only move
+it.
+
+1. **The survey.** The surveyor writes ranked candidates, each with the
+   code that shows the friction, the deletion test, what would change, its
+   cost, and before and after diagrams, rated strong, worth exploring or
+   speculative, with a top recommendation and the areas it left alone.
+   `bin/report-page` shows it as a page. It respects the project's
+   decision records, raising one only when the friction is worth
+   reopening it.
+2. **Design it twice.** For the candidate you pick, three interface
+   designers each design it under a different constraint, the smallest
+   interface, the most flexible and a different seam, without seeing each
+   other's. The surveyor checks they really differ, having one redesigned
+   if two came out the same, then compares them and recommends one, or a
+   combination, and what it gives up.
+3. **Build it,** if you choose, with `/vibes:vibe`, from the chosen
+   design: a spec, a test-first rebuild through the gate, and every
+   review.
+
+The survey changes nothing: its agents may write only their own reports.
+When you turn a candidate down for a lasting reason, it offers to record a
+decision record so later surveys don't suggest it again.
+
 ## Look back on a session
 
 `/vibes:retro` looks back on a session, this one unless you name another by
@@ -354,16 +395,19 @@ If you run sessions in git worktrees, install it at user scope, the
 default for `claude plugin install vibes@vibes` in a shell, or enable it in
 each worktree. A plugin enabled only for the main checkout can load its
 skills in a worktree session but not its agents. `/vibes:vibe`,
-`/vibes:optimise`, `/vibes:debug`, `/vibes:review`, `/vibes:review-pr` and
-`/vibes:retro` then stop and say so, rather than run without them.
+`/vibes:optimise`, `/vibes:debug`, `/vibes:survey`, `/vibes:review`,
+`/vibes:review-pr` and `/vibes:retro` then stop and say so, rather than run
+without them.
 
 The plugin provides:
 
 - **Skills:** `/vibes:vibe`, `/vibes:optimise`, `/vibes:debug`,
-  `/vibes:review`, `/vibes:review-pr` and `/vibes:retro`, plus `vibes:test-driven-development`, `vibes:atomic-commits` and
+  `/vibes:survey`, `/vibes:review`, `/vibes:review-pr` and `/vibes:retro`,
+  plus `vibes:test-driven-development`, `vibes:atomic-commits` and
   `vibes:commit-gate`, which agents use on their own when they apply.
 - **Agents:** `vibes:designer`, `vibes:spiker`, `vibes:builder`,
-  `vibes:profiler`, `vibes:optimiser`, `vibes:diagnoser`, `vibes:commit-message-suggester`,
+  `vibes:profiler`, `vibes:optimiser`, `vibes:diagnoser`, `vibes:surveyor`,
+  `vibes:interface-designer`, `vibes:commit-message-suggester`,
   `vibes:retrospective` and the reviewers, such as `vibes:security-reviewer` and
   `vibes:project-docs-reviewer`.
 - **The commit gate hook,** which runs before every `git commit` the agent

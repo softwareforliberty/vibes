@@ -25,6 +25,16 @@ guides behave, and says so under **Changed**.
     breaking a record as a BLOCKER and using a word the glossary says to
     avoid as MAJOR.
   - **The final report** lists the terms and records the task added.
+- **`/vibes:survey` looks across the codebase for modules worth
+  deepening.** The new surveyor starts where `bin/hotspots` shows recent
+  commits keep landing, and writes ranked candidates, each with the code
+  that shows the friction, the deletion test and before and after
+  diagrams, which `bin/report-page` shows as a page. For the candidate
+  you pick, three new interface designers each design it under a
+  different constraint, and the surveyor compares them and recommends
+  one, as a task for `/vibes:vibe`. It changes nothing.
+- **`architecture/deep-modules.md`:** depth, seams, leverage and locality,
+  the deletion test, and designing it twice.
 - **`/vibes:retro` looks back on a session** and suggests changes to the
   project that would make the next one go better, such as a check, a
   coding standard or a pointer to a file, each citing the calls behind
