@@ -11,8 +11,8 @@
 # never the project's code, so this blocks its other writes and edits. The
 # retrospective may write only its report, and may run commands that read
 # but none that change files or git. The surveyor may likewise write only
-# its survey and comparison, and the interface designer only its design.
-# It
+# its survey and comparison, the interface designer only its design, and
+# the researcher only its note. It
 # guards against mistakes, not a determined attacker: a program an agent runs
 # can still write files.
 
@@ -33,9 +33,11 @@ readonly PROFILERS=" profiler "
 readonly RETROSPECTIVES=" retrospective "
 # Agents that may write only their own files in a survey's directory.
 readonly SURVEYORS=" interface-designer surveyor "
+# Agents that may write only a note in a run's research directory.
+readonly RESEARCHERS=" researcher "
 # Agents whose Bash commands may not change files or git state.
 READ_ONLY_SHELL=" commit-message-suggester retrospective spec-reviewer"
-READ_ONLY_SHELL+=" surveyor "
+READ_ONLY_SHELL+=" researcher surveyor "
 readonly READ_ONLY_SHELL
 # git subcommands that only read.
 GIT_READERS=" blame cat-file describe diff grep log ls-files ls-tree"
@@ -94,11 +96,23 @@ is_survey_file() {
   esac
 }
 
+# Succeeds when the path is a research note, .vibes/<run>/research/<topic>.md.
+is_research_file() {
+  local path="$1" rest
+  [[ "${path}" == /* && "${path}" != *"/../"* \
+    && "${path}" == */.vibes/*/research/*.md ]] || return 1
+  rest="${path#*/.vibes/}"
+  [[ "${rest}" == */research/*.md && "${rest}" != */*/*/* ]]
+}
+
 # Succeeds when the path is the one file a read-only agent may write: a
-# reviewer's findings file, the retrospective's report, or a survey's.
+# reviewer's findings file, the retrospective's report, a survey's, or a
+# research note.
 is_own_file() {
   local path="$1" agent="$2"
-  if [[ "${RETROSPECTIVES}" == *" ${agent} "* ]]; then
+  if [[ "${RESEARCHERS}" == *" ${agent} "* ]]; then
+    is_research_file "${path}"
+  elif [[ "${RETROSPECTIVES}" == *" ${agent} "* ]]; then
     is_retro_file "${path}"
   elif [[ "${SURVEYORS}" == *" ${agent} "* ]]; then
     is_survey_file "${path}" "${agent}"
@@ -239,6 +253,13 @@ main() {
     if ! is_findings_file "${path}" "${agent}"; then
       printf 'vibes: %s is read-only. It may write only ' "${agent}" >&2
       printf '%s.md in the review directory.\n' "${agent}" >&2
+      exit 2
+    fi
+  elif [[ "${RESEARCHERS}" == *" ${agent} "* ]]; then
+    path="$(hook::json_field "${input}" '.tool_input.file_path')"
+    if ! is_research_file "${path}"; then
+      printf 'vibes: %s is read-only. It may write only ' "${agent}" >&2
+      printf 'its note, .vibes/<run>/research/<topic>.md.\n' >&2
       exit 2
     fi
   elif [[ "${SURVEYORS}" == *" ${agent} "* ]]; then

@@ -157,5 +157,36 @@ class SurveyTest(unittest.TestCase):
                 self.assertEqual(hook("surveyor", "Bash", command=command), 2)
 
 
+class ResearcherTest(unittest.TestCase):
+    AGENT = "vibes:researcher"
+
+    def test_writes_its_note(self) -> None:
+        for run in ("order-export", "debug-month-end", "optimise-parse"):
+            with self.subTest(run=run):
+                self.assertEqual(hook(self.AGENT, "Write", file_path=(
+                    f"/p/.vibes/{run}/research/pagination.md")), 0)
+
+    def test_never_writes_anything_else(self) -> None:
+        for path in ("/p/docs/specs/x/spec.md", "/p/src/api.py",
+                     "/p/.vibes/x/research/deep/a.md",
+                     "/p/.vibes/x/y/research/a.md",
+                     "/p/.vibes/x/research/../../../src/api.py",
+                     "/p/.vibes/x/research/a.txt"):
+            for tool in ("Write", "Edit"):
+                with self.subTest(path=path, tool=tool):
+                    self.assertEqual(
+                        hook(self.AGENT, tool, file_path=path), 2)
+
+    def test_reads_versions_but_changes_nothing(self) -> None:
+        for command in ("pip show requests", "git log -3 -- poetry.lock",
+                        "cat package-lock.json"):
+            with self.subTest(command=command):
+                self.assertEqual(hook(self.AGENT, "Bash", command=command), 0)
+        for command in ("rm -rf node_modules", "git checkout v2",
+                        "echo x > src/api.py"):
+            with self.subTest(command=command):
+                self.assertEqual(hook(self.AGENT, "Bash", command=command), 2)
+
+
 if __name__ == "__main__":
     unittest.main()
