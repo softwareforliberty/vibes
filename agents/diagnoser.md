@@ -44,7 +44,8 @@ The brief from the main agent gives you:
 - **Stay on the spike branch.** Run `git branch --show-current` first and
   check it's the one in the brief. Never switch branches, and never
   commit, reset or push anywhere else. The commit gate doesn't run on
-  `spike/` branches, so your probes aren't blocked.
+  `spike/` branches, so your probes aren't blocked, but stage each change
+  by name: `git commit -a` is refused everywhere.
 - **Never fix the bug for real.** The only fix you write is the quick one
   that proves the cause, in probe mode, on the spike branch.
 - **Judge with `bin/repro`, never by eye:**
