@@ -124,7 +124,9 @@ could lose your work.
    architecture reviewer checks it before any code exists. The design
    keeps to the project's decision records, and each new decision that's
    hard to reverse, surprising and a real choice gets a short record of
-   its own, in `docs/adr/` or wherever the project keeps them. The spec
+   its own, in `docs/adr/` or wherever the project keeps them. Each
+   component gets entry points, its front door, which other components and
+   its own tests must go through. The spec
    and design are committed in your repository, in `docs/specs/<task>/` or
    wherever the project already keeps them.
 3. **Spike.** A subagent builds the whole task quickly to the spec and
@@ -148,7 +150,10 @@ could lose your work.
    on and fix the findings, and reply in a line or two, so its context
    stays small however long the run.
 7. **Gate.** Every commit runs the project's linters and fast tests, and is
-   blocked if anything fails. Each batch ends with the slow tests too.
+   blocked if anything fails. Each batch ends with the slow tests too. The
+   first batch adds the design's boundary rules to the gate, the layers
+   and each component's entry points, and proves each one bites by
+   breaking it once on purpose.
 8. **Review again.** The same reviewers, plus reviewers for code
    cleanliness, coding style, idioms and test quality, check the rebuild,
    and their findings are fixed test-first. The spec reviewer verifies
@@ -348,7 +353,8 @@ it.
    combination, and what it gives up.
 3. **Build it,** if you choose, with `/vibes:vibe`, from the chosen
    design: a spec, a test-first rebuild through the gate, and every
-   review.
+   review. The gate then holds callers and tests to the deepened module's
+   entry points, so it can't turn shallow again.
 
 The survey changes nothing: its agents may write only their own reports.
 When you turn a candidate down for a lasting reason, it offers to record a

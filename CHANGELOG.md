@@ -67,6 +67,18 @@ guides behave, and says so under **Changed**.
 
 ### Changed
 
+- **Each component has a front door.** The design names each component's
+  entry points, and the gate enforces them: code outside a component, and
+  its own tests, use only those, while what's behind them can be
+  organised freely. Each language guide's Architecture section says how,
+  with the language's visibility rules or the build where they can, and
+  its architecture test tool otherwise, each checked against the real
+  tool. The architecture reviewer checks the design names them and the
+  code keeps to them.
+- **Every rule the gate gets is proved to bite.** Setting up the gate
+  breaks each check once on purpose and sees it fail, and the first build
+  batch does the same for each boundary rule, so a rule that matches
+  nothing can't pass unnoticed.
 - **Every decision you're asked comes with a recommended answer,** worded
   so "yes" accepts it, so you can accept them all at once. Unattended runs
   take the recommendation, unless it does more than you asked.
