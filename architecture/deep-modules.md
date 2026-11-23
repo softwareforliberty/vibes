@@ -44,7 +44,9 @@ modules hold with the project's glossary terms.
 - **The interface is the test surface.** A module is tested through its
   interface. When a test has to reach behind it, or the code had to be
   split up only so a piece could be tested, the interface is in the wrong
-  place.
+  place. Once a module is deep, the architecture rules
+  [give it a front door](README.md#enforce-it), so callers and tests can't
+  reach past its interface and make it shallow again.
 - **One adapter means a hypothetical seam; two mean a real one.** An
   interface with only one implementation, and no second one planned, adds
   a jump for every reader and buys nothing yet. Keep it only where the

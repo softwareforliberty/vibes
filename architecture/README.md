@@ -126,6 +126,20 @@ receives the values it needs, never the whole configuration.
 - **Write the remaining rules as architecture tests** and run them in
   `scripts/check`, so a change that breaks a boundary fails the gate. Each
   guide suggests rules and tools.
+- **Give each component a front door.** The design names each component's
+  entry points: the files, packages, modules or headers other components
+  may use. Code outside the component uses only those; the component's own
+  code uses any of its parts; and its tests go through the entry points
+  too, so they test what callers see, and the inside can be reorganised
+  without breaking them. Where the code lives is free: an entry point can
+  re-export what's kept in folders behind it. Enforce it with the
+  language's visibility rules or the build where they can, and an
+  architecture test otherwise. Each guide says how.
+- **Prove each rule bites.** When you add a rule, break it on purpose, such
+  as by importing an edge from the core, or a component's private file from
+  outside it, run the check, and see it fail and name the rule. Then undo
+  the breach. A rule that can't fail, because its pattern matches no files
+  or the tool found nothing to check, looks just like one that passes.
 - **When existing code breaks a rule,** keep the rule and disable it for that
   one case, with a comment naming the violation and how to fix it. Never
   weaken a rule to make the code pass.
