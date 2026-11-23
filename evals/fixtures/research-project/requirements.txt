@@ -1,0 +1,1 @@
+tinyhttp==2.3.0  # vendored in vendor/tinyhttp

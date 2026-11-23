@@ -56,6 +56,19 @@ a document.
 repository, and passes when the suggested subject is 50 characters or
 fewer and in the imperative.
 
+The **`research`** cases work on reports, a small Python project that
+vendors an HTTP library at 2.3.0 whose README still gives the old default
+timeout. **`researcher-trusts-the-code`** passes when the researcher's
+note answers from the library's code at the pinned version, with a
+`Checked:` line naming it, and says the README is out of date.
+**`designer-researches-facts-asks-decisions`** gives the designer a task
+that needs a fact about an outside API and a choice of file format, and
+passes when the fact is marked `(fact)` rather than asked or guessed, and
+the choice is a `(decision)` with a recommended answer. Run them with
+`--tag research --allow-tools Write Edit "Bash(*/tree-check)" "Bash(git *)"
+"Bash(cat *)" "Bash(ls *)" "Bash(grep *)" "Bash(head *)" "Bash(sed -n *)"
+"Bash(pip show *)"`.
+
 The **`survey`** cases work on orders, a small Python library whose
 pricing is split into one-line modules that three callers sequence
 themselves, one in the wrong order, beside a deep storage module a
@@ -88,6 +101,7 @@ suggestions, cites the calls behind each one, and leaves the tree clean.
 | `source/optimise/`, `source/optimise-run/` | contacts, and the run directory its baseline leaves |
 | `optimise_cases.py` | The optimise candidates and cases, which `generate.py` writes too |
 | `docs_cases.py` | The project docs reviewer's and commit message suggester's projects and cases, which `generate.py` writes too |
+| `research_cases.py` | The research project and cases, which `generate.py` writes too |
 | `survey_cases.py` | The survey's project, history and cases, which `generate.py` writes too |
 | `retro_cases.py` | The retrospective's project, session and case, which `generate.py` writes too |
 | `fixtures/` | Each variant's project and review directory, generated |
