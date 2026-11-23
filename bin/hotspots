@@ -1,0 +1,76 @@
+#!/usr/bin/env bash
+#
+# Prints the files and directories the project's recent commits changed
+# most, so an architecture survey looks first where change keeps landing:
+#
+#   hotspots [--commits N] [--top N]
+#
+# Run it from the repository's root. It reads the last N commits, 500 by
+# default, without merges, and prints the top N files, 40 by default, with
+# the number of commits that changed each, then the top directories, with
+# the changes to the files in them:
+#
+#   FILES
+#   37  src/orders/pricing.py
+#   DIRECTORIES
+#   61  src/orders/
+#
+# Files that no longer exist, documents, lock files, vendored code and
+# generated output are left out. Exits 2 outside a repository.
+
+set -euo pipefail
+
+# What isn't the project's own code, in lower case.
+SKIPPED_RE='(^|/)(node_modules|vendor|third_party|third-party|external|dist'
+SKIPPED_RE+='|build|target|\.vibes|\.git)/|\.(md|markdown|rst|adoc|txt|lock)$'
+SKIPPED_RE+='|(^|/)(package-lock\.json|go\.sum|cargo\.lock|poetry\.lock'
+SKIPPED_RE+='|yarn\.lock|pnpm-lock\.yaml|gemfile\.lock|composer\.lock)$'
+readonly SKIPPED_RE
+
+usage() {
+  printf 'usage: hotspots [--commits N] [--top N]\n' >&2
+  exit 2
+}
+
+main() {
+  local commits=500 top=40
+  while (($# > 0)); do
+    case "$1" in
+      --commits) [[ $# -ge 2 && "$2" =~ ^[0-9]+$ ]] || usage; commits="$2"; shift 2 ;;
+      --top) [[ $# -ge 2 && "$2" =~ ^[0-9]+$ ]] || usage; top="$2"; shift 2 ;;
+      *) usage ;;
+    esac
+  done
+  git rev-parse --verify --quiet HEAD >/dev/null 2>&1 || {
+    printf 'hotspots: no commits here\n' >&2
+    exit 2
+  }
+
+  local counts
+  # Each file's count, a tab and its path, most changed first, for the
+  # project's own files that still exist.
+  counts="$(
+    git log --no-merges -n "${commits}" --format= --name-only HEAD \
+      | grep -v '^$' | sort | uniq -c \
+      | sed -E 's/^ *([0-9]+) (.*)$/\1\t\2/' \
+      | awk -F '\t' -v skipped="${SKIPPED_RE}" 'tolower($2) !~ skipped' \
+      | while IFS=$'\t' read -r count path; do
+        [[ -f "${path}" ]] && printf '%s\t%s\n' "${count}" "${path}"
+      done \
+      | sort -t $'\t' -k1,1nr -k2,2 || true
+  )"
+  printf 'FILES\n'
+  awk -F '\t' -v top="${top}" 'NF == 2 && NR <= top {
+      printf "%s  %s\n", $1, $2 }' <<<"${counts}"
+  printf 'DIRECTORIES\n'
+  awk -F '\t' 'NF == 2 {
+      n = split($2, part, "/")
+      dir = ""
+      for (i = 1; i < n; i++) { dir = dir part[i] "/"; total[dir] += $1 }
+    } END { for (d in total) printf "%s\t%s\n", total[d], d }' <<<"${counts}" \
+    | sort -t $'\t' -k1,1nr -k2,2 \
+    | awk -F '\t' -v top="$(((top + 1) / 2))" 'NR <= top {
+        printf "%s  %s\n", $1, $2 }'
+}
+
+main "$@"

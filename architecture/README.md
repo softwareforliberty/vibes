@@ -8,7 +8,8 @@ The [spiker](../agents/spiker.md) designs to these guides, and the
 [architecture reviewer](../agents/architecture-reviewer.md) holds each change
 to them. They apply the [programming principles](../principles.md) at the
 scale of a whole program: separation of concerns, single responsibility and
-dependency inversion above all.
+dependency inversion above all. [Deep modules](deep-modules.md) says how to
+judge whether a module's boundary pays for itself, for `/vibes:survey`.
 
 ## Pick the guide
 
