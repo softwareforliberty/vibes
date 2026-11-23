@@ -288,6 +288,14 @@ each one a fact or a decision. The user is asked only for decisions.
    Tell the user they can answer by number, or reply "yes" to accept every
    recommendation. Then have the designer write the answers in, and empty
    the section.
+
+   **When only someone else can answer,** such as a client, a domain
+   expert or another team, offer a questionnaire for them, as
+   `${CLAUDE_PLUGIN_ROOT}/skills/questionnaire/SKILL.md` says, with those
+   decisions and any `UNSETTLED` fact only a person can settle. Record
+   `waiting: <questionnaire path>` in `state.md`, and wait for the
+   answers, as you would for the user's. An unattended run never writes
+   one: it takes the recommended answers as usual.
 3. **Keep the notes with the spec.** When you commit the spec or design,
    copy each note it cites into `<spec directory>/research/`, and commit
    them with it, so the facts and their sources stay in the project.
