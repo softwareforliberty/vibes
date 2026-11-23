@@ -50,8 +50,9 @@ The brief from the main agent gives you:
    so the design serves the calls that really happen.
 3. **Design the interface** under your constraint, in the project's own
    language and idiom: every name, type, error and state a caller sees,
-   with the glossary's names. Keep to the decision records; where your
-   constraint pushes against one, say so.
+   with the glossary's names, and its entry points: the files, packages
+   or headers callers would import it from. Keep to the decision records;
+   where your constraint pushes against one, say so.
 4. **Show it in use:** rewrite the commonest real call site, and the
    hardest one, against your interface.
 
@@ -65,6 +66,9 @@ Write the design file:
 ```<language>
 <the full interface: signatures, types, errors, with short doc comments>
 ```
+
+**Entry points:** <the files, packages or headers it's imported from;
+everything else behind them is private>.
 
 ## In use
 

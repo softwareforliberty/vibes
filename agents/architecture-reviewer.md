@@ -50,6 +50,8 @@ itself, against the same standards and the checks below:
 - **The structure is right before it's built:** apply each check in
   [What to check](#what-to-check) to the planned components, interfaces and
   flows.
+- **Each component has a front door:** it names its entry points, they're
+  few, and the boundary rules enforce them.
 - **It's design, not code:** the design settles structure and boundaries,
   and leaves the details to the spike. Don't ask for more detail than the
   structure needs: a missing detail the builders can settle well either
@@ -96,6 +98,10 @@ uses. For every guide the change needs, read:
   was written in.
 - **Coupling and cohesion:** related code lives together, and modules depend
   on narrow interfaces rather than each other's internals.
+- **Entry points:** where the design names a component's entry points,
+  code outside the component, and the component's own tests, use only
+  those, and `scripts/check` enforces it, as the guide's `tools.md` says.
+  An exemption names the breach and how to fix it.
 - **Dependency direction:** core logic doesn't depend on frameworks, I/O or
   delivery details. Side effects sit at the edges.
 - **Abstractions:** each abstraction earns its keep. Flag both missing ones

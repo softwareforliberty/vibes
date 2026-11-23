@@ -23,9 +23,11 @@ with why it wasn't chosen.
 ## Components
 
 <!--
-Each module or layer: its one job, what it may depend on, and its
-interface, as the main types and the signatures other components call. Leave
-out private helpers and parameter-by-parameter prose.
+Each module or layer: its one job, what it may depend on, its interface,
+as the main types and the signatures other components call, and its entry
+points: the files, packages, modules or headers that other components and
+its own tests may use. Everything else in it is private. Leave out private
+helpers and parameter-by-parameter prose.
 -->
 
 ### Component
@@ -33,6 +35,7 @@ out private helpers and parameter-by-parameter prose.
 - **Job:**
 - **Depends on:**
 - **Interface:**
+- **Entry points:**
 
 ## Boundary types
 
@@ -88,11 +91,13 @@ satisfy it. Every id in the spec appears here.
 
 <!--
 The dependency rules between components, such as "the core never imports
-the adapters", written so the build or an architecture test from the
-guide's tools.md can enforce them.
+the adapters", and the entry-point rule, written so the build or an
+architecture test from the guide's tools.md can enforce them.
 -->
 
 - <component> never depends on <component>.
+- Outside each component, code and the component's tests use only its
+  entry points.
 
 ## Change log
 
