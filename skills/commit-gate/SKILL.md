@@ -49,6 +49,12 @@ whose code is thrown away, and files git ignores.
    running anything else.
 7. In Claude Code it also blocks `git commit -a`, `--all`, `--no-verify` and
    `-n`. Each change is staged deliberately, and the gate is never bypassed.
+8. In Claude Code it has the user confirm a commit that loosens the gate
+   itself: one that deletes `scripts/check` or `scripts/check-file`, makes
+   either not executable, or removes or changes a line of either so that a
+   word of it is lost, such as a check, an option or a guide. Extending the
+   gate keeps every word, so it needs no confirmation. Where nobody can
+   answer, as in `claude -p`, the commit is refused.
 
 ## Step 1: find the guides
 
@@ -348,5 +354,9 @@ first Dockerfile, the gate blocks the commit and names the guide. Then:
 - Never bypass the gate with `--no-verify`, `-n` or by deleting the hook.
 - When the gate blocks a commit, fix the cause and commit again. Don't weaken
   a check or a test to get past it.
+- Extend the gate by adding: a new check, a new file to an existing one, a
+  guide to the `# Guides:` line. When an existing check truly has to change,
+  stop and ask the user, or report it in an unattended run, since the commit
+  needs their confirmation.
 - To commit part of the working tree, stash the rest first, as the
   [atomic commits](../atomic-commits/SKILL.md) skill describes.

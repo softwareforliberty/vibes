@@ -38,6 +38,28 @@ print(json.dumps({"hookSpecificOutput": {
   fi
 }
 
+# Prints the JSON that has the user confirm a tool call before it runs,
+# with the reason shown to them. Without a JSON tool, the reason is left
+# out rather than risk printing broken JSON, which would let the call run.
+hook::pre_tool_ask() {
+  local reason="$1"
+  if command -v jq >/dev/null; then
+    jq -cn --arg reason "${reason}" \
+      '{hookSpecificOutput: {hookEventName: "PreToolUse",
+        permissionDecision: "ask", permissionDecisionReason: $reason}}'
+  elif command -v python3 >/dev/null; then
+    python3 -c '
+import json, sys
+print(json.dumps({"hookSpecificOutput": {
+    "hookEventName": "PreToolUse", "permissionDecision": "ask",
+    "permissionDecisionReason": sys.argv[1]}}))
+' "${reason}"
+  else
+    printf '%s\n' '{"hookSpecificOutput": {"hookEventName": "PreToolUse",
+      "permissionDecision": "ask"}}'
+  fi
+}
+
 # Prints a shell command on one line without its quoted strings and
 # here-document bodies. A line break that ends a command becomes "; ", so
 # the commands stay apart, and a continued line becomes a space.

@@ -98,6 +98,7 @@ Only when the user names them, after the report:
 - Make each change its own commit, so any one can be reverted. A change
   big enough to need a spec, such as a new check with tests, goes through
   `/vibes:vibe` instead.
-- The commit gate asks the user to confirm any commit that removes a line
-  from `scripts/check` or `scripts/check-file`, or deletes either, so
-  loosening the gate always needs their word, whoever makes the change.
+- The commit gate asks the user to confirm any commit that removes or
+  weakens a line of `scripts/check` or `scripts/check-file`, deletes
+  either, or makes either not executable, so loosening the gate always
+  needs their word, whoever makes the change.

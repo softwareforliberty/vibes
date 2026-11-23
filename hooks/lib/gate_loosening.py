@@ -1,0 +1,112 @@
+"""Finds changes that would loosen a repository's commit gate.
+
+    python3 -I -S gate_loosening.py <directory>
+
+Compares scripts/check and scripts/check-file at HEAD with the index and
+the working tree, and prints one line for each loosening: the file deleted,
+its executable bit dropped, or a line removed whose words no added line in
+the same file keeps. Extending the gate keeps every word, such as adding a
+guide to the "# Guides:" line or a file to a lint command, so it passes;
+dropping a check, an option or a guide doesn't. Blank lines and comments
+other than the "# Guides:" line don't count.
+
+Prints nothing for a file HEAD doesn't have, outside a repository, and on a
+spike branch, where the gate doesn't run.
+"""
+
+import difflib
+import os
+import subprocess
+import sys
+from collections import Counter
+
+FILES = ("scripts/check", "scripts/check-file")
+GUIDES = "# Guides:"
+SHOWN = 10
+
+
+def git(directory, *args):
+    """git's output, or None when it fails."""
+    found = subprocess.run(["git", "-C", directory, *args],
+                           capture_output=True, check=False)
+    if found.returncode != 0:
+        return None
+    return found.stdout.decode("utf-8", "replace")
+
+
+def counts(line):
+    """The line's words, unless it's blank or a comment that doesn't
+    matter."""
+    text = line.strip()
+    if not text or (text.startswith("#") and not text.startswith(GUIDES)):
+        return None
+    return Counter(text.split())
+
+
+def removed(old, new):
+    """The old lines whose words no added line keeps, stripped."""
+    old_lines, new_lines = old.splitlines(), new.splitlines()
+    gone, added = [], []
+    matcher = difflib.SequenceMatcher(None, old_lines, new_lines,
+                                      autojunk=False)
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag in ("delete", "replace"):
+            gone += old_lines[i1:i2]
+        if tag in ("insert", "replace"):
+            added += [c for c in map(counts, new_lines[j1:j2]) if c]
+    lost = []
+    for line in gone:
+        words = counts(line)
+        if words and not any(not words - kept for kept in added):
+            lost.append(line.strip())
+    return lost
+
+
+def loosenings(directory):
+    root = git(directory, "rev-parse", "--show-toplevel")
+    if root is None:
+        return []
+    root = root.strip()
+    branch = (git(root, "symbolic-ref", "--quiet", "--short", "HEAD")
+              or "").strip()
+    if branch.startswith("spike/"):
+        return []
+    found = []
+    for path in FILES:
+        tree = git(root, "ls-tree", "HEAD", "--", path)
+        if not tree:
+            continue
+        executable = tree.split()[0] == "100755"
+        old = git(root, "show", f"HEAD:{path}") or ""
+        staged = git(root, "ls-files", "--stage", "--", path) or ""
+        full = os.path.join(root, path)
+        if not staged or not os.path.isfile(full):
+            found.append(f"{path}: deleted")
+            continue
+        if executable and (staged.split()[0] != "100755"
+                           or not os.access(full, os.X_OK)):
+            found.append(f"{path}: no longer executable, which turns "
+                         "the gate off")
+        versions = [git(root, "show", f":{path}") or ""]
+        with open(full, encoding="utf-8", errors="replace") as stream:
+            versions.append(stream.read())
+        lost = []
+        for new in versions:
+            lost += [line for line in removed(old, new) if line not in lost]
+        found += [f"{path}: removes or changes `{line}`" for line in lost]
+    if len(found) > SHOWN:
+        found = found[:SHOWN] + [f"and {len(found) - SHOWN} more"]
+    return found
+
+
+def main():
+    if len(sys.argv) != 2:
+        print("usage: gate_loosening.py <directory>", file=sys.stderr)
+        return 2
+    for line in loosenings(sys.argv[1]):
+        print(line)
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

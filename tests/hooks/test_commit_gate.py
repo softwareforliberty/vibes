@@ -141,5 +141,116 @@ class ClaudeHookTest(unittest.TestCase):
         self.assertIn("install-git-hooks", result.stderr)
 
 
+# A gate that passes, with lines that stand for its checks.
+LOOSENING_CHECK = """#!/usr/bin/env bash
+#
+# Guides: languages/BASH languages/Python
+set -euo pipefail
+: lint --strict scripts
+: test unit
+"""
+LOOSENING_CHECK_FILE = """#!/usr/bin/env bash
+: format "$@"
+"""
+
+
+class LooseningTest(unittest.TestCase):
+    """The Claude Code hook has the user confirm a commit that loosens the
+    gate, and lets one that extends it through."""
+
+    def setUp(self) -> None:
+        self.repo = os.path.realpath(tempfile.mkdtemp())
+        self.git("init", "-q", "-b", "main")
+        for path, text in (("scripts/check", LOOSENING_CHECK),
+                           ("scripts/check-file", LOOSENING_CHECK_FILE)):
+            self.write(path, text)
+            os.chmod(os.path.join(self.repo, path), 0o755)
+        self.git("add", ".")
+        self.git("-c", "user.name=t", "-c", "user.email=t@example.com",
+                 "commit", "-q", "--no-verify", "-m", "Add the checks")
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.repo)
+
+    git = DocsOnlyTest.git
+    write = DocsOnlyTest.write
+    hook = ClaudeHookTest.hook
+
+    def edit(self, old: str, new: str) -> None:
+        path = os.path.join(self.repo, "scripts", "check")
+        with open(path, encoding="utf-8") as stream:
+            text = stream.read()
+        self.assertIn(old, text)
+        self.write("scripts/check", text.replace(old, new))
+        self.git("add", "scripts/check")
+
+    def decision(self, command: str = "git commit -m x") -> str:
+        """The reason the hook asks for confirmation, or "" when it lets the
+        commit through without asking."""
+        result = self.hook(command)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        if not result.stdout.strip():
+            return ""
+        output = json.loads(result.stdout)["hookSpecificOutput"]
+        self.assertEqual(output["permissionDecision"], "ask")
+        return output["permissionDecisionReason"]
+
+    def test_extending_the_gate_needs_no_confirmation(self) -> None:
+        self.edit("# Guides: languages/BASH languages/Python",
+                  "# Guides: languages/BASH languages/Python languages/SH")
+        self.edit(": lint --strict scripts", ": lint --strict scripts src")
+        self.edit(": test unit\n", ": test unit\n: test integration\n")
+        self.assertEqual(self.decision(), "")
+
+    def test_dropping_a_check_asks(self) -> None:
+        self.edit(": test unit\n", "")
+        reason = self.decision()
+        self.assertIn("loosens the vibes commit gate", reason)
+        self.assertIn("scripts/check: removes or changes `: test unit`",
+                      reason)
+
+    def test_dropping_an_option_or_a_guide_asks(self) -> None:
+        for old, new in ((": lint --strict scripts", ": lint scripts"),
+                         ("set -euo pipefail", "set -uo pipefail"),
+                         ("# Guides: languages/BASH languages/Python",
+                          "# Guides: languages/BASH")):
+            with self.subTest(old=old):
+                self.edit(old, new)
+                self.assertIn(f"`{old}`", self.decision())
+                self.git("checkout", "HEAD", "--", "scripts/check")
+
+    def test_comments_and_blank_lines_do_not_count(self) -> None:
+        self.edit("#\n# Guides", "# The project's checks.\n# Guides")
+        self.assertEqual(self.decision(), "")
+
+    def test_deleting_the_gate_asks(self) -> None:
+        self.git("rm", "-q", "scripts/check-file")
+        self.assertIn("scripts/check-file: deleted", self.decision())
+
+    def test_deleting_the_check_asks_though_it_turns_the_gate_off(
+            self) -> None:
+        self.git("rm", "-q", "scripts/check")
+        self.assertIn("scripts/check: deleted", self.decision())
+
+    def test_dropping_the_executable_bit_asks(self) -> None:
+        os.chmod(os.path.join(self.repo, "scripts", "check"), 0o644)
+        self.git("add", "scripts/check")
+        self.assertIn("no longer executable", self.decision())
+
+    def test_sees_a_change_staged_in_the_same_command(self) -> None:
+        # With the git hook installed, the gate runs inside git, so the
+        # change needn't be staged before the command runs.
+        self.write(".git/hooks/pre-commit", "# vibes-commit-gate\n")
+        self.write("scripts/check", LOOSENING_CHECK.replace(
+            ": test unit\n", ""))
+        self.assertIn("`: test unit`", self.decision(
+            "git add scripts/check && git commit -m x"))
+
+    def test_spike_branches_are_left_alone(self) -> None:
+        self.git("checkout", "-q", "-b", "spike/x")
+        self.edit(": test unit\n", "")
+        self.assertEqual(self.decision(), "")
+
+
 if __name__ == "__main__":
     unittest.main()

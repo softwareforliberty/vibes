@@ -2,7 +2,10 @@
 #
 # Claude Code PreToolUse hook for the vibes commit gate. Reads the tool call
 # as JSON on stdin and blocks a git commit (exit 2) when its subject is
-# longer than 50 characters or the gate fails.
+# longer than 50 characters or the gate fails. When the commit would loosen
+# the gate itself, by removing or weakening a line of scripts/check or
+# scripts/check-file, deleting either or making it not executable, it has
+# the user confirm the commit, whoever made the change.
 
 set -euo pipefail
 
@@ -171,6 +174,24 @@ hooks_resolve() {
   done
 }
 
+# Prints each way the commits in these directories would loosen the gate.
+# Without python3, any change to the gate's scripts counts.
+loosenings() {
+  local dir path
+  for dir in "$@"; do
+    if command -v python3 >/dev/null; then
+      python3 -I -S "${LIB}/gate_loosening.py" "${dir}" || true
+      continue
+    fi
+    for path in scripts/check scripts/check-file; do
+      if git -C "${dir}" cat-file -e "HEAD:${path}" 2>/dev/null \
+        && ! git -C "${dir}" diff --quiet HEAD -- "${path}" 2>/dev/null; then
+        printf '%s: changed\n' "${path}"
+      fi
+    done
+  done
+}
+
 # Returns 0 when the project's own git hook is the vibes gate.
 git_hook_is_gate() {
   local hook
@@ -208,8 +229,8 @@ check_commit() {
 }
 
 main() {
-  local input raw command cwd dir args length subject
-  local -a found=()
+  local input raw command cwd dir args length subject found_loose
+  local -a found=() dirs=()
   input="$(cat)"
   raw="$(hook::json_field "${input}" '.tool_input.command')"
   command="$(hook::strip_text <<<"${raw}")"
@@ -262,7 +283,17 @@ main() {
       continue
     fi
     check_commit "${dir}" "${args}" || exit 2
+    dirs+=("${dir}")
   done
+
+  # Bash 3.2 treats an empty array as unset, which set -u rejects.
+  ((${#dirs[@]} > 0)) || exit 0
+  found_loose="$(loosenings "${dirs[@]}")"
+  if [[ -n "${found_loose}" ]]; then
+    hook::pre_tool_ask "This commit loosens the vibes commit gate:"$'\n'"$(
+      sed 's/^/- /' <<<"${found_loose}")"$'\n'"Allow it only if you meant to \
+remove or weaken these checks."
+  fi
 }
 
 main "$@"
