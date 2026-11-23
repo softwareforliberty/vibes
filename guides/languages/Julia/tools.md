@@ -244,10 +244,11 @@ julia --project -e 'using Pkg
 ```
 
 `scripts/check` then precompiles every package, and fails when one breaks
-its `[deps]`:
+its `[deps]`. Pass `strict=true`: without it, Julia 1.13 prints the error
+but exits 0.
 
 ```sh
-julia --project -e 'using Pkg; Pkg.precompile()'
+julia --project -e 'using Pkg; Pkg.precompile(strict=true)'
 ```
 
 Pkg only warns about a cycle in the declared dependencies, with
