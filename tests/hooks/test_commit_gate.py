@@ -219,6 +219,21 @@ class LooseningTest(unittest.TestCase):
                 self.assertIn(f"`{old}`", self.decision())
                 self.git("checkout", "HEAD", "--", "scripts/check")
 
+    def test_ignoring_a_failure_asks(self) -> None:
+        for old, new in ((": test unit", ": test unit || true"),
+                         (": test unit", ": test unit||:"),
+                         (": lint --strict scripts",
+                          ": lint --strict --exit-zero scripts"),
+                         ("set -euo pipefail\n",
+                          "set -euo pipefail\nset +e\n"),
+                         ("set -euo pipefail\n",
+                          "set -euo pipefail\nexit 0\n")):
+            with self.subTest(new=new):
+                self.edit(old, new)
+                self.assertIn("loosens the vibes commit gate",
+                              self.decision())
+                self.git("checkout", "HEAD", "--", "scripts/check")
+
     def test_comments_and_blank_lines_do_not_count(self) -> None:
         self.edit("#\n# Guides", "# The project's checks.\n# Guides")
         self.assertEqual(self.decision(), "")

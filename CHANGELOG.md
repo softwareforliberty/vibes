@@ -40,9 +40,10 @@ guides behave, and says so under **Changed**.
 
 - **The commit gate asks before it's loosened.** In Claude Code, a commit
   that deletes `scripts/check` or `scripts/check-file`, makes either not
-  executable, or removes or changes a line of either so that a word is
-  lost now needs your confirmation, and is refused where nobody can give
-  it. Builders report a check they think must change instead.
+  executable, removes or changes a line of either so that a word is lost,
+  or lets a failure pass, such as with `|| true`, now needs your
+  confirmation, and is refused where nobody can give it. Builders report
+  a check they think must change instead.
 
 ## [0.6.1] - 2026-11-20
 

@@ -4,8 +4,9 @@
 # as JSON on stdin and blocks a git commit (exit 2) when its subject is
 # longer than 50 characters or the gate fails. When the commit would loosen
 # the gate itself, by removing or weakening a line of scripts/check or
-# scripts/check-file, deleting either or making it not executable, it has
-# the user confirm the commit, whoever made the change.
+# scripts/check-file, letting a failure pass, deleting either or making it
+# not executable, it has the user confirm the commit, whoever made the
+# change.
 
 set -euo pipefail
 

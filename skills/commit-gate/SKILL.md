@@ -51,9 +51,10 @@ whose code is thrown away, and files git ignores.
    `-n`. Each change is staged deliberately, and the gate is never bypassed.
 8. In Claude Code it has the user confirm a commit that loosens the gate
    itself: one that deletes `scripts/check` or `scripts/check-file`, makes
-   either not executable, or removes or changes a line of either so that a
-   word of it is lost, such as a check, an option or a guide. Extending the
-   gate keeps every word, so it needs no confirmation. Where nobody can
+   either not executable, removes or changes a line of either so that a
+   word of it is lost, such as a check, an option or a guide, or lets a
+   failure pass, such as with `|| true`, `set +e` or an early `exit`.
+   Extending the gate keeps every word, so it needs no confirmation. Where nobody can
    answer, as in `claude -p`, the commit is refused.
 
 ## Step 1: find the guides

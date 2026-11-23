@@ -403,9 +403,10 @@ Once it exists, the gate:
 - in Claude Code, also blocks `git commit -a` and `--no-verify`
 - in Claude Code, asks you to confirm a commit that loosens the gate
   itself: one that deletes `scripts/check` or `scripts/check-file`, makes
-  either not executable, or removes or changes a line so that a word of it
-  is lost, such as a check, an option or a guide. Extending the gate keeps
-  every word, so it goes through without asking. Where nobody can answer,
+  either not executable, removes or changes a line so that a word of it is
+  lost, such as a check, an option or a guide, or lets a failure pass, such
+  as with `|| true` or an early `exit`. Extending the gate keeps every word,
+  so it goes through without asking. Where nobody can answer,
   as in `claude -p`, the commit is refused
 
 `scripts/check` runs its static checks first, and stops before the tests
