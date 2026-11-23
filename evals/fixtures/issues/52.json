@@ -1,0 +1,9 @@
+{
+  "number": 52,
+  "title": "Add a currency column to the sales CSV",
+  "url": "https://github.com/example/reports/issues/52",
+  "state": "OPEN",
+  "labels": [],
+  "body": "Could the sales CSV get a `currency` column, right after `sku`?\nWe're starting to sell in euros too and the totals are ambiguous.\n\nSo the header would be `sku,currency,quantity,total_pence`.\n",
+  "comments": []
+}

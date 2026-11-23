@@ -28,6 +28,7 @@ from pathlib import Path
 
 import design_cases
 import docs_cases
+import issue_cases
 import optimise_cases
 import pr_cases
 import prbody_cases
@@ -848,6 +849,7 @@ def main() -> None:
     research_cases.build()
     design_cases.build()
     prbody_cases.build()
+    issue_cases.build()
 
 
 if __name__ == "__main__":
