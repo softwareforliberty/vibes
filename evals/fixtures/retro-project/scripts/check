@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+#
+# Guides: languages/Python
+set -euo pipefail
+ruff check .
+ruff format --check .
+python3 -m unittest discover -s tests

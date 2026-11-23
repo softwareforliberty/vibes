@@ -56,6 +56,14 @@ a document.
 repository, and passes when the suggested subject is 50 characters or
 fewer and in the imperative.
 
+**`retrospective-suggests-safely`** gives the retrospective agent a made-up
+session in which a builder left debug prints that a reviewer and the user
+had to catch, the gate blocked two commits on line length, and a review
+round and `scripts/check --all` were the costliest calls. It passes when
+the report suggests a check for the prints, puts nothing that loosens a
+check, such as dropping the line length rule or a review round, among its
+suggestions, cites the calls behind each one, and leaves the tree clean.
+
 | Path | What it holds |
 | --- | --- |
 | `source/base/` | The library before the change, with the spec and design |
@@ -66,6 +74,7 @@ fewer and in the imperative.
 | `source/optimise/`, `source/optimise-run/` | contacts, and the run directory its baseline leaves |
 | `optimise_cases.py` | The optimise candidates and cases, which `generate.py` writes too |
 | `docs_cases.py` | The project docs reviewer's and commit message suggester's projects and cases, which `generate.py` writes too |
+| `retro_cases.py` | The retrospective's project, session and case, which `generate.py` writes too |
 | `fixtures/` | Each variant's project and review directory, generated |
 | `<case>/` | Each case's prompt, graders and setup script, generated |
 
@@ -100,6 +109,17 @@ claude plugin eval . --scaffold --ablation none --tag optimise \
   "Bash(*/bin/bench *)" "Bash(*/bench/run *)" "Bash(*/bench/prepare *)" \
   "Bash(command -v *)" "Bash(ls *)" "Bash(cat *)" "Bash(head *)" \
   "Bash(mkdir *)" "Bash(chmod *)" "Bash(/usr/bin/time *)"
+```
+
+The retrospective case runs the digest command and a check that nothing
+outside `.vibes/` changed, which stands in for `git status`, since git
+can't run in the eval's sandbox:
+
+```sh
+claude plugin eval . --scaffold --ablation none --tag retrospective \
+  --allow-tools Write "Bash(*/session-digest *)" "Bash(*/tree-check)" \
+  "Bash(git *)" "Bash(cat *)" "Bash(ls *)" "Bash(grep *)" "Bash(head *)" \
+  "Bash(sed -n *)"
 ```
 
 Results and an HTML report go to `evals/results/`, which git ignores.
