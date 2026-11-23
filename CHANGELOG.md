@@ -92,6 +92,15 @@ guides behave, and says so under **Changed**.
   confirmation, and is refused where nobody can give it. Builders report
   a check they think must change instead.
 
+### Fixed
+
+- **Three layer checks that couldn't fail now do.** On Julia 1.13,
+  `Pkg.precompile()` printed a forbidden dependency but exited 0, so the
+  Julia guide passes `strict=true`. On sbt 2, a cached `sbt test` skipped
+  the architecture suite, so the Scala guide runs `sbt testFull`. The Go
+  guide's go-arch-lint example refused a component's own packages and
+  tests until each component lists itself.
+
 ## [0.6.1] - 2026-11-20
 
 ### Fixed
