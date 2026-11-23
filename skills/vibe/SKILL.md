@@ -99,7 +99,7 @@ code.
   them, so each commit shows what changed, why, and how it was built. Only
   the first approved spec and design, which nothing implements yet, are
   committed on their own.
-- **No code does anything the spec doesn't describe.**
+- **The code does only what the spec describes.**
 - **If a change would alter what the user asked for,** ask the user before
   writing it into the spec.
 - **The spec reviewer checks every spec change** in the next review round,
@@ -256,9 +256,9 @@ finished report:
 - **Notify them first,** with the `PushNotification` tool if this session
   has it, loading it with ToolSearch if it's listed as deferred. Send one
   notification of under 200 characters, leading with what they need to do,
-  such as `vibe scene-workers: 3 spec questions need your answers`. Never
-  notify for progress, and in an unattended run, only when it finishes or
-  can't go on.
+  such as `vibe scene-workers: 3 spec questions need your answers`. Notify
+  only when the run waits for them, never for progress, and in an
+  unattended run, only when it finishes or can't go on.
 - **Ask everything at once.** Gather every question you have at that point
   into one ask, rather than asking one, waiting, then asking the next.
   Number them, and give each your recommended answer, worded so "yes"
@@ -367,28 +367,8 @@ Before Phase 0, look for a `.vibes/*/state.md` with `status: running`.
 - **There's one, for a different task:** ask the user whether to finish it
   first, or set it aside and start the new one.
 
-To resume:
-
-1. **Read where the run stopped:** `state.md`, the spec and design, the
-   rebuild plan and the latest round directory. Tell the user which phase
-   and step you're resuming from.
-2. **Check git agrees.** The branches exist, the right one is checked out,
-   and its latest commits match the state. Where they disagree, git is
-   right: update `state.md` to match.
-3. **Look at uncommitted changes.** On the rebuild branch they're usually an
-   unfinished red, green or refactor step: finish it if the test list shows
-   which entry it belongs to, and ask the user otherwise. Never discard
-   changes without asking.
-4. **Carry on from the first unfinished step:**
-   - in a review round with findings files missing, run only the missing
-     reviewers, with the same brief;
-   - when the designer, the spiker or a builder didn't report, run it
-     again, and tell it what already exists so it carries on rather than
-     starting over;
-   - in the build, give a fresh builder the next batch, starting from the
-     first entry in the test list that isn't ticked off;
-   - when `state.md` names an audit that was running and its log has no
-     result, start it again, as Phase 7 says.
+To resume, read `${CLAUDE_PLUGIN_ROOT}/skills/vibe/resume.md` and follow
+its steps.
 
 ## Phase 0: Set up
 
@@ -566,7 +546,8 @@ apply to it.
    task, write the spec there yourself instead.
 2. **Resolve every open question,** as [Open questions](#open-questions)
    describes: the facts researched, the decisions asked, and the answers
-   written into the spec as requirements.
+   written into the spec as requirements. Done when the spec's Open
+   questions section says "None.".
 3. **Review the spec** in rounds with `vibes:spec-reviewer` and
    `vibes:project-docs-reviewer`, as [Size the task](#size-the-task) says,
    with the designer deciding on and fixing their findings, until they
@@ -808,4 +789,5 @@ with `git worktree remove --force .vibes/<name>/audit`.
    - for a large task, the spike branch, kept for reference: ask whether to
      delete it
 4. Set `status: done` in `state.md`.
-5. Don't push, merge or open a pull request unless the user asks.
+5. Leave the branches where they are: push, merge or open a pull request
+   only when the user asks.

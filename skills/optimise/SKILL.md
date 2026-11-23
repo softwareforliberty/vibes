@@ -52,22 +52,14 @@ needs it.
 
 **Check they're loaded before anything else,** even before resuming: each
 agent above, and each reviewer `/vibes:vibe` lists, must be among the
-agent types you can spawn. If any is missing, stop and tell the user the
-vibes agents aren't loaded in this session. This happens when vibes is
-enabled only for one checkout and the session runs in a git worktree or
-another checkout; enabling it at user scope, or running from the checkout
-it's enabled in, then starting a new session, fixes it. Never stand in for
-an agent with `general-purpose` or any other agent told to read its
-definition: a stand-in has none of its tool limits, and the hooks that keep
-the profiler and the reviewers from changing the code know them only by
-their agent type.
+agent types you can spawn. If any is missing, stop and tell the user, as
+the vibe skill's [agents section](../vibe/SKILL.md#the-agents) says, which
+gives the cause and the fix, and why no other agent may stand in for one.
 
-**Your own commits.** For each commit you make yourself, such as the spec
-or the spike review's corrections, stage it, then spawn
-`vibes:commit-message-suggester` with the repository's path, the task and
-what the commit is for, and commit with the message it replies. The agents that commit, such as
-the builders, write their own. Every subject is 50 characters at most: the
-gate refuses a longer one.
+**Your own commits,** such as the spec or the spike review's corrections,
+are made as the vibe skill's [agents section](../vibe/SKILL.md#the-agents)
+says: stage, have `vibes:commit-message-suggester` suggest the message, and
+commit through the gate. Every subject is 50 characters at most.
 
 ## Names
 
@@ -104,7 +96,7 @@ this run makes is prefixed so it never meets a `/vibes:vibe` run's:
   ```
 
 - **One measurement at a time,** and nothing else running while the
-  profiler measures: never run another agent alongside it.
+  profiler measures: wait for its reply before you spawn another agent.
 - **Check the main tree after every profiler run:** `git status --porcelain`
   is as it was, and `HEAD` hasn't moved. If not, stop and tell the user.
 - **Installing tools:** when the profiler reports a missing tool, ask the
@@ -120,11 +112,9 @@ to ask the user:
   and record each as an `Unattended decision:` in the state file, with the
   options not chosen.
 - **Open questions in the spec, or a change that would alter what the user
-  asked for:** research the facts as usual. For a decision, take its
-  recommended answer unless it does more than the user asked, and then
-  choose the option that does the least the user didn't ask for and is
-  easiest to change later. Record it in the spec's assumptions the same
-  way.
+  asked for:** research the facts as usual, then decide and record each
+  decision as the vibe skill's
+  [Unattended runs](../vibe/SKILL.md#unattended-runs) says.
 - **A trade-off,** such as a candidate that fails a guard rail: reject it.
 - **Anything that could lose the user's work:** stop, and report it.
 - **A round limit:** stop, and report the outstanding findings.
@@ -136,16 +126,9 @@ The final report lists every unattended decision first.
 ### Keep the guides current
 
 After every optimiser or builder report, and before every review round,
-run:
-
-```sh
-git diff --name-only <base>...HEAD | "${CLAUDE_PLUGIN_ROOT}/bin/guides-for"
-```
-
-Add each new guide to the state file and every later brief. On the rebuild
-branch, the next builder extends the gate for it, in a commit of its own.
-For each `no guide:` file, tell the user, and have a `# No guide:` line
-added to `scripts/check`; in an unattended run, list them in the report.
+check the guides on the branch's changes, as the vibe skill's
+[Keep the guides current](../vibe/SKILL.md#keep-the-guides-current) says,
+with `optimise-state.md` in place of `state.md`.
 
 ## The state file
 
@@ -159,12 +142,9 @@ step.
 
 ## When you need the user
 
-Whenever the run stops to wait for the user, notify them first, as the
-vibe skill's
-[When you need the user](../vibe/SKILL.md#when-you-need-the-user) says:
-one `PushNotification` of under 200 characters, leading with what they
-need to do, if this session has the tool, and never for progress. Ask
-every question you have at that point together, in one ask.
+Whenever the run stops to wait for the user, notify them first and ask
+everything at once, as the vibe skill's
+[When you need the user](../vibe/SKILL.md#when-you-need-the-user) says.
 
 ## Resume an unfinished run
 
@@ -412,7 +392,8 @@ clean, the plan's entries are ticked off, and the builder's reply says
    - the spike branches and the run directory, kept for reference: ask
      whether to delete the branches.
 4. Set `status: done`.
-5. Don't push, merge or open a pull request unless the user asks.
+5. Leave the branches where they are: push, merge or open a pull request
+   only when the user asks.
 
 ## Review rounds
 

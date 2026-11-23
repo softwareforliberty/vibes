@@ -361,7 +361,8 @@ first Dockerfile, the gate blocks the commit and names the guide. Then:
 
 ## Rules for every commit
 
-- Never bypass the gate with `--no-verify`, `-n` or by deleting the hook.
+- Commit through the gate every time: never bypass it with `--no-verify`,
+  `-n` or by deleting the hook.
 - When the gate blocks a commit, fix the cause and commit again. Don't weaken
   a check or a test to get past it.
 - Extend the gate by adding: a new check, a new file to an existing one, a

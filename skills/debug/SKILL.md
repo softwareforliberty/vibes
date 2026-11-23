@@ -52,14 +52,9 @@ hypotheses; leave the probes and the code to the agents.
 
 **Check they're loaded before anything else,** even before resuming: each
 agent above, the conditional ones too, must be among the agent types you
-can spawn. If any is missing, stop and tell the user the vibes agents
-aren't loaded in this session. This happens when vibes is enabled only for
-one checkout and the session runs in a git worktree or another checkout;
-enabling it at user scope, or running from the checkout it's enabled in,
-then starting a new session, fixes it. Never stand in for an agent with
-`general-purpose` or any other agent told to read its definition: a
-stand-in has none of its tool limits, and the hooks that keep the
-reviewers read-only know them only by their agent type.
+can spawn. If any is missing, stop and tell the user, as the vibe skill's
+[agents section](../vibe/SKILL.md#the-agents) says, which gives the cause
+and the fix, and why no other agent may stand in for one.
 
 **Your own commits,** such as the bug spec, are made as the vibe skill's
 [agents section](../vibe/SKILL.md#the-agents) says: stage, have
@@ -86,7 +81,7 @@ optimise run's:
 
 ## Rules
 
-- **No hypothesis before a red reproduction.** The diagnoser's
+- **Hypothesise only from a red reproduction.** The diagnoser's
   `hypothesise` mode runs only once `bin/repro` says `RED` for both
   `repro.sh` and `minimal.sh`.
 - **You judge with `bin/repro`,** never the diagnoser's word, running each
@@ -118,12 +113,9 @@ to ask the user:
 
 - **The hypotheses:** keep the diagnoser's ranking.
 - **Open questions in the bug spec, or a fix that would alter what the
-  user expects:** research the facts as usual. For a decision, take its
-  recommended answer unless it does more than the user asked, and then
-  choose the option that does the least the user didn't ask for and is
-  easiest to change later, and record it in the spec's
-  assumptions, marked `Unattended decision:`, with the options not
-  chosen.
+  user expects:** research the facts as usual, then decide and record each
+  decision as the vibe skill's
+  [Unattended runs](../vibe/SKILL.md#unattended-runs) says.
 - **No reproduction, every hypothesis refuted three rounds running, a fix
   that needs a design, a symptom that's only slowness, or a round
   limit:** stop, and report what was found and what's needed.
@@ -332,4 +324,5 @@ round limit is 5.
    - the spike branch and the run directory, kept for reference: ask
      whether to delete the branch.
 2. Set `status: done`.
-3. Don't push, merge or open a pull request unless the user asks.
+3. Leave the branches where they are: push, merge or open a pull request
+   only when the user asks.
