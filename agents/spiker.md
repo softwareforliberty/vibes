@@ -66,6 +66,14 @@ the spec doesn't describe.
 8. **Commit everything to the spike branch** in one or more commits. The
    commit gate doesn't run on `spike/` branches.
 
+Run anything long, such as the tests or the program, in the shell's
+background mode, and wait for the report it sends when it ends, however
+it ends. Never start a process yourself with `&`, `nohup` or `setsid` to
+run on after your command returns, and never wait in a loop for a file
+or a line to appear: if that process dies, nothing tells you, and you
+wait forever. Any other wait gets a deadline, and when it passes, report
+what you were waiting for.
+
 Don't push, merge or change any branch other than the spike branch.
 
 ## Fix mode

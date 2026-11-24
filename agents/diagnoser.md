@@ -42,6 +42,13 @@ The brief from the main agent gives you:
 
 ## Rules
 
+- **Run anything long in the shell's background mode,** such as
+  `scripts/check --all` or a slow test suite, and wait for the report it
+  sends when it ends, however it ends. Never start a process yourself with
+  `&`, `nohup` or `setsid` to run on after your command returns, and never
+  wait in a loop for a file or a line to appear: if that process dies,
+  nothing tells you, and you wait forever. Any other wait gets a deadline,
+  and when it passes, report what you were waiting for.
 - **Stay on the spike branch.** Run `git branch --show-current` first and
   check it's the one in the brief. Never switch branches, and never
   commit, reset or push anywhere else. The commit gate doesn't run on
