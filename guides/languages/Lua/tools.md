@@ -279,7 +279,101 @@ Rely on two checks instead:
   a line that runs but whose result no test checks, which is why the
   review matters.
 
+### Architecture
+
+No maintained FOSS tool checks the dependencies between a Lua project's
+own modules. selene's `restricted_module_paths` lint skips a `require` that
+takes a string, which is how modules are loaded. So a search in
+`scripts/check`
+[enforces the layers](../../../architecture/README.md#enforce-it).
+
+`require` turns each dot in a module's name into a directory, and returns
+what the module's file returns. busted's default path holds `src/?.lua`
+and `src/?/init.lua`, so `src/app/core/init.lua` is the module `app.core`.
+Make each layer a directory under `src/app/`. The names are examples:
+replace them with the layers in the project's `design.md`.
+
+Only what a module returns can be used, and its `local` functions stay
+private. Lua can't hide a whole module, though: any code can `require` it
+by name. So keep each layer's entry points directly in its directory, such
+as `app.core` and `app.adapters.console`, and the rest under an `internal`
+folder, such as `src/app/core/internal/format.lua`. The layer's own modules
+may require those, and its entry points return only what callers need.
+`src/app/core/init.lua`:
+
+```lua
+local format = require('app.core.internal.format')
+
+local M = {}
+
+function M.greet(name)
+  return format.title('hello, ' .. name)
+end
+
+return M
+```
+
+Fail `scripts/check` when the core requires an edge, or when code outside a
+layer requires one of its internal modules. That covers every spec, so a
+layer's own specs use only its entry points too. A breach prints the file,
+the line and the `require`:
+
+```sh
+if find src/app/core -name '*.lua' -exec grep -nE \
+    'require[^[:alnum:]_]*app\.(adapters|cli)([^[:alnum:]_]|$)' \
+    /dev/null {} + | grep .; then
+  echo 'the core must not require an edge' >&2
+  exit 1
+fi
+
+for c in core adapters cli; do
+  if find src spec -name '*.lua' ! -path "src/app/${c}/*" -exec grep -nE \
+      "require[^[:alnum:]_]*app\.${c}\.internal([^[:alnum:]_]|\$)" \
+      /dev/null {} + | grep .; then
+    echo "require app.${c} only through its entry points" >&2
+    exit 1
+  fi
+done
+```
+
+```text
+spec/core/breach_spec.lua:1:local format = require('app.core.internal.format')
+require app.core only through its entry points
+```
+
+- `/dev/null` makes grep name the file even when `find` passes it only one.
+  `find` doesn't pass on grep's exit status, so the final `grep .` decides:
+  it succeeds only when a line matched.
+- The search sees only a `require` of a literal name, in any of its forms,
+  such as `require 'app.cli'` or `require [[app.cli]]`. Review must catch a
+  `require` of a variable, a module taken from `package.loaded`, and a file
+  run with `dofile` or `loadfile`.
+
+To let one existing breach through, skip its file with another `! -path`,
+with a comment naming the breach and how to fix it.
+
+Prove each check bites. For the first, the builder keeps a new core module
+that requires an edge as `scripts/breaches/core-requires-edge.patch`:
+
+```text
+Rule: the core never requires an edge
+Fails with: the core must not require an edge
+
+diff --git a/src/app/core/breach.lua b/src/app/core/breach.lua
+new file mode 100644
+index 0000000..3d57ecf
+--- /dev/null
++++ b/src/app/core/breach.lua
+@@ -0,0 +1,4 @@
++-- Breach: the core requires an edge.
++local cli = require('app.cli')
++
++return cli
+```
+
 ## Sources
 
 - [luamut on LuaRocks](https://luarocks.org/modules/ligurio/luamut)
 - [universalmutator](https://github.com/agroce/universalmutator)
+- [Lua 5.4 manual: modules](https://www.lua.org/manual/5.4/manual.html#6.3)
+- [selene: `restricted_module_paths`](https://kampfkarren.github.io/selene/lints/restricted_module_paths.html)

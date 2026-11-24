@@ -228,6 +228,110 @@ whose mutants can't change behaviour, in `## MUTANT_SKIP_BEGIN` and
 `## MUTANT_SKIP_END` comments, rather than writing a test that contorts
 the code.
 
+### Architecture
+
+Perl has no private modules or subs, and no maintained FOSS tool checks
+the dependencies between a project's own modules. A naming convention,
+Perl::Critic and a search in `scripts/check`
+[enforce the layers](../../../architecture/README.md#enforce-it) instead.
+
+Make each layer a namespace with a module of the same name, such as
+`App::Core` in `lib/App/Core.pm`, with the modules under it in
+`lib/App/Core/`. The names are examples: replace them with the layers in
+the project's `design.md`.
+
+A layer's entry points are its modules outside an `Internal` namespace,
+and their subs whose names don't start with `_`. Keep the rest under
+`Internal`, such as `App::Core::Internal::Format`, which only the layer's
+own modules use. A sub whose name starts with `_` is private to its
+package.
+
+Perl::Critic's `Subroutines::ProtectPrivateSubs` policy reports a call to
+a `_` sub from outside its package, such as `App::Core::_salute()` or
+`App::Core->_salute()`, in the tests too. It's at severity 3, so
+[Linting](#linting) already runs it, but the `verbose = 8` format leaves
+out the file name. `scripts/check` runs it on its own with `--verbose 1`,
+which prints the file and line, and exits 2 on a breach:
+
+```sh
+perlcritic --quiet --verbose 1 \
+  --single-policy Subroutines::ProtectPrivateSubs lib bin t
+```
+
+```text
+t/core/salute.t:6:4:Private subroutine/method used
+```
+
+Then fail `scripts/check` when the core names an edge, or when code outside
+a layer, tests included, names one of its internal modules. A breach prints
+the file, the line and the code:
+
+```sh
+if find lib/App/Core.pm lib/App/Core -type f -exec grep -nE \
+    'App(::|/)(Adapters|CLI)([^[:alnum:]_]|$)' /dev/null {} + | grep .; then
+  echo 'the core must not use an edge' >&2
+  exit 1
+fi
+
+for c in Core Adapters CLI; do
+  if find lib bin t -type f ! -path "lib/App/${c}.pm" \
+      ! -path "lib/App/${c}/*" -exec grep -nE \
+      "App(::|/)${c}(::|/)Internal([^[:alnum:]_]|\$)" /dev/null {} + |
+    grep .; then
+    echo "use App::${c} only through its entry points" >&2
+    exit 1
+  fi
+done
+```
+
+```text
+t/core/breach.t:5:use App::Core::Internal::Format qw(title);
+use App::Core only through its entry points
+```
+
+- The first search fails on a `use`, a `require` of the file, such as
+  `require 'App/CLI.pm'`, and a call such as `App::CLI::run()`. A comment
+  or POD that names an edge fails too: the core has no reason to know its
+  edges.
+- `/dev/null` makes grep name the file even when `find` passes it only one.
+  `find` doesn't pass on grep's exit status, so the final `grep .` decides:
+  it succeeds only when a line matched.
+- Neither check sees a call through a class name held in a variable, such
+  as `$class->_salute()`, which the policy can't tell from
+  `$self->_salute()`. Nor do they see `require $name`, a string `eval`, or
+  `can('_salute')`. Review must catch those.
+
+To let one existing breach through, put
+`## no critic (Subroutines::ProtectPrivateSubs)` on the line, with the
+reason, or skip the file in the search with another `! -path`, with a
+comment naming the breach and how to fix it.
+
+Prove each check bites. For the second, the builder keeps a new test that
+uses an internal module as `scripts/breaches/test-uses-internal.patch`:
+
+```text
+Rule: tests use a layer only through its entry points
+Fails with: use App::Core only through its entry points
+
+diff --git a/t/core/breach.t b/t/core/breach.t
+new file mode 100644
+index 0000000..c3d65d9
+--- /dev/null
++++ b/t/core/breach.t
+@@ -0,0 +1,9 @@
++use v5.36;
++use Test::More;
++
++# Breach: a test uses the core's internal module.
++use App::Core::Internal::Format qw(title);
++
++is(title('ada'), 'Ada', 'reaches past the entry point');
++
++done_testing();
+```
+
 ## Sources
 
 - [`test-generator-mutate` documentation](https://metacpan.org/dist/App-Test-Generator/view/bin/test-generator-mutate)
+- [Perl::Critic: `Subroutines::ProtectPrivateSubs`](https://metacpan.org/pod/Perl::Critic::Policy::Subroutines::ProtectPrivateSubs)
+- [`perlcritic`: `--verbose` formats](https://metacpan.org/pod/perlcritic)

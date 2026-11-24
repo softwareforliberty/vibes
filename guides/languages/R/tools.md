@@ -224,6 +224,136 @@ one that just runs the line. muttest has no way to skip a single mutant,
 so if one can't change behaviour, leave it to the margin under 80% rather
 than writing a test that contorts the code.
 
+### Architecture
+
+Make each layer its own package, in its own directory, so the package
+system [enforces the layers](../../../architecture/README.md#enforce-it).
+The names are examples: replace them with the layers in the project's
+`design.md`. The core, `appcore` in `core/`, lists no other layer in its
+`DESCRIPTION`. Each edge lists the layers it uses under `Imports`.
+
+`R CMD check` warns about a call through `::` to a package the
+`DESCRIPTION` doesn't list, and the check under
+[Configuration](#configuration) fails on any warning:
+
+```text
+* checking dependencies in R code ... WARNING
+'::' or ':::' import not declared from: ‘appcli’
+```
+
+So the core can't call an edge through `::` without listing it. Fail
+`scripts/check` on any mention of an edge in the core's directory, which
+catches the listing too:
+
+```sh
+if find core -type f -exec grep -nE \
+    '(^|[^[:alnum:].])app(adapters|cli)([^[:alnum:].]|$)' /dev/null {} + |
+  grep .; then
+  echo 'the core must not use an edge' >&2
+  exit 1
+fi
+```
+
+```text
+core/DESCRIPTION:12:Imports: appadapters
+the core must not use an edge
+```
+
+A package's entry points are the functions its `NAMESPACE` exports. Other
+packages can still reach the rest with `:::`, and the `R CMD check` under
+[Configuration](#configuration) doesn't report it. Fail on any `:::`, in
+the code and the tests:
+
+```sh
+if find core adapters cli -name '*.R' -exec grep -n ':::' /dev/null {} + |
+  grep .; then
+  echo 'use a package only through its exports' >&2
+  exit 1
+fi
+```
+
+- `/dev/null` makes grep name the file even when `find` passes it only one.
+  `find` doesn't pass on grep's exit status, so the final `grep .` decides:
+  it succeeds only when a line matched.
+- Review must catch what the searches can't see: `get()`,
+  `getFromNamespace()`, `asNamespace()` and `environment()` reach
+  unexported functions with no `:::`.
+
+A package's own tests can call its unexported functions with no `:::` at
+all, because `test_check()` runs them in a copy of the package's namespace.
+Run them in a child of the global environment instead, which sees only the
+exports that `library()` attached. In each package's `tests/testthat.R`,
+such as `core/tests/testthat.R`:
+
+```r
+library(testthat)
+library(appcore)
+
+# Run the tests with only the exports in scope, as callers see them.
+test_check("appcore", env = new.env(parent = globalenv()))
+```
+
+A test that calls an internal function then fails under `R CMD check`,
+naming the file and line:
+
+```text
+── Error ('test-breach.R:3:3'): title_case() capitalises ───────────────────────
+Error in `title_case("ada")`: could not find function "title_case"
+```
+
+`devtools::test()` and `testthat::test_local()` don't read `testthat.R`, and
+give the tests every function, so only `R CMD check` catches it.
+
+`scripts/check` runs the commands under [Configuration](#configuration) in
+each package, core first. It installs each package into a temporary
+library first: the next packages' checks need it, and lintr finds a
+package's imports through its installed copy. With `set -e`:
+
+```sh
+lib="$(mktemp -d)"
+R_LIBS="${lib}"
+export R_LIBS
+for pkg in core adapters cli; do
+  R CMD INSTALL --library="${lib}" "${pkg}"
+  (
+    cd "${pkg}"
+    Rscript -e 'styler::style_pkg(dry = "fail")'
+    Rscript -e 'if (length(lintr::lint_package())) quit(status = 1)'
+    out="$(mktemp -d)"
+    (cd "${out}" && R CMD build "${OLDPWD}" &&
+      _R_CHECK_CRAN_INCOMING_=false R CMD check --as-cran --no-manual \
+        ./*.tar.gz)
+    grep -qx 'Status: OK' "${out}"/*.Rcheck/00check.log
+  )
+done
+```
+
+To let one existing breach through, skip its file in the search with
+`! -path`, with a comment naming the breach and how to fix it.
+
+Prove each check bites. For the last, the builder keeps a new core test
+that calls an internal function as
+`scripts/breaches/test-calls-internal.patch`:
+
+```text
+Rule: tests use a package only through its exports
+Fails with: could not find function "title_case"
+
+diff --git a/core/tests/testthat/test-breach.R b/core/tests/testthat/test-breach.R
+new file mode 100644
+index 0000000..4be5960
+--- /dev/null
++++ b/core/tests/testthat/test-breach.R
+@@ -0,0 +1,4 @@
++# Breach: a test calls an internal function.
++test_that("title_case() capitalises", {
++  expect_identical(title_case("ada"), "Ada")
++})
+```
+
 ## Sources
 
 - [muttest documentation](https://jakubsob.github.io/muttest/)
+- [Writing R Extensions: package dependencies](https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Package-Dependencies)
+- [Writing R Extensions: package namespaces](https://cran.r-project.org/doc/manuals/r-release/R-exts.html#Package-namespaces)
+- [testthat: `test_dir()`](https://testthat.r-lib.org/reference/test_dir.html)
