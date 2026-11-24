@@ -80,7 +80,11 @@ while holding it to the standards of careful, experienced developers.
   and interface designer, the commit message suggester, the
   retrospective, the pull request writer, the issue reader, the
   prototyper and the wizard writer.
-- **`hooks/`:** the commit gate, for Claude Code and for git; a guide
+- **`bin/host-files`:** writes vibes' agents for Codex, and a whole
+  extension for Gemini CLI, as [Other agents](#other-agents) says. It's in
+  `lib/host_files/`, and its tests in `tests/host_files/`.
+- **`hooks/`:** the commit gate, for Claude Code, Copilot CLI, Codex,
+  Gemini CLI and git; a guide
   check that makes the agent read the guide for each kind of file before
   writing it; and a guard that keeps the reviewers, the commit message
   suggester, the retrospective, the survey's agents, the pull request
@@ -648,17 +652,76 @@ and date, set the same version in `.claude-plugin/plugin.json`, commit
 both, and tag the commit `v<version>`. Until 1.0, a minor version marks any
 change in how the workflow, the gate or the guides behave.
 
-## Use without Claude Code
+## Other agents
 
-Everything is plain Markdown and Bash, so other agents and people can use it
-too:
+vibes is built for Claude Code, and also runs in GitHub Copilot CLI, Codex
+and Gemini CLI, with as much of its enforcement as each allows. Each needs
+Bash, git and Python 3. Each loads vibes, and the hooks are tested with the
+input each sends them, but no workflow has yet run end to end in any of
+them.
 
-- Point the agent at a skill's `SKILL.md` or an agent definition in
-  `agents/`, and replace `${CLAUDE_PLUGIN_ROOT}` with the path to your
-  checkout of this repository.
-- Read the guides in `guides/` directly, and copy a guide's `.editorconfig`
-  and tool configs into your project.
-- Install the commit gate as a git hook (see below).
+### Copilot CLI
+
+Copilot CLI reads the plugin as Claude Code does, skills, agents and hooks:
+
+```sh
+copilot plugin marketplace add softwareforliberty/vibes
+copilot plugin install vibes@vibes
+```
+
+Its commands have no prefix: `/vibe`, `/optimise`, `/debug`.
+
+### Codex
+
+Codex reads the plugin's skills and hooks, but a plugin can't carry agents,
+so `bin/host-files` writes them as Codex's custom agents:
+
+```sh
+codex plugin marketplace add softwareforliberty/vibes
+codex plugin add vibes@vibes
+"$(ls -d ~/.codex/plugins/cache/vibes/vibes/* | sort -V | tail -n 1)/bin/host-files" codex ~/.codex/agents
+```
+
+Then run `/hooks` in a session, and trust vibes' hooks: Codex skips a
+plugin's hooks until you do. Start a workflow by naming its skill, such as
+`$vibes:vibe add CSV export`. Run `host-files` again after each update.
+
+### Gemini CLI
+
+Gemini CLI reads only its own extensions, so `bin/host-files` writes one,
+from a checkout of this repository:
+
+```sh
+bin/host-files gemini ~/.vibes-gemini
+gemini extensions link ~/.vibes-gemini
+```
+
+The commands are as in Claude Code: `/vibes:vibe`, `/vibes:optimise`. The
+extension uses the checkout for everything else, so keep it where it is,
+and run `host-files` again after updating it.
+
+### What each enforces
+
+| | Claude Code | Copilot CLI | Codex | Gemini CLI |
+|---|---|---|---|---|
+| The commit gate on the agent's commits | Yes | Yes | Once you trust the hooks | Yes |
+| A commit that loosens the gate | Asks you | Asks you | Refused | Refused |
+| Formatting and linting each file written | Yes | Yes | Yes | Yes |
+| The guide check | Yes | Yes | Yes | Yes |
+| Reviewers write only their findings | Yes | Yes | Yes | No |
+| Each agent's tools | As listed | As listed | All, but an agent listed without Bash may only run commands that read | As listed |
+| Each agent's model | As listed | Not checked | The session's | The session's |
+
+Elsewhere, the guide check counts a guide as read if the session's
+transcript names its files, even before the conversation was compacted.
+Gemini CLI doesn't say which agent is calling a tool, so a reviewer there
+has no shell, but could write any file. Codex can't ask you questions
+outside Plan mode, so vibes asks in its reply, and waits for yours.
+
+The rest is plain Markdown and Bash, for any agent or person: read the
+guides in `guides/`, copy a guide's `.editorconfig` and tool configs into
+your project, and install the commit gate as a git hook, below, which
+holds whatever makes the commit.
 
 ## The commit gate
 
@@ -688,14 +751,15 @@ Once it exists, the gate:
 - blocks a commit that adds a line carrying a `/vibes:debug` run's debug
   tag, such as `vibes-debug-month-end`
 - runs no checks on `spike/*` branches, apart from the subject's length
-- in Claude Code, also blocks `git commit -a` and `--no-verify`
-- in Claude Code, asks you to confirm a commit that loosens the gate
+- in an agent's session, also blocks `git commit -a` and `--no-verify`
+- in an agent's session, asks you to confirm a commit that loosens the gate
   itself: one that deletes `scripts/check` or `scripts/check-file`, makes
   either not executable, removes or changes a line so that a word of it is
   lost, such as a check, an option or a guide, or lets a failure pass, such
   as with `|| true` or an early `exit`. Extending the gate keeps every word,
   so it goes through without asking. Where nobody can answer,
-  as in `claude -p`, the commit is refused
+  as in `claude -p`, or the host can't ask from a hook, as in Codex and
+  Gemini CLI, the commit is refused
 
 `scripts/check` runs its static checks first, and stops before the tests
 if any fail, since the tests are the slow part. It runs only the fast
@@ -724,6 +788,9 @@ repository's root:
 ~/.claude/plugins/cache/vibes/vibes/<version>/bin/install-git-hooks
 ```
 
+or the same script in another agent's copy of vibes, such as
+`~/.codex/plugins/cache/vibes/vibes/<version>/bin/install-git-hooks`.
+
 It writes a small stub for each hook, not a link: the stub runs the hook
 from the newest vibes installed, so updates apply and removing an old
 version breaks nothing, and refuses the commit if vibes is gone. It leaves
@@ -731,8 +798,9 @@ a hook that isn't vibes' alone unless you add `--replace`. `/vibes:vibe`
 and `/vibes:optimise` run it at the start of each run, which also mends
 hooks installed as links by earlier versions.
 
-The hooks need Bash, git and `realpath`. The Claude Code hook also uses `jq`
-or Python 3 to read its input.
+The hooks need Bash, git and `realpath`. The agents' hooks also use `jq`
+or Python 3 to read their input, and Python 3 for Codex's and Gemini
+CLI's.
 
 ## License
 

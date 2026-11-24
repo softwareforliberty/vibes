@@ -3,10 +3,10 @@
 # vibes-commit-gate
 #
 # A git hook for the vibes commit gate, installed by bin/install-git-hooks.
-# It runs the vibes hook named below from the newest vibes in Claude Code's
-# plugin cache, so updates apply and removing an old version's folder breaks
-# nothing. When it can't find vibes, it refuses the commit rather than let it
-# through unchecked.
+# It runs the vibes hook named below from the newest vibes in the agent's
+# plugin cache, such as Claude Code's or Codex's, so updates apply and
+# removing an old version's folder breaks nothing. When it can't find vibes,
+# it refuses the commit rather than let it through unchecked.
 
 set -euo pipefail
 
@@ -43,7 +43,7 @@ main() {
       printf 'vibes commit gate: vibes is no longer installed in %s,\n' \
         "${VIBES_ROOT:-${VIBES_VERSIONS}}"
       printf 'so this commit is blocked rather than left unchecked.\n'
-      printf 'Install vibes in Claude Code again, then commit. To drop the\n'
+      printf 'Install vibes again, then commit. To drop the\n'
       printf 'gate instead, remove %s.\n' "$0"
     } >&2
     exit 1

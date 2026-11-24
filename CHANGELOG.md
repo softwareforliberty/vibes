@@ -128,6 +128,19 @@ guides behave, and says so under **Changed**.
   transcript and its subagents': every tool call on one line with a
   reference, and the failures, hook blocks, retries, repeated calls and
   largest results.
+- **vibes runs in Copilot CLI, Codex and Gemini CLI,** with as much of its
+  enforcement as each allows, as the README's "Other agents" says.
+  - **Copilot CLI** installs the plugin as it is.
+  - **Codex** installs its skills and hooks, and `bin/host-files codex`
+    writes its agents. Each skill only you start has an
+    `agents/openai.yaml`, so Codex never starts it itself.
+  - **Gemini CLI** gets an extension from `bin/host-files gemini`.
+  - **The hooks** read each host's input, including a Codex patch that
+    changes several files. Where a hook can't ask you, a commit that
+    loosens the gate is refused. An agent listed without Bash may run
+    only commands that read, on a host that can't take the shell away.
+  - **Skills and agents** say what `${CLAUDE_PLUGIN_ROOT}` stands for
+    where it isn't filled in, and skills pass the folder to each agent.
 
 ### Changed
 
