@@ -185,8 +185,9 @@ The user can ask for a run that never stops to ask them anything, such as
 `/vibes:vibe unattended: <task>` or by saying so in the task. Record it in
 `state.md`. Then, wherever this skill says to ask the user:
 
-- **Open questions in the spec:** research the facts as usual. Decide
-  each decision yourself: take its recommended answer, unless it does
+- **Open questions in the spec:** work through the rounds as usual,
+  deciding each round's decisions yourself, so later rounds follow from
+  the choices made: take its recommended answer, unless it does
   more than the user asked, and then choose the option that does the
   least the user didn't ask for and is easiest to change later. Record it
   in the spec's assumptions, marked `Unattended decision:`, with the
@@ -269,27 +270,30 @@ finished report:
 ## Open questions
 
 Whenever a spec or design lists open questions, the spec template marks
-each one a fact or a decision. The user is asked only for decisions.
+each one a fact or a decision, and what it waits on, such as
+`(decision, after Q2)`. The user is asked only for decisions, in
+**rounds:** each round asks every decision whose prerequisites are
+answered, and no other, so the user never answers a question that an
+earlier answer would have changed or made moot.
 
-1. **Research the facts first,** before asking anything, so the decisions
-   come in one ask. Spawn a `vibes:researcher` for each `(fact)` question,
-   all in one message. Each brief gives the question and why the spec
-   needs it, the project's languages and where its dependency versions
-   are pinned, such as a lock file, today's date, and the note's path,
+1. **Find the round's questions:** the open ones that wait on nothing
+   still open. A question waiting on a fact that's being researched waits
+   for its note.
+2. **Research the round's facts in the background:** spawn a
+   `vibes:researcher` for each `(fact)` among them, all in one message.
+   Each brief gives the question and why the spec needs it, the project's
+   languages and where its dependency versions are pinned, such as a lock
+   file, today's date, and the note's path,
    `.vibes/<name>/research/<topic>.md`. Each replies:
    - `ANSWERED`: the fact is settled, in its note.
    - `UNSETTLED`: the sources don't settle it. It becomes a decision, and
      the note's findings go with it.
    - `A DECISION`: it was a choice after all, and becomes a decision.
-
-   Give the designer the notes, in the mode it was in, to write each
-   answer into the spec, citing its note. For a small task's spec, which
-   you wrote, do the same yourself.
-2. **Ask the decisions,** all at once, numbered, each with its
-   recommended answer worded so "yes" accepts it, and the other options.
-   Tell the user they can answer by number, or reply "yes" to accept every
-   recommendation. Then have the designer write the answers in, and empty
-   the section.
+3. **Ask the round's decisions** without waiting for the researchers:
+   all at once, by their numbers, each with its recommended answer worded
+   so "yes" accepts it, and the other options. Tell the user they can
+   answer by number, or reply "yes" to accept every recommendation. When
+   the round has no decisions, only facts, wait for the notes.
 
    **When only someone else can answer,** such as a client, a domain
    expert or another team, offer a questionnaire for them, as
@@ -307,7 +311,20 @@ each one a fact or a decision. The user is asked only for decisions.
    the spec, each confirmed scenario as a requirement the build tests,
    citing the prototype branch and commit. An unattended run never builds
    one.
-3. **Keep the notes with the spec.** When you commit the spec or design,
+
+   A decision sent to someone else, or tried in a prototype, holds back
+   only the questions that wait on it.
+4. **Write the round in:** once the user has answered and the round's
+   researchers have replied, give the designer, in the mode it was in,
+   the answers and the notes. It writes each into the spec, citing its
+   note, removes the questions they settle or make moot, and adds any
+   new question an answer raises, with what it waits on. For a small
+   task's spec, which you wrote, do the same yourself.
+5. **Start the next round,** from step 1. Done when the section says
+   "None.". After the fifth round, ask every question still open in one
+   last round, recommending answers that fit the ones already given, so
+   the questions can't go on for ever.
+6. **Keep the notes with the spec.** When you commit the spec or design,
    copy each note it cites into `<spec directory>/research/`, and commit
    them with it, so the facts and their sources stay in the project.
 
@@ -549,7 +566,9 @@ apply to it.
 
 ## Phase 1: Spec
 
-1. Spawn `vibes:designer` in `spec` mode, with the task and the guides.
+1. Spawn `vibes:designer` in `spec` mode, with the task and the guides,
+   and the decisions document the task names, if any, such as the one
+   `/vibes:grill` writes.
    Its spec directory is the draft directory `.vibes/<name>/draft/`, which
    git ignores, so the gate setup's commit isn't blocked by the new files.
    Its glossary is a copy there too, `.vibes/<name>/draft/glossary.md`:
