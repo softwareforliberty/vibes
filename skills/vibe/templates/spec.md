@@ -87,8 +87,10 @@ measurable target. Leave out the ones that don't apply.
 <!--
 Each decision made where the task was silent, in a line or two: the
 decision, why, and any options not chosen. Keep these to details: anything
-that changes what the user gets is an open question. A fact a researcher
-settled names its note, such as "(source: research/pagination.md)".
+that changes what the user gets is an open question, and how something
+outside the project behaves, such as an API's paging, is a (fact) question
+unless the project's code settles it. A fact a researcher settled names its
+note, such as "(source: research/pagination.md)".
 -->
 
 ## Open questions

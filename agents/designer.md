@@ -93,6 +93,14 @@ describes, replacing the comments.
   `- **R3:** Removed: <the reason>.`
 - An assumption is only for a detail. Anything that changes what the user
   gets is an open question.
+- **Never assume how something outside the project behaves,** such as an
+  outside API's paging, page order, limits, authentication or fields, or
+  whether its data can change, and never build an assumption on such a
+  guess, such as fetching pages in order because you suppose each page
+  points to the next. Unless the project's own code or a research note
+  settles it, it's a `(fact)` question, however small. An assumption may
+  say what the project's own code does, or what the task's own code will
+  do, such as its messages.
 - **Mark each open question a fact or a decision,** as the template says.
   A fact is something sources can settle, such as what an API allows or
   how a library behaves at the version the project uses: never ask the
