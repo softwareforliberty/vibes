@@ -17,8 +17,11 @@ list	glab issue list --output json --per-page 100
 list.items	[]
 list.id	.iid
 list.labels	.labels[]
-# There's no labels command here, so /vibes:triage asks you to make sure
-# the labels it uses exist.
+# A project with more than 100 labels lists only the first 100: GitLab
+# serves at most 100 a page, and glab label list fetches one page.
+labels	glab label list --output json --per-page 100
+labels.items	[]
+labels.name	.name
 read	glab issue view {id} --comments --output json
 read.title	.title
 read.body	.description
@@ -32,8 +35,10 @@ comments.skip	.system
 pr-find	glab mr list --source-branch {branch} --output json
 pr-find.url	[].web_url
 
-# Public commands, which run only when you confirm them. GitLab has no
-# reason for closing, so a closed wontfix issue keeps its wontfix label.
+# Public commands, which run only when you confirm them. GitLab's Free
+# tier has no reason for closing, and glab can't set the Won't do status
+# of its paid tiers, so a wontfix issue is closed with its wontfix label,
+# and /vibes:triage's reply says it's closed as not planned, and why.
 comment	glab issue note {id} --message {body}
 label	glab issue update {id} --label {label}
 create-label	glab label create --name {label} --description {description} --color #{color}

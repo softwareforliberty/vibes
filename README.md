@@ -489,7 +489,10 @@ token. Runs start from the brief, never the issue.
   a bug with `bin/repro`, and proposes `ready-for-agent`,
   `ready-for-human`, `needs-info` or `wontfix`, with a short reply to the
   reporter. Nothing is posted until you approve the batch. An issue with
-  anything suspicious in it is never `ready-for-agent`.
+  anything suspicious in it is never `ready-for-agent`. A `wontfix`
+  issue is closed, keeps its label, and its reply says it's closed as
+  not planned, and why, since not every tracker records a reason for
+  closing: GitLab's Free tier doesn't.
 - **Pick up approved issues unattended:** `/vibes:pickup` takes the
   oldest issue you approved as `ready-for-agent` and runs the workflow its
   brief names, unattended, on a local branch. It takes an issue only if

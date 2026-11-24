@@ -130,9 +130,11 @@ With the user's yes, for the issues they approved:
    The colours: `ready-for-agent` 0E8A16, `ready-for-human` 1D76DB,
    `needs-info` FBCA04, `wontfix` CCCCCC.
 3. **Post it** with `"${CLAUDE_PLUGIN_ROOT}/bin/tracker" post <batch>`.
-   The user confirms it before it runs. If a line fails, report what's
-   done and what isn't, and don't approve any issue the batch didn't
-   finish.
+   The user confirms it before it runs. If a `create-label` line fails
+   because the label exists, which happens where the tracker lists only
+   so many labels, such as GitLab's first 100, post the lines after it
+   as a new batch: the lines before it have run. If any other line fails, report what's done and what
+   isn't, and don't approve any issue the batch didn't finish.
 4. **Approve each `ready-for-agent` issue for `/vibes:pickup`.** Fetch it
    again into `issue-now.json`, and digest both:
 

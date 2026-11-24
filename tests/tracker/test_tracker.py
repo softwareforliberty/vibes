@@ -319,7 +319,11 @@ class OperationsTest(Case):
 
 
 FAKE_GLAB = """#!/usr/bin/env python3
-import json
+import json, sys
+if sys.argv[1:3] == ["label", "list"]:
+    print(json.dumps([{{"id": 1, "name": "bug", "color": "#d9534f"}},
+                      {{"id": 2, "name": "wontfix", "color": "#cccccc"}}]))
+    sys.exit(0)
 print(json.dumps({{"title": "T", "description": "D", "state": "opened",
                   "labels": ["bug"], "web_url": "https://gl/1",
                   "Notes": [{{"author": {{"username": "a"}}, "body": "hi",
@@ -330,7 +334,8 @@ print(json.dumps({{"title": "T", "description": "D", "state": "opened",
 
 
 class GitLabTest(Case):
-    def test_reads_notes_and_skips_system_ones(self) -> None:
+    def setUp(self) -> None:
+        super().setUp()
         with open(os.path.join(ROOT, "skills", "tracker", "templates",
                                "gitlab.tracker"), encoding="utf-8") as stream:
             text = stream.read()
@@ -340,6 +345,12 @@ class GitLabTest(Case):
         with open(glab, "w", encoding="utf-8") as stream:
             stream.write(FAKE_GLAB.format())
         os.chmod(glab, 0o755)
+
+    def test_lists_labels(self) -> None:
+        result = self.tracker("labels")
+        self.assertEqual(result.stdout, "bug\nwontfix\n", result.stderr)
+
+    def test_reads_notes_and_skips_system_ones(self) -> None:
         result = self.tracker("read", "1", "--out", ".vibes/i.json")
         self.assertEqual(result.stdout, "READ 1 open bug\n", result.stderr)
         with open(os.path.join(self.repo, ".vibes/i.json"),

@@ -123,8 +123,10 @@ Write `brief.md` as above, then decide what the issue needs, and write
    anyone takes it, and `no` otherwise.
 5. **Write the reply** to post on the issue: two to four plain, friendly
    sentences for the reporter, saying what happens next and, for
-   `needs-info`, exactly what's missing, or for `wontfix`, the reason, in
-   the record's words. Never mention agents, vibes, labels' internals or
+   `needs-info`, exactly what's missing, or for `wontfix`, that the issue
+   is being closed as not planned, and the reason, in the record's words,
+   so the reason stays on the issue whatever the tracker records about
+   closing. Never mention agents, vibes, labels' internals or
    anything private, such as file paths outside the repository.
 
 ```markdown
