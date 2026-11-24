@@ -63,11 +63,17 @@ note answers from the library's code at the pinned version, with a
 `Checked:` line naming it, and says the README is out of date.
 **`designer-researches-facts-asks-decisions`** gives the designer a task
 that needs a fact about an outside API and a choice of file format, and
-passes when the fact is marked `(fact)` rather than asked or guessed, and
-the choice is a `(decision)` with a recommended answer. Run them with
-`--tag research --allow-tools Write Edit "Bash(*/tree-check)" "Bash(git *)"
-"Bash(cat *)" "Bash(ls *)" "Bash(grep *)" "Bash(head *)" "Bash(sed -n *)"
-"Bash(pip show *)"`.
+passes when the fact is marked `(fact)` rather than asked or guessed, the
+choice is a `(decision)` with a recommended answer, and no assumption
+states how the API behaves. Its `finish` script copies the spec's
+Assumptions to a file of their own, so the judge reads only those. Run
+them with `--tag research --judge-model sonnet --allow-tools Write Edit
+"Bash(*/tree-check)" "Bash(*/finish)" "Bash(git *)" "Bash(cat *)"
+"Bash(ls *)" "Bash(grep *)" "Bash(head *)" "Bash(sed -n *)"
+"Bash(pip show *)"`. The default judge, Haiku, failed clean assumptions,
+such as the vendored client's timeout, in about one run in five; Sonnet
+passed all of 9 such runs, and failed a planted guess about the API's
+paging.
 
 **`designer-names-entry-points`** gives the designer an approved spec for
 a command that writes the day's sales as a CSV, in the same project, and

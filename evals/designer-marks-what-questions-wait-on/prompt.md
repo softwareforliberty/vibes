@@ -2,7 +2,7 @@
 max_turns: 60
 timeout_seconds: 1200
 runs: 3
-allowed_tools: [Read, Glob, Grep, Agent, Write, Edit, "Bash(*/tree-check)", "Bash(git *)", "Bash(cat *)", "Bash(ls *)", "Bash(grep *)", "Bash(head *)", "Bash(sed -n *)", "Bash(pip show *)"]
+allowed_tools: [Read, Glob, Grep, Agent, Write, Edit, "Bash(*/tree-check)", "Bash(*/finish)", "Bash(git *)", "Bash(cat *)", "Bash(ls *)", "Bash(grep *)", "Bash(head *)", "Bash(sed -n *)", "Bash(pip show *)"]
 ---
 
 Run the `vibes:designer` agent, giving it exactly this brief, with `<cwd>`

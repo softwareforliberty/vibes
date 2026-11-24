@@ -19,3 +19,17 @@ cp "${fixtures}/retro-tools/tree-check" .vibes/research-eval/
 chmod +x .vibes/research-eval/tree-check
 .vibes/research-eval/tree-check >/dev/null
 mv .vibes/research-eval/tree-now .vibes/research-eval/tree-before
+# Checks the tree, then copies the spec's Assumptions section to its own
+# file, so the judge reads only that, not the open questions about the API
+# above it. One command, so the agent can't run one and forget the other.
+cat > .vibes/research-eval/finish <<'SCRIPT'
+#!/bin/sh
+dir="$(dirname -- "$0")"
+"${dir}/tree-check"
+{
+  echo "Assumptions:"
+  awk '/^## Assumptions/ { on = 1; next } on && /^## / { exit } on' \
+    "${dir}/draft/spec.md"
+} > "${dir}/assumptions.md"
+SCRIPT
+chmod +x .vibes/research-eval/finish

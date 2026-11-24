@@ -104,10 +104,24 @@ cp "${{fixtures}}/retro-tools/tree-check" {run}/
 chmod +x {run}/tree-check
 {run}/tree-check >/dev/null
 mv {run}/tree-now {run}/tree-before
+# Checks the tree, then copies the spec's Assumptions section to its own
+# file, so the judge reads only that, not the open questions about the API
+# above it. One command, so the agent can't run one and forget the other.
+cat > {run}/finish <<'SCRIPT'
+#!/bin/sh
+dir="$(dirname -- "$0")"
+"${{dir}}/tree-check"
+{{
+  echo "Assumptions:"
+  awk '/^## Assumptions/ {{ on = 1; next }} on && /^## / {{ exit }} on' \\
+    "${{dir}}/draft/spec.md"
+}} > "${{dir}}/assumptions.md"
+SCRIPT
+chmod +x {run}/finish
 """
 
 TOOLS = ('[Read, Glob, Grep, Agent, Write, Edit, "Bash(*/tree-check)", '
-         '"Bash(git *)", "Bash(cat *)", "Bash(ls *)", "Bash(grep *)", '
+         '"Bash(*/finish)", "Bash(git *)", "Bash(cat *)", "Bash(ls *)", "Bash(grep *)", '
          '"Bash(head *)", "Bash(sed -n *)", "Bash(pip show *)"]')
 
 RESEARCHER_PROMPT = """---
@@ -158,10 +172,10 @@ Glossary: <cwd>/{run}/draft/glossary.md, which doesn't exist yet
 Decision records: <cwd>/docs/adr/, which doesn't exist yet
 ```
 
-Don't do its work yourself. When it's done, run `<cwd>/{run}/tree-check`,
-then read `<cwd>/{run}/draft/spec.md`.
+Don't do its work yourself. When it's done, run `<cwd>/{run}/finish` on
+its own, then read `<cwd>/{run}/draft/spec.md`.
 
-Reply with only the line `tree-check` printed, then the spec's Open
+Reply with only the line `finish` printed, then the spec's Open
 questions and Assumptions sections, complete and unchanged, and nothing
 else: not the agent's reply.
 """
@@ -213,11 +227,24 @@ def build() -> None:
          "recommends-a-decision": "---\ntype: regex\n"
                                   "pattern: '\\(decision\\)[\\s\\S]{0,400}?"
                                   "Recommended: yes'\nflags: i\n---\n",
-         "no-guessed-fact": llm(
-             "the Assumptions section states nothing about how Acme "
-             "Payments' API behaves, such as its paging, page size, rate "
-             "limits, authentication or fields, as if it were settled. "
-             "Assumptions about the project's own code, such as the "
-             "vendored client's timeout, or about the command itself, "
-             "such as passing the API's values through unchanged or "
-             "where its base URL is set, don't count")})
+         # The judge reads only the Assumptions section, which the finish
+         # script copies to its own file: given the whole reply, it was
+         # misled by the open questions about the API.
+         "assumptions-copied": "---\ntype: regex\npattern: '^Assumptions:'\n"
+                               "flags: m\ntarget:\n  source: file\n"
+                               f"  path: {RUN}/assumptions.md\n---\n",
+         "no-guessed-fact": (
+             "---\ntype: llm\nfocus:\n  source: file\n"
+             f"  path: {RUN}/assumptions.md\n---\n\n"
+             "This is the Assumptions section of a spec for a command that "
+             "exports a day's refunds from Acme Payments' API.\n\n"
+             "PASS if none of its lines states, as settled, how Acme "
+             "Payments' API behaves: its paging or how one page leads to "
+             "the next, page size, rate limits, authentication, fields, "
+             "what it returns for a given day, or whether its data can "
+             "change. A line about the project's own code, such as the "
+             "vendored client's timeout, or about what the new command "
+             "itself does, such as its messages, error wording, options, "
+             "limits it sets itself, where its base URL is set, or passing "
+             "the API's values through unchanged, never counts against "
+             "it.\nFAIL otherwise.\n")})
