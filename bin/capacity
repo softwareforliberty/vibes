@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+#
+# Measures how many vibes builders this machine can run at once for the
+# project, from runs of its gate, and caches the answer:
+#
+#   capacity measure --cache <file> --as single|pair --tree <dir> [--tree <dir>] -- <command>
+#   capacity decide --cache <file>
+#   capacity check --cache <file>
+#   capacity lower --cache <file> --to <n> --reason <text>
+#
+# lib/capacity/cli.py describes each. Exits 0, 3 when check says to
+# measure, and 2 on an error. Needs Python 3.9 or later.
+
+set -euo pipefail
+
+ROOT="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/.."
+readonly ROOT
+
+# -I ignores PYTHON* variables and the user's site directory, and -S skips
+# site, so nothing outside the plugin is imported. -I also leaves the
+# script's own directory off the path, so lib/ is added here.
+exec python3 -I -S -c 'import sys; sys.path.insert(0, sys.argv.pop(1)); from capacity.cli import main; sys.exit(main(sys.argv[1:]))' \
+  "${ROOT}/lib" "$@"
