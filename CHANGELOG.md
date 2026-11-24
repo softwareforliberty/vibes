@@ -39,6 +39,10 @@ guides behave, and says so under **Changed**.
   you pick, three new interface designers each design it under a
   different constraint, and the surveyor compares them and recommends
   one, as a task for `/vibes:vibe`. It changes nothing.
+- **`/vibes:grill`** stress-tests a plan before it's built: it maps every
+  decision the plan leaves open and every fact it rests on, and asks you
+  the decisions in rounds until nothing is left, ending with a decisions
+  document `/vibes:vibe` can start from.
 - **`/vibes:wizard`** writes a wizard for steps only you can do, such as
   creating an API key in a dashboard or setting a CI secret: a bash script
   you run in your own terminal that opens each page, says what to click,
@@ -118,6 +122,12 @@ guides behave, and says so under **Changed**.
 
 ### Changed
 
+- **Open questions are asked in rounds.** The designer marks what each
+  question waits on, and each round asks only the decisions whose
+  prerequisites are answered, while the facts are researched in the
+  background rather than before anything is asked. Answers that make
+  questions moot remove them, and answers that raise new ones add them to
+  the next round. An unattended run decides each round in turn.
 - **Committing `CLAUDE.md`, `AGENTS.md`, a skill or a subagent needs the
   new `tools/Agent-instructions` guide** on `scripts/check`'s
   `# Guides:` line. It adds no checks.

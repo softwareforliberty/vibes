@@ -52,6 +52,7 @@ while holding it to the standards of careful, experienced developers.
   outside pull request, writing a pull request, triaging issues and
   picking up approved ones, asking someone else through a questionnaire,
   prototyping a decision, writing a wizard for steps only you can do,
+  grilling a plan before it's built,
   looking back on a session, test-driven development, atomic commits and setting up the
   commit gate.
 - **`principles.md`:** the programming principles every change is held
@@ -134,11 +135,11 @@ such decision first in its final report. It still stops rather than touch anythi
 could lose your work.
 
 1. **Spec.** A designer subagent writes a complete spec: every requirement,
-   error and edge case, each testable, in proportion to the task. Its
-   factual questions are researched, you answer the decisions, and a spec
-   reviewer checks it until it's complete. The spec uses the project's glossary, and each new term the
-   task brings is added to it. Meanwhile, another subagent sets up the
-   commit gate.
+   error and edge case, each testable, in proportion to the task. Its factual
+   questions are researched, you answer the decisions in rounds, and a spec
+   reviewer checks it until it's complete. The spec uses the project's
+   glossary, and each new term the task brings is added to it. Meanwhile,
+   another subagent sets up the commit gate.
 2. **Design.** The designer writes the design to the spec, and the
    architecture reviewer checks it before any code exists. The design
    keeps to the project's decision records, and each new decision that's
@@ -463,6 +464,23 @@ token. Runs start from the brief, never the issue.
   through them.
 
 Approvals are kept in `.vibes/issues/` on the machine you triaged on.
+
+## Grill a plan
+
+Before you start a task, `/vibes:grill <the plan or idea>` stress-tests
+it. It maps every decision the plan leaves open and every fact it rests
+on, settles what the code and the decision records already answer, has
+the researcher look up the facts, and asks you the decisions **in
+rounds**: each round holds only the questions whose prerequisites you've
+answered, so you're never asked the CSV's delimiter before you've chosen
+CSV, and each answer can make some questions moot and raise new ones. It
+ends when nothing is open and you agree it's what you mean, with a
+decisions document `/vibes:vibe` can start from, and offers to record the
+lasting decisions and new terms.
+
+A vibes run asks its spec's open questions the same way: the designer
+marks what each waits on, the first round asks everything that waits on
+nothing, and the facts are researched while you answer.
 
 ## Steps only you can do
 
