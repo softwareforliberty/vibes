@@ -203,9 +203,12 @@ the baseline again before trusting old gains.
 1. **Ask about the workload,** unless the task or an unattended run settles
    it: how the program is used, with what sizes of input, and what "slow"
    means to the user. Give the profiler their answers.
-2. **Spawn `vibes:profiler` in `baseline` mode,** with the task, the run
-   directory, the guides, the baseline commit and the answers. It builds
-   the harness in `bench/`, profiles, and runs the A/A measurement.
+2. **Spawn `vibes:profiler` in `baseline` mode,** keeping watch on it as
+   the vibe skill's [Keep watch on a running
+   agent](../vibe/SKILL.md#keep-watch-on-a-running-agent) says, with the
+   task, the run directory, the guides, the baseline commit and the
+   answers. It builds the harness in `bench/`, profiles, and runs the A/A
+   measurement.
 3. **Check the main tree,** then remove the worktrees.
 4. **Tell the user** the top hot spots and the noise floor in a few lines,
    and record the noise floor in the state file. If the task named an area
@@ -239,14 +242,18 @@ The best version starts as the head of `optimise/<slug>`. For each attempt
    user, as the optimiser reported, ask first.
 2. **Branch from the best version:**
    `git switch -c spike/optimise-<slug>-<i> <best>`.
-3. **Spawn `vibes:optimiser` in `try` mode,** with the candidate, the
-   attempt, the branch, the spec directory and the guides. Check its
-   commits are on the branch and the tree is clean, and check the guides.
-   If it reports the idea can't work, mark it so and go to step 7.
-4. **Spawn `vibes:profiler` in `measure` mode:** side a the best version,
-   side b the candidate's head, into `profile/candidate-<i>/`, with the
-   noise directory `profile/aa/main`, the test command and the guard rails.
-   Then check the main tree.
+3. **Spawn `vibes:optimiser` in `try` mode,** keeping watch on it as the
+   vibe skill's [Keep watch on a running
+   agent](../vibe/SKILL.md#keep-watch-on-a-running-agent) says, with the
+   candidate, the attempt, the branch, the spec directory and the guides.
+   Check its commits are on the branch and the tree is clean, and check the
+   guides. If it reports the idea can't work, mark it so and go to step 7.
+4. **Spawn `vibes:profiler` in `measure` mode,** keeping watch on it as the
+   vibe skill's [Keep watch on a running
+   agent](../vibe/SKILL.md#keep-watch-on-a-running-agent) says, with side a
+   the best version, side b the candidate's head, into
+   `profile/candidate-<i>/`, with the noise directory `profile/aa/main`,
+   the test command and the guard rails. Then check the main tree.
 5. **Decide,** yourself, running each command on its own, with no shell
    variables, so a permission rule for `bench` matches:
 
@@ -340,12 +347,14 @@ needs.
 ## Phase 6: Rebuild test-first
 
 Spawn a fresh `vibes:builder` in `build` mode for each batch of the plan,
-one at a time, on `optimise/<slug>`. Its brief gives the task, the branches
-(the rebuild branch, the base branch, and the spike branch to read the spec
-and design from with `git show`), the paths of the spec, the design and the
-plan, the batch's section, its guides and any the gate doesn't check yet,
-whether it's the first batch, and its report's path,
-`.vibes/optimise-<slug>/build-<batch>.md`.
+one at a time, on `optimise/<slug>`, keeping watch on it as the vibe
+skill's [Keep watch on a running
+agent](../vibe/SKILL.md#keep-watch-on-a-running-agent) says. Its brief
+gives the task, the branches (the rebuild branch, the base branch, and the
+spike branch to read the spec and design from with `git show`), the paths
+of the spec, the design and the plan, the batch's section, its guides and
+any the gate doesn't check yet, whether it's the first batch, and its
+report's path, `.vibes/optimise-<slug>/build-<batch>.md`.
 
 The first batch extends the gate for any new guide, and adds the design's
 boundary rules to `scripts/check` if there's a design, proving each one

@@ -135,12 +135,15 @@ that keep the reviewers read-only know them only by their agent type.
      uncommitted work. If it isn't clean, ask the user to commit or stash
      their changes first. Never commit, stash or discard them yourself. A
      detached HEAD can't be fixed: ask the user to switch to a branch.
-   - **Spawn `vibes:builder` in `fix` mode,** with the purpose as the task,
-     the branch to work on and the base branch, the spec and design or
-     `none`, the guides, the round directory `<dir>/review/round-1`, and
-     the user's decisions about any finding. Without a spec, tell it to fix
-     to the change's purpose and write no spec. Ask the user about each
-     finding it leaves to you, and give the answers to a fresh builder.
+   - **Spawn `vibes:builder` in `fix` mode,** keeping watch on it as the
+     vibe skill's [Keep watch on a running
+     agent](../vibe/SKILL.md#keep-watch-on-a-running-agent) says, with the
+     purpose as the task, the branch to work on and the base branch, the
+     spec and design or `none`, the guides, the round directory
+     `<dir>/review/round-1`, and the user's decisions about any finding.
+     Without a spec, tell it to fix to the change's purpose and write no
+     spec. Ask the user about each finding it leaves to you, and give the
+     answers to a fresh builder.
    - **Check the fixes** in a new round,
      `<dir>/review/round-<n>/`: copy the previous round's findings files and
      `responses.md` into it, save `git diff <the reviewed head> HEAD` as

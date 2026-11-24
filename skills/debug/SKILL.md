@@ -193,10 +193,12 @@ that didn't reply runs again in the same mode, told what already exists.
 
 ## Phase 1: Reproduce and shrink
 
-1. **Spawn `vibes:diagnoser` in `reproduce` mode,** with the symptom and
-   the user's answers, the spike and base branches, the run directory, the
-   debug tag, the guides, the path of `bin/repro`, and the template
-   `${CLAUDE_PLUGIN_ROOT}/skills/debug/templates/diagnosis.md`.
+1. **Spawn `vibes:diagnoser` in `reproduce` mode,** keeping watch on it as
+   the vibe skill's [Keep watch on a running
+   agent](../vibe/SKILL.md#keep-watch-on-a-running-agent) says, with the
+   symptom and the user's answers, the spike and base branches, the run
+   directory, the debug tag, the guides, the path of `bin/repro`, and the
+   template `${CLAUDE_PLUGIN_ROOT}/skills/debug/templates/diagnosis.md`.
 2. **On `NO REPRO`,** read the reproduction section of `diagnosis.md`, and
    ask the user for what it needs: access to an environment, a captured
    log or request, or leave to add logging. Give the answers to a fresh

@@ -95,6 +95,39 @@ commit runs, even when a slow gate outlasts the shell's time limit and
 the commit carries on in the background: the gate refuses a commit whose
 files changed while it was checking them.
 
+## Keep watch on a running agent
+
+A builder, a spiker, the optimiser, the profiler or the diagnoser can run
+for an hour or more, and while it runs you hear nothing from it: only its
+report, when it finishes. One that's stuck, such as waiting on a command
+that died, would wait forever, and so would you. So keep watch on each
+one you start:
+
+1. **Mark the start and set a timer** as you spawn it: `touch` a file
+   such as `.vibes/<name>/watch-<agent>`, and start a command in the
+   shell's background mode that only waits, such as `sleep 1800`, which
+   reports when it ends. Make the wait three times one run of the
+   project's gate, the `wall` of `.vibes/capacity.json`'s `single` run
+   when there is one, and at least 30 minutes.
+2. **When the timer reports, look for progress** since the mark: a newer
+   commit on the agent's branch, or a newer file in its checkout or its
+   run directory:
+
+   ```sh
+   find <its checkout> <its run directory> -not -path '*/.git/*' \
+     -newer .vibes/<name>/watch-<agent> -print -quit
+   ```
+
+   With progress, `touch` the mark again and set the timer again.
+3. **Without progress, ask the agent** what it's waiting on, by sending it
+   a message where the host lets you message a running agent, and tell it
+   to carry on or report. Set the timer again.
+4. **Still none at the next timer:** stop the agent, leave its checkout as
+   it is, and tell the user what it was doing and what's uncommitted. In
+   an unattended run, report it and stop: what's uncommitted needs a
+   person's look before a fresh agent picks the work up.
+5. **When the agent finishes,** stop its timer, and delete the mark.
+
 ## The spec comes first
 
 The spec is the single source of truth for what the task does, and the
@@ -635,7 +668,9 @@ Large tasks only. Small and medium tasks go straight to
 
 1. Create the spike branch from the rebuild branch, so it starts with the
    spec and design: `git switch -c spike/<name>`.
-2. Spawn `vibes:spiker` in `build` mode, with a brief giving the task, the
+2. Spawn `vibes:spiker` in `build` mode, keeping watch on it as
+   [Keep watch on a running agent](#keep-watch-on-a-running-agent) says,
+   with a brief giving the task, the
    spike branch, the base branch, the absolute paths of `spec.md` and
    `design.md`, and the guides.
 3. It writes its report to `.vibes/<name>/spike-report.md`. Check the
@@ -792,7 +827,8 @@ below that mention one don't apply.
    guides the gate doesn't check yet, it extends the gate for them first
    too.
 2. **Spawn a fresh `vibes:builder` in `build` mode for each batch,** one
-   at a time, on the rebuild branch. When
+   at a time, on the rebuild branch, and keep watch on it, as
+   [Keep watch on a running agent](#keep-watch-on-a-running-agent) says. When
    `"${CLAUDE_PLUGIN_ROOT}/bin/plan-graph" .vibes/<name>/rebuild-plan.md`
    prints `WIDTH:` 2 or more, read
    `${CLAUDE_PLUGIN_ROOT}/skills/vibe/parallel.md` first: it says when to

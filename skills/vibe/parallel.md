@@ -53,10 +53,12 @@ every commit in a line, as a run that built one batch at a time would.
    git -C .vibes/workers/<k> switch -c vibe/<name>--<batch> vibe/<name>
    ```
 
-   Spawn a fresh `vibes:builder` for each, all in one message, with the
-   brief Phase 6 gives, its worktree and its branch, and the notes from
-   every batch joined so far that bear on it, such as a decision or a
-   problem a builder reported.
+   Spawn a fresh `vibes:builder` for each, all in one message, keeping
+   watch on each as the vibe skill's
+   [Keep watch on a running agent](SKILL.md#keep-watch-on-a-running-agent)
+   says, with the brief Phase 6 gives, its worktree and its branch, and the
+   notes from every batch joined so far that bear on it, such as a decision
+   or a problem a builder reported.
 3. **When a builder finishes, check its batch** as Phase 6's step 3 says,
    in its worktree.
 4. **Join it,** one batch at a time, in the order they finish:
