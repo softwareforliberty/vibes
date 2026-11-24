@@ -1,0 +1,79 @@
+#!/usr/bin/env bash
+#
+# Checks a wizard written onto the vibes wizard library, without running
+# it:
+#
+#   wizard-check <wizard.sh>
+#
+# Prints one line for each check:
+#
+#   SYNTAX OK            bash -n parses it
+#   LIBRARY INTACT       the library, from its first line to the STAGES
+#                        line, is the template's, unchanged
+#   SHELLCHECK OK        ShellCheck finds nothing, run from the PATH, or
+#                        with Docker when it isn't installed
+#
+# A failing check prints BROKEN, CHANGED or PROBLEMS instead, with
+# ShellCheck's findings after it; SHELLCHECK NOT AVAILABLE means neither
+# was found. Exits 0 when every check that ran passed, 1 when one failed,
+# and 2 on an error.
+
+set -euo pipefail
+
+ROOT="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/.."
+readonly ROOT
+readonly TEMPLATE="${ROOT}/skills/wizard/templates/wizard.sh"
+readonly SHELLCHECK_IMAGE="koalaman/shellcheck:v0.10.0"
+
+# Prints the library: from its first line to the STAGES line.
+library() {
+  sed -n '/^# ── The vibes wizard library/,/^# ── STAGES/p' "$1"
+}
+
+# Runs ShellCheck on the wizard, and prints its verdict and findings.
+# Returns 1 on findings.
+shellcheck_wizard() {
+  local wizard="$1" output
+  if command -v shellcheck >/dev/null 2>&1; then
+    output="$(shellcheck "${wizard}" 2>&1)" || {
+      printf 'SHELLCHECK PROBLEMS\n%s\n' "${output}"
+      return 1
+    }
+  elif command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+    output="$(docker run --rm -v "$(dirname -- "${wizard}"):/mnt:ro" \
+      "${SHELLCHECK_IMAGE}" "/mnt/$(basename -- "${wizard}")" 2>&1)" || {
+      printf 'SHELLCHECK PROBLEMS\n%s\n' "${output}"
+      return 1
+    }
+  else
+    printf 'SHELLCHECK NOT AVAILABLE\n'
+    return 0
+  fi
+  printf 'SHELLCHECK OK\n'
+}
+
+main() {
+  local wizard failed=0
+  if (($# != 1)) || [[ ! -f "$1" ]]; then
+    printf 'usage: wizard-check <wizard.sh>\n' >&2
+    exit 2
+  fi
+  wizard="$(realpath -- "$1")"
+  if bash -n "${wizard}" 2>/dev/null; then
+    printf 'SYNTAX OK\n'
+  else
+    printf 'SYNTAX BROKEN\n'
+    failed=1
+  fi
+  if [[ -n "$(library "${wizard}")" ]] \
+    && [[ "$(library "${wizard}")" == "$(library "${TEMPLATE}")" ]]; then
+    printf 'LIBRARY INTACT\n'
+  else
+    printf 'LIBRARY CHANGED\n'
+    failed=1
+  fi
+  shellcheck_wizard "${wizard}" || failed=1
+  exit "${failed}"
+}
+
+main "$@"
