@@ -235,5 +235,33 @@ class IssueReaderTest(unittest.TestCase):
                         hook(self.AGENT, tool, file_path=path), 2)
 
 
+class WizardWriterTest(unittest.TestCase):
+    AGENT = "vibes:wizard-writer"
+    WIZARD = "/p/.vibes/sales-csv/wizard.sh"
+
+    def test_writes_its_wizard(self) -> None:
+        self.assertEqual(hook(self.AGENT, "Write", file_path=self.WIZARD), 0)
+        self.assertEqual(hook(self.AGENT, "Bash", command=(
+            f"sed 's/x/y/' t > {self.WIZARD}")), 0)
+
+    def test_never_writes_anything_else(self) -> None:
+        for path in ("/p/.env", "/p/scripts/setup", "/p/.vibes/x/plan.md",
+                     "/p/.vibes/x/y/wizard.sh",
+                     "/p/.vibes/x/../../.env", ".vibes/x/wizard.sh"):
+            with self.subTest(path=path):
+                self.assertEqual(hook(self.AGENT, "Write", file_path=path), 2)
+
+    def test_checks_but_never_runs_or_changes(self) -> None:
+        for command in ("bash -n /p/.vibes/x/wizard.sh",
+                        "shellcheck /p/.vibes/x/wizard.sh",
+                        "grep -n secrets. .github/workflows/ci.yml"):
+            with self.subTest(command=command):
+                self.assertEqual(hook(self.AGENT, "Bash", command=command), 0)
+        for command in ("echo KEY=1 >> .env", "rm .env",
+                        "git commit -m x", "chmod +x scripts/setup"):
+            with self.subTest(command=command):
+                self.assertEqual(hook(self.AGENT, "Bash", command=command), 2)
+
+
 if __name__ == "__main__":
     unittest.main()

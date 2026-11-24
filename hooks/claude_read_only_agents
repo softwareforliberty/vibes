@@ -13,7 +13,8 @@
 # but none that change files or git. The surveyor may likewise write only
 # its survey and comparison, the interface designer only its design, the
 # researcher only its note, the pull request writer only its body and the
-# list of its sources, and the issue reader only its brief and triage. It
+# list of its sources, the issue reader only its brief and triage, and the
+# wizard writer only its wizard. It
 # guards against mistakes, not a determined attacker: a program an agent runs
 # can still write files.
 
@@ -41,9 +42,11 @@ readonly RESEARCHERS=" researcher "
 readonly PR_WRITERS=" pr-writer "
 # Agents that may write only the brief and triage in an issue's directory.
 readonly ISSUE_READERS=" issue-reader "
+# Agents that may write only a run's wizard.
+readonly WIZARD_WRITERS=" wizard-writer "
 # Agents whose Bash commands may not change files or git state.
 READ_ONLY_SHELL=" commit-message-suggester retrospective spec-reviewer"
-READ_ONLY_SHELL+=" researcher surveyor "
+READ_ONLY_SHELL+=" researcher surveyor wizard-writer "
 readonly READ_ONLY_SHELL
 # git subcommands that only read.
 GIT_READERS=" blame cat-file describe diff grep log ls-files ls-tree"
@@ -131,6 +134,14 @@ is_issue_file() {
   [[ "${rest}" =~ ^[0-9]+/(brief|triage)\.md$ ]]
 }
 
+# Succeeds when the path is a run's wizard, .vibes/<run>/wizard.sh.
+is_wizard_file() {
+  local path="$1"
+  [[ "${path}" == /* && "${path}" != *"/../"* ]] \
+    && [[ "${path}" == */.vibes/*/wizard.sh ]] \
+    && [[ "${path#*/.vibes/}" != */*/* ]]
+}
+
 # Succeeds when the path is the one file a read-only agent may write: a
 # reviewer's findings file, the retrospective's report, a survey's, or a
 # research note.
@@ -138,6 +149,8 @@ is_own_file() {
   local path="$1" agent="$2"
   if [[ "${RESEARCHERS}" == *" ${agent} "* ]]; then
     is_research_file "${path}"
+  elif [[ "${WIZARD_WRITERS}" == *" ${agent} "* ]]; then
+    is_wizard_file "${path}"
   elif [[ "${RETROSPECTIVES}" == *" ${agent} "* ]]; then
     is_retro_file "${path}"
   elif [[ "${SURVEYORS}" == *" ${agent} "* ]]; then
@@ -300,6 +313,13 @@ main() {
     if ! is_retro_file "${path}"; then
       printf 'vibes: %s is read-only. It may write only ' "${agent}" >&2
       printf 'its report, .vibes/retro-<slug>/retro.md.\n' >&2
+      exit 2
+    fi
+  elif [[ "${WIZARD_WRITERS}" == *" ${agent} "* ]]; then
+    path="$(hook::json_field "${input}" '.tool_input.file_path')"
+    if ! is_wizard_file "${path}"; then
+      printf 'vibes: %s may write only ' "${agent}" >&2
+      printf 'the wizard, .vibes/<run>/wizard.sh.\n' >&2
       exit 2
     fi
   elif [[ "${ISSUE_READERS}" == *" ${agent} "* ]]; then
