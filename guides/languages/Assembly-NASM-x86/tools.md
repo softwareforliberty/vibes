@@ -49,6 +49,24 @@ nasm -f win64 -g -F cv8 -w+all -w-reloc -w+error -o buf.obj buf.asm
   report every relocation left for the linker, so they fire on every call to
   another file and every RIP-relative reference to data in another section,
   which is normal, correct code.
+- NASM 2.16.02 added the `reloc-*` classes. NASM 2.15 and 2.16.01 don't have
+  them, so `-w+all` can't turn them on there, and `-w-reloc` only prints
+  `unknown warning name: reloc`. Leave it out for those versions. A script
+  that must work with either can choose for itself:
+
+  ```sh
+  # -w-reloc where this NASM has the reloc classes: 2.16.02 and later.
+  reloc='-w-reloc'
+  if nasm -f elf64 -w+all -w-reloc -o /dev/null /dev/null 2>&1 |
+    grep -q 'unknown warning'; then
+    reloc=''
+  fi
+  nasm -f elf64 -g -F dwarf -w+all $reloc -w+error -o buf.o buf.asm
+  ```
+
+  `-w+all` is needed in the test: without it, NASM doesn't report an
+  unknown warning name at all. Every other command in this guide that has
+  `-w-reloc` takes `$reloc` the same way.
 - `-g` with the format's debug format (`dwarf` or `cv8`) lets debuggers and
   profilers map addresses back to source lines.
 - When a warning is a deliberate exception, turn it off for those lines only,
