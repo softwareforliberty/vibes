@@ -200,6 +200,13 @@ guides behave, and says so under **Changed**.
   can't be committed unchecked. The builder and the main agent change
   nothing while a commit runs.
 
+- **No agent waits forever.** The agents that run long commands run them
+  in the shell's background mode, which reports however a command ends,
+  and never detach a process themselves or wait in a loop for a file. The
+  main agent keeps watch on each long-running agent with a timer, asks
+  one that has made no progress what it's waiting on, and stops it and
+  tells the user if it stays stuck.
+
 ### Changed
 
 - **Open questions are asked in rounds.** The designer marks what each
