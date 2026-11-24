@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#
+# Reaches the project's issue tracker the way its .vibes-tracker file says,
+# and only as the user approved it:
+#
+#   tracker check | approve | draft | whoami | list | read <id> --out <file>
+#   tracker pr-find <branch> | closes <id> | post <batch file>
+#
+# lib/tracker/cli.py describes the file, each command and its exit codes.
+# Needs Python 3.9 or later.
+
+set -euo pipefail
+
+ROOT="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/.."
+readonly ROOT
+
+# -I ignores PYTHON* variables and the user's site directory, and -S skips
+# site, so nothing outside the plugin is imported. -I also leaves the
+# script's own directory off the path, so lib/ is added here.
+exec python3 -I -S -c 'import sys; sys.path.insert(0, sys.argv.pop(1)); from tracker.cli import main; sys.exit(main(sys.argv[1:]))' \
+  "${ROOT}/lib" "$@"

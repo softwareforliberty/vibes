@@ -1,0 +1,41 @@
+# How vibes reaches this project's issues and merge requests: GitLab, with
+# its CLI, glab. vibes reads this file from the default branch, and runs it
+# only as you approved it on your machine, so after any change, run
+# `tracker approve` in your own terminal. vibes' README explains each line
+# under "Your issue tracker".
+issue-id	[0-9]+
+closes	Closes #{id}
+state-open	opened
+token	GITLAB_TOKEN
+token	GITLAB_HOST
+
+# Commands that only read. A note GitLab writes itself, such as "added a
+# label", is marked system, and skipped.
+whoami	glab api user
+whoami.login	.username
+list	glab issue list --output json --per-page 100
+list.items	[]
+list.id	.iid
+list.labels	.labels[]
+read	glab issue view {id} --comments --output json
+read.title	.title
+read.body	.description
+read.state	.state
+read.url	.web_url
+read.labels	.labels[]
+comments.items	.Notes[]
+comments.author	.author.username
+comments.body	.body
+comments.skip	.system
+pr-find	glab mr list --source-branch {branch} --output json
+pr-find.url	[].web_url
+
+# Public commands, which run only when you confirm them. GitLab has no
+# reason for closing, so a closed wontfix issue keeps its wontfix label.
+comment	glab issue note {id} --message {body}
+label	glab issue update {id} --label {label}
+create-label	glab label create --name {label} --description {description} --color #{color}
+close	glab issue close {id}
+pr-open	glab mr create --source-branch {branch} --target-branch {base} --title {title} --description-file {body-file} --yes
+pr-open-draft	glab mr create --source-branch {branch} --target-branch {base} --title {title} --description-file {body-file} --draft --yes
+pr-edit	glab mr update {branch} --title {title} --description-file {body-file} --state opened

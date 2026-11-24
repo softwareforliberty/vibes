@@ -1,0 +1,37 @@
+# How vibes reaches this project's issues and pull requests: GitHub, with
+# its CLI, gh. vibes reads this file from the default branch, and runs it
+# only as you approved it on your machine, so after any change, run
+# `tracker approve` in your own terminal. vibes' README explains each line
+# under "Your issue tracker".
+issue-id	[0-9]+
+closes	Closes #{id}
+state-open	OPEN
+token	GH_TOKEN
+token	GITHUB_TOKEN
+
+# Commands that only read.
+whoami	gh api user --jq .login
+list	gh issue list --state open --limit 1000 --json number,labels
+list.items	[]
+list.id	.number
+list.labels	.labels[].name
+read	gh issue view {id} --json title,body,comments,labels,state,url
+read.title	.title
+read.body	.body
+read.state	.state
+read.url	.url
+read.labels	.labels[].name
+comments.items	.comments[]
+comments.author	.author.login
+comments.body	.body
+pr-find	gh pr list --head {branch} --state open --json url
+pr-find.url	[].url
+
+# Public commands, which run only when you confirm them.
+comment	gh issue comment {id} --body-file {body-file}
+label	gh issue edit {id} --add-label {label}
+create-label	gh label create {label} --description {description} --color {color}
+close	gh issue close {id} --reason "not planned"
+pr-open	gh pr create --base {base} --head {branch} --title {title} --body-file {body-file}
+pr-open-draft	gh pr create --base {base} --head {branch} --title {title} --body-file {body-file} --draft
+pr-edit	gh pr edit {branch} --title {title} --body-file {body-file}
