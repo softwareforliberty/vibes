@@ -219,4 +219,5 @@ def build() -> None:
              "limits, authentication or fields, as if it were settled. "
              "Assumptions about the project's own code, such as the "
              "vendored client's timeout, or about the command itself, "
-             "don't count")})
+             "such as passing the API's values through unchanged or "
+             "where its base URL is set, don't count")})
