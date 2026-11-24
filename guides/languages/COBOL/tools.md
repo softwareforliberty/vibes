@@ -212,7 +212,132 @@ isn't pinned down. Write the test that fails on the mutant, not one that just
 runs the line. A mutant that can't change behaviour needs no test; the
 threshold allows for it.
 
+### Architecture
+
+COBOL has no modules, so the build enforces what it can of the layers, as
+the [architecture guide](../../../architecture/README.md#enforce-it) asks,
+and `scripts/check` checks the rest. Give each layer its own directory, with
+its entry points at the top: the programs other layers may `CALL`, and, in
+`copy`, the copybooks they may `COPY`, such as the records those programs
+take. Everything else goes under `internal`. The names are examples: replace
+them with the layers in the project's `design.md`.
+
+```text
+core/GREET.cob              an entry point
+core/copy/GREETREC.cpy      the record GREET takes
+core/internal/FMTNAME.cob   a program only the core calls
+core/internal/FMTREC.cpy    a copybook only the core copies
+core/tests/TGREET.cob       the core's tests
+adapters/SHOW.cob           an edge, which calls GREET
+adapters/copy/SHOWREC.cpy   the record SHOW takes
+```
+
+The build enforces the copybooks. `cobc -I` adds a directory to the ones a
+`COPY` searches. Compile each layer with its own `copy` directory, its
+`internal` one if it has one, and the `copy` directory of each layer it may
+use. Compile its tests with only its own `copy`. `scripts/check` runs the
+build, with the [compiler warnings](#compiler-warnings) flags too:
+
+```sh
+rm -rf build
+mkdir -p build/core build/adapters build/tests
+for f in core/*.cob core/internal/*.cob; do
+  cobc -c -std=cobol2014 -I core/copy -I core/internal \
+    -o "build/core/$(basename "$f" .cob).o" "$f"
+done
+for f in adapters/*.cob; do
+  cobc -c -std=cobol2014 -I adapters/copy -I core/copy \
+    -o "build/adapters/$(basename "$f" .cob).o" "$f"
+done
+for f in core/tests/*.cob; do
+  cobc -x -std=cobol2014 -I core/copy \
+    -o "build/tests/$(basename "$f" .cob)" "$f" build/core/*.o
+done
+```
+
+A `COPY` of an edge's copybook in the core, or of an internal copybook in an
+edge or a test, fails to compile with `SHOWREC: No such file or directory`.
+cobc also searches the directory it runs in, so a `COPY` that names a path,
+such as `COPY "core/internal/FMTREC.cpy"`, or a library, such as
+`COPY FMTREC IN "core/internal"`, gets around the copy path. Fail
+`scripts/check` on either. A breach prints the file, the line and the
+`COPY`:
+
+```sh
+if grep -rniE -e "COPY[[:space:]]+[\"'][^\"']*/" \
+    -e 'COPY[[:space:]]+[A-Z0-9-]+[[:space:]]+(IN|OF)[[:space:]]' \
+    core adapters cli; then
+  echo 'COPY a copybook by its name alone' >&2
+  exit 1
+fi
+```
+
+Nothing limits a `CALL`: a program can call any other by name, wherever it's
+compiled. Only a nested program is hidden. Without `COMMON`, only the
+program that contains it can call it, so a helper that one program calls can
+be nested inside it. For the rest, `scripts/check` matches each literal
+`CALL` against the programs its caller may not call. The
+[file rules](coding-style.md#files) give each program its file's name, so
+the check finds them by file. The core calls no edge. Only the core's own
+programs call its internal ones, so its tests, like the edges, go through
+its entry points. A breach prints the file, the line and the `CALL`:
+
+```sh
+# Prints a pattern that matches a literal CALL of each program in the
+# given directories. Each program is named after its file.
+call_patterns() {
+  find "$@" -name '*.cob' |
+    sed -E "s|.*/||; s|\.cob$||; s|.*|CALL[[:space:]]+[\"']&[\"']|"
+}
+
+if grep -rniE -f <(call_patterns adapters cli) core; then
+  echo 'the core calls an edge program' >&2
+  exit 1
+fi
+if grep -rniE -f <(call_patterns core/internal) adapters cli core/tests
+then
+  echo 'call the core through its entry points' >&2
+  exit 1
+fi
+```
+
+Repeat the second check for each layer with an `internal` directory.
+
+A `CALL` of a data name, such as `CALL WS-PROGRAM`, picks its program at run
+time, so no check can see where it goes. Review must catch any that can
+reach an edge from the core, or an internal program from outside its layer.
+When existing code breaks a rule, leave that one file out of the check with
+`--exclude=OLDRPT.cob`, or give that one program the internal directory,
+with a comment naming the breach and how to fix it.
+
+Keep a breach of each rule as `scripts/breaches/<rule>.patch`, as the
+builder does. The build compiles every program in a layer's directory, so a
+breach needs only a new file. For the layers, `core/BREACH.cob`:
+
+```cobol
+       IDENTIFICATION DIVISION.
+       PROGRAM-ID. BREACH.
+      * Breaks a boundary rule on purpose: the core calls an edge.
+       DATA DIVISION.
+       WORKING-STORAGE SECTION.
+       01  WS-NAME                     PIC X(20) VALUE "Ada".
+       PROCEDURE DIVISION.
+       0000-MAIN.
+           CALL "SHOW" USING WS-NAME
+           END-CALL
+           GOBACK.
+```
+
+Its patch starts with:
+
+```text
+Rule: the core never calls an edge
+Fails with: the core calls an edge program
+```
+
 ## Sources
 
 - [universalmutator](https://github.com/agroce/universalmutator)
 - [universalmutator on PyPI](https://pypi.org/project/universalmutator/1.14.1/)
+- [GnuCOBOL manual: compiler options](https://gnucobol.sourceforge.io/doc/gnucobol.html)
+- [GnuCOBOL Programmer's Guide: nested programs and COMMON](https://gnucobol.sourceforge.io/HTML/gnucobpg.html)

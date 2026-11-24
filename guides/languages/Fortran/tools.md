@@ -244,7 +244,159 @@ isn't pinned down. Write the test that fails on the mutant, not one that just
 runs the line. A mutant that can't change behaviour needs no test; the
 threshold allows for it.
 
+### Architecture
+
+The build enforces the layers, as the
+[architecture guide](../../../architecture/README.md#enforce-it) asks.
+gfortran finds the module a `use` names by its `.mod` file, in the directory
+`-J` writes to or one that `-I` names. Give each layer its own module
+directory, and compile each layer with only the directories of the layers it
+may use, so a `use` of any other layer's module fails to compile. fpm can't
+do this: it writes every package's `.mod` files to one directory, where any
+module finds any other. Build a project with layers with
+[CMake](../../build/CMake/idioms.md) instead.
+
+Make each layer its own library target, with its own
+`Fortran_MODULE_DIRECTORY`, and add that directory as a `PUBLIC` include
+directory, so the targets that link the layer find its modules. Never leave a
+target without one: its `.mod` files then go to the build directory of its
+source folder, where every target built from that folder finds them.
+
+Each layer's `CMakeLists.txt` declares its target, its sources and the layers
+it may use. The target names are examples: replace them with the layers in
+the project's `design.md`. `adapters/CMakeLists.txt`:
+
+```cmake
+add_library(app_adapters STATIC src/console.f90)
+set_target_properties(
+    app_adapters
+    PROPERTIES Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/mod"
+)
+target_include_directories(
+    app_adapters
+    PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/mod"
+)
+target_link_libraries(app_adapters PUBLIC app_core)
+```
+
+The core's target links no other layer, so a core module that uses an edge's
+module fails to compile with `Cannot open module file 'console.mod'`. CMake
+allows a cycle between static libraries, so nothing stops the core linking
+an edge and using its modules. Check for it at the end of the top-level
+`CMakeLists.txt`, after the `add_subdirectory()` calls:
+
+```cmake
+# CMake allows a cycle between static libraries, so check that the core
+# links no edge.
+get_target_property(app_core_links app_core LINK_LIBRARIES)
+foreach(edge IN ITEMS app_adapters app_cli)
+    if(edge IN_LIST app_core_links)
+        message(FATAL_ERROR "app_core must not link ${edge}")
+    endif()
+endforeach()
+```
+
+`scripts/check` runs the build, so a breach fails it. The check names the
+edge the core links, and the compiler names the module it can't find:
+
+```sh
+cmake -S . -B build
+cmake --build build
+```
+
+Fortran's own rules give each module a front door. Start each module with
+`private`, and list its entry points in a `public` statement, as under
+[Modules](idioms.md#modules). A `use` of anything else fails to compile,
+with `Symbol 'bracket' referenced at (1) not found in module 'greeting'`. A
+`use` can't name a submodule at all, so a module's implementation can go in
+one.
+
+A layer's modules also use each other, so a layer has modules only it may
+use. Keep them under `src/internal`, in a target of their own with its own
+module directory, and link that target `PRIVATE`: the layer's own modules
+find them, and the targets that link the layer don't. Build the layer's tests
+as a separate target that links the layer, so they see only the entry
+points, as callers do. `core/CMakeLists.txt`:
+
+```cmake
+add_library(app_core_internal OBJECT src/internal/text_format.f90)
+set_target_properties(
+    app_core_internal
+    PROPERTIES Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/internal"
+)
+target_include_directories(
+    app_core_internal
+    INTERFACE "${CMAKE_CURRENT_BINARY_DIR}/internal"
+)
+
+add_library(app_core STATIC src/greeting.f90)
+set_target_properties(
+    app_core
+    PROPERTIES Fortran_MODULE_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/mod"
+)
+target_include_directories(
+    app_core
+    PUBLIC "${CMAKE_CURRENT_BINARY_DIR}/mod"
+)
+target_link_libraries(app_core PRIVATE app_core_internal)
+
+add_executable(app_core_tests tests/greeting_test.f90)
+target_link_libraries(app_core_tests PRIVATE app_core)
+add_test(NAME app_core_tests COMMAND app_core_tests)
+```
+
+The core's own modules `use text_format`. An edge or a core test that does
+fails to compile with `Cannot open module file 'text_format.mod'`.
+
+gfortran looks for an `include` file in the including file's own folder
+first, so a test's `include "../src/internal/text_format.f90"` compiles its
+own copy of the module, and gets around all of this. Fail `scripts/check` on
+any include path that climbs with `..`. A breach prints the file, the line
+and the include:
+
+```sh
+if grep -rniE '^[[:space:]]*#?[[:space:]]*include[^[:alnum:]_].*\.\./' \
+    core adapters cli; then
+  echo 'include files through the build, not a relative path' >&2
+  exit 1
+fi
+```
+
+The build hides modules, not procedures. A procedure outside any module,
+which the [module rule](idioms.md#modules) forbids, links from anywhere.
+`-Wimplicit-interface` reports a call to one, and CI's `-Werror` fails it,
+but an `interface` block that declares the procedure silences the warning,
+so review must catch that. When existing code needs an internal module, add
+the layer's internal module directory to that one target's include
+directories, with a comment naming the breach and how to fix it; the build
+can't exempt a single `use`.
+
+Keep a breach of each rule as `scripts/breaches/<rule>.patch`, as the
+builder does. For the layers, add a new file to the core that uses an edge's
+module, `core/src/breach.f90`, and add it to `app_core`'s sources:
+
+```fortran
+module core_breach
+    use console, only: show
+    implicit none
+    private
+end module core_breach
+```
+
+gfortran quotes a module's name with curly quotes in a UTF-8 locale and
+straight ones otherwise, so the patch's second line names just the file:
+
+```text
+Rule: the core never uses an edge
+Fails with: console.mod
+```
+
+For the front door, a new core test that uses `text_format`, added as a test
+target, breaks it the same way.
+
 ## Sources
 
 - [universalmutator](https://github.com/agroce/universalmutator)
 - [universalmutator on PyPI](https://pypi.org/project/universalmutator/1.14.1/)
+- [GNU Fortran: options for directory search](https://gcc.gnu.org/onlinedocs/gfortran/Directory-Options.html)
+- [CMake: Fortran_MODULE_DIRECTORY](https://cmake.org/cmake/help/latest/prop_tgt/Fortran_MODULE_DIRECTORY.html)
