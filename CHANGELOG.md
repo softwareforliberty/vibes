@@ -193,6 +193,13 @@ guides behave, and says so under **Changed**.
   component the design gains after the first batch gets its rules and
   their breaches in the batch that creates it.
 
+- **A commit whose files change during its gate is refused.** The gate
+  compares what's staged, the tracked files and the untracked ones before
+  and after its checks, so an edit made while a slow gate runs, such as
+  after the agent's shell time limit moves the commit to the background,
+  can't be committed unchecked. The builder and the main agent change
+  nothing while a commit runs.
+
 ### Changed
 
 - **Open questions are asked in rounds.** The designer marks what each

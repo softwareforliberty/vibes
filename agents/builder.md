@@ -210,6 +210,12 @@ as the audit's, fix each one the same way.
   a failing test first if the cause isn't the test, then the fix, through
   the gate. A script that ignores the argument runs everything, which is
   fine.
+- **Change nothing while a commit runs.** The gate checks the working
+  tree, so a file that changes while it runs could be checked in place of
+  what's committed; the gate refuses such a commit. When a slow gate
+  outlasts the shell's time limit and your commit carries on in the
+  background, wait for it to report, and change no file, before you go
+  on.
 - **Leave the working tree clean** when you finish: everything committed,
   nothing stashed.
 

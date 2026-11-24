@@ -890,7 +890,9 @@ Once it exists, the gate:
   for a commit of documents only, such as a spec, it runs
   `scripts/check --static`, without the tests
 - refuses to commit while there are unstaged changes or untracked files, so
-  the checks test exactly what's being committed
+  the checks test exactly what's being committed, and refuses it too when
+  a file changes while the checks run, such as an edit made while a slow
+  gate carries on in the background
 - blocks a commit whose subject is longer than 50 characters
 - blocks a commit that adds a line carrying a `/vibes:debug` run's debug
   tag, such as `vibes-debug-month-end`

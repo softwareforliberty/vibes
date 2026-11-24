@@ -90,7 +90,10 @@ approved spec and design or the spike review's corrections, stage it, then
 spawn `vibes:commit-message-suggester` with the repository's path, the
 task and what the commit is for, and commit with the message it replies. The agents that commit, such
 as the builders, write their own. Every subject is 50 characters at most:
-the gate refuses a longer one.
+the gate refuses a longer one. Change nothing in the checkout while a
+commit runs, even when a slow gate outlasts the shell's time limit and
+the commit carries on in the background: the gate refuses a commit whose
+files changed while it was checking them.
 
 ## The spec comes first
 
