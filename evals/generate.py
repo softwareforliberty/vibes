@@ -32,6 +32,7 @@ import issue_cases
 import optimise_cases
 import pr_cases
 import prbody_cases
+import prototype_cases
 import questionnaire_cases
 import research_cases
 import retro_cases
@@ -852,6 +853,7 @@ def main() -> None:
     prbody_cases.build()
     issue_cases.build()
     questionnaire_cases.build()
+    prototype_cases.build()
 
 
 if __name__ == "__main__":
