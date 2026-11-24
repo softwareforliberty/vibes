@@ -20,7 +20,7 @@ def issue(title: str = "Export fails", body: str = "It crashes.",
           comments: tuple[tuple[str, str], ...] = ()) -> dict:
     return {"number": 7, "title": title, "body": body,
             "labels": [{"name": "bug"}], "updatedAt": "2026-11-23T10:00:00Z",
-            "comments": [{"author": {"login": who}, "body": text,
+            "comments": [{"author": who, "body": text,
                           "createdAt": "2026-11-23T11:00:00Z"}
                          for who, text in comments]}
 

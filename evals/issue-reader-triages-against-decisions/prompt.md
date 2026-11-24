@@ -11,7 +11,7 @@ Run the `vibes:issue-reader` agent, giving it exactly this brief, with
 ```text
 Mode: triage
 Issue: <cwd>/.vibes/issues/52/issue.json
-Owner's login: project-owner
+Your login on the tracker: project-owner
 Decision records: <cwd>/docs/adr/
 Glossary: none
 Brief: <cwd>/.vibes/issues/52/brief.md

@@ -37,7 +37,8 @@ The brief from the main agent gives you:
     there's history.
 - **The run directory,** when a vibes run built the branch, and its kind:
   `vibe`, `optimise` or `debug`. Otherwise none.
-- **The issue** the pull request closes, such as `#123`, or none.
+- **The closing line** for the issue the pull request closes, such as
+  `Closes #123`, or none.
 - **The repository's pull request template,** if it has one, such as
   `.github/pull_request_template.md`.
 - **The paths** of `pr.md` and `sources.md` in the pull request's
@@ -108,7 +109,7 @@ words.>
 
 <The smallest view, if the change needs one.>
 
-<When the brief names an issue, the line `Closes #<number>.`>
+<When the brief gives a closing line, that line, as it's given.>
 
 ## Evidence
 

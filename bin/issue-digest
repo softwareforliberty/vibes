@@ -6,7 +6,8 @@
 #
 #   issue-digest <issue.json> <your login>
 #
-# The file is what `gh issue view <n> --json title,body,comments` writes.
+# The file is what `tracker read` writes: the issue in vibes' format, each
+# comment with its author and body.
 # The digest covers the title, the body and every comment by anyone but
 # you, so your own triage comments, labels and timestamps don't change it,
 # but an edit to the issue, or anyone else's new comment, does. Exits 2 on
@@ -26,7 +27,7 @@ try:
     with open(sys.argv[1], encoding="utf-8") as stream:
         issue = json.load(stream)
     others = [c["body"] for c in issue.get("comments", [])
-              if c["author"]["login"] != sys.argv[2]]
+              if c["author"] != sys.argv[2]]
     text = json.dumps([issue["title"], issue["body"], others])
 except (OSError, ValueError, KeyError, TypeError) as error:
     print(f"issue-digest: {error}", file=sys.stderr)

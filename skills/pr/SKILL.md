@@ -66,7 +66,11 @@ knows it only by its agent type.
    `status: done` hasn't finished: tell the user, and ask whether to write
    the body anyway. The issue the pull request closes is the one the
    arguments name, such as `#123`, or else the run's `issue:` line, if
-   either.
+   either. Its closing line comes from
+   `"${CLAUDE_PLUGIN_ROOT}/bin/tracker" closes <id>`, such as
+   `Closes #123`, once the tracker is checked as `/vibes:tracker`'s
+   [Before using the tracker](../tracker/SKILL.md#before-using-the-tracker)
+   says.
 3. **Make the pull request's directory** from the repository root,
    `.vibes/pr-<slug>`, the branch name with each `/` made `-`, such as
    `.vibes/pr-vibe-sales-csv`. If it exists from an earlier run, empty
@@ -105,7 +109,8 @@ knows it only by its agent type.
    case.
 7. **Spawn `vibes:pr-writer`,** with the branch, the base, the pull
    request's directory, the run directory and its kind, or that there's
-   none, the issue it closes or that there's none, the template's path or
+   none, the closing line for the issue it closes or that there's none,
+   the template's path or
    that there's none, and the paths of
    `pr.md` and `sources.md` in the directory, all as absolute paths.
 8. **Show the body.** Print `pr.md` in full. Then say, in a line each:
@@ -123,17 +128,19 @@ knows it only by its agent type.
 
    Say plainly that opening it pushes the branch to the remote. When a
    pull request for the branch already exists
-   (`gh pr view <branch> --json url` succeeds), offer to replace its body
-   instead of opening one.
+   (`"${CLAUDE_PLUGIN_ROOT}/bin/tracker" pr-find <branch>` prints its
+   address rather than `NONE`), offer to replace its body instead of
+   opening one.
 
 ## Opening the pull request
 
 Only with the user's answer from step 9, which covers the push and the
 pull request for this branch, this once:
 
-1. **Check the tools:** `gh` is installed and `gh auth status` succeeds,
-   and the repository has a remote. If either fails, stop and give the
-   user the commands to run themselves, from step 3 below.
+1. **Check the tracker,** as `/vibes:tracker`'s
+   [Before using the tracker](../tracker/SKILL.md#before-using-the-tracker)
+   says, and that the repository has a remote. If either fails, stop, and
+   tell the user what's missing.
 2. **Split the title from the body:** the title is `pr.md`'s first line
    without its `# `, and the body is the rest:
 
@@ -141,21 +148,23 @@ pull request for this branch, this once:
    tail -n +3 .vibes/pr-<slug>/pr.md > .vibes/pr-<slug>/body.md
    ```
 
-3. **Push the branch and open it:**
+3. **Push the branch and open it.** Push with
+   `git push -u origin <branch>`, then write a batch of one line to
+   `.vibes/pr-<slug>/batch.tsv`, with a tab between each field:
 
-   ```sh
-   git push -u origin <branch>
-   gh pr create --base <base> --head <branch> --title "<title>" --body-file .vibes/pr-<slug>/body.md --draft
+   ```text
+   pr-open-draft	base=<base>	branch=<branch>	title=<title>	body-file=.vibes/pr-<slug>/body.md
    ```
 
-   Leave out `--draft` for a pull request ready for review. To replace an
-   existing pull request's body, run
-   `gh pr edit <branch> --title "<title>" --body-file .vibes/pr-<slug>/body.md`
-   after the push instead.
+   Use `pr-open` for a pull request ready for review, or to replace an
+   existing one's body, `pr-edit` without the base. Run
+   `"${CLAUDE_PLUGIN_ROOT}/bin/tracker" post .vibes/pr-<slug>/batch.tsv`;
+   the user confirms it before it runs.
 4. **Never force a push.** If the push is refused, because the remote
    branch has commits this one lacks, stop and tell the user: settling it
    is theirs.
-5. **Give the user the pull request's address.**
+5. **Give the user the pull request's address,** from
+   `"${CLAUDE_PLUGIN_ROOT}/bin/tracker" pr-find <branch>`.
 
 Keep the pull request's directory: it records what the body was built
 from.
