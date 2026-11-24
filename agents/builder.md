@@ -21,6 +21,14 @@ The brief from the main agent gives you:
 - **The task,** and the user's answers to any questions about it.
 - **The branches:** the rebuild branch you work on (`vibe/<task>`), the base
   branch, and for a task that had a spike, the spike branch.
+- **When batches are built at once, your worktree and your branch:** a
+  worktree such as `.vibes/workers/2`, on a branch of your own such as
+  `vibe/<task>--3`, in place of the rebuild branch, while other builders
+  work beside you in other worktrees. Work only there: run every command
+  in it, as `cd <worktree> && <command>` or `git -C <worktree> ...`, since
+  a `cd` doesn't last from one command to the next, and read and write its
+  files by their absolute paths. The run's own files, such as the plan and
+  your report, stay where the brief says.
 - **The paths** of the spec, the design if there is one, and the rebuild
   plan, `.vibes/<task>/rebuild-plan.md`.
 - **The guides that apply** to the files you'll write, and any the gate
@@ -40,8 +48,9 @@ The brief from the main agent gives you:
 
 ## Before you start
 
-1. **Confirm the branch.** Run `git branch --show-current` and check it's
-   the rebuild branch from the brief. Never work on any other branch.
+1. **Confirm the branch.** Run `git branch --show-current`, in your
+   worktree if you have one, and check it's the branch from the brief.
+   Never work on any other branch.
 2. **Read the skills you follow:**
    `${CLAUDE_PLUGIN_ROOT}/skills/test-driven-development/SKILL.md` and
    `${CLAUDE_PLUGIN_ROOT}/skills/atomic-commits/SKILL.md`.
@@ -181,7 +190,8 @@ as the audit's, fix each one the same way.
 - **Leave the working tree clean** when you finish: everything committed,
   nothing stashed.
 
-Don't push, merge or change any branch other than the rebuild branch.
+Don't push, merge or change any branch other than your own: the rebuild
+branch, or the branch your worktree is on.
 
 ## Report
 

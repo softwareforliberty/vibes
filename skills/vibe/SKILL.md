@@ -693,7 +693,38 @@ commit that implements it. Builders read them there, with
 `.vibes/<name>/rebuild-plan.md` is what the builders work from. It opens
 with the task's name, the branches and the list of batches, then holds the
 batches in order, each in its own section, so a builder reads only the
-opening and its own batch. Each batch section holds:
+opening and its own batch.
+
+The list of batches, under `## Batches`, is also the task graph. Under
+each batch, an `After:` line names the batches it needs finished first, or
+`none`, and a `Touches:` line names the files and directories, ending in
+`/`, that it changes, so batches that don't need each other can be built
+at once:
+
+```markdown
+## Batches
+
+1. [Gate and the core](#batch-1-gate-and-the-core) (9 entries)
+   After: none
+   Touches: scripts/check, src/core/, tests/core/
+2. [The file edge](#batch-2-the-file-edge) (8 entries)
+   After: 1
+   Touches: src/files/, tests/files/
+```
+
+- **A batch waits only for what it needs:** the code it calls, the tests
+  it extends, or a gate change it relies on. A batch built on another's
+  interface, such as an edge on the core, waits for the batch that builds
+  that interface.
+- **Two batches that don't wait for each other never touch the same
+  path.** A file several batches change, such as `scripts/check`, a build
+  file, a shared list of tests, the spec or the glossary, is changed in a
+  batch they all wait for, or the later batch waits for the earlier.
+  `"${CLAUDE_PLUGIN_ROOT}/bin/plan-graph" <plan>` lists any that do.
+- **When unsure, make it wait.** A wrong `After:` only loses speed; a
+  missing one breaks the build.
+
+Each batch section holds:
 
 - **The test list entries,** in order from simplest to hardest. Each entry
   is one red, green, refactor cycle ending in a commit: the tests that
@@ -741,7 +772,11 @@ below that mention one don't apply.
    rule bites by breaking it once on purpose. Where the spike needed guides
    the gate doesn't check yet, it extends the gate for them first too.
 2. **Spawn a fresh `vibes:builder` in `build` mode for each batch,** one
-   at a time, on the rebuild branch. Its brief gives the task, the
+   at a time, on the rebuild branch. When
+   `"${CLAUDE_PLUGIN_ROOT}/bin/plan-graph" .vibes/<name>/rebuild-plan.md`
+   prints `WIDTH:` 2 or more, read
+   `${CLAUDE_PLUGIN_ROOT}/skills/vibe/parallel.md` first: it says when to
+   build batches at once instead, and how. Its brief gives the task, the
    branches, the paths of the spec, design and rebuild plan, the batch's
    section in the plan, its guides and any the gate doesn't check yet,
    whether it's the first batch, and its report's path,

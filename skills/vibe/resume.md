@@ -21,7 +21,9 @@ its `state.md`. The phases and sections named here are the vibe skill's.
      again, and tell it what already exists so it carries on rather than
      starting over;
    - in the build, give a fresh builder the next batch, starting from the
-     first entry in the test list that isn't ticked off;
+     first entry in the test list that isn't ticked off; when batches were
+     being built at once, carry on as
+     [parallel.md](parallel.md#after-the-build) says;
    - when `state.md` names an audit that was running and its log has no
      result, start it again, as
      [Phase 7](SKILL.md#phase-7-review-the-rebuild) says.
