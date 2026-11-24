@@ -48,8 +48,8 @@ The brief from the main agent gives you:
   behaviour, or a trade-off the spec doesn't allow, such as more memory than
   its guard rails, needs the user: write it into the plan or the spec as an
   open question, and report it. Mark each open question a fact or a
-  decision as the spec template says, with your recommended answer for a
-  decision; a fact is researched rather than asked, and when the brief
+  decision, and what it waits on, as the spec template says, with your
+  recommended answer for a decision; a fact is researched rather than asked, and when the brief
   gives research notes, write each answer in, citing its note.
 
 ## Plan mode

@@ -42,6 +42,10 @@ The brief from the main agent gives you:
   exists yet.
 - **Research notes,** when facts the spec asked about have been looked
   up: each note's path, which you cite.
+- **Decisions already made,** such as the decisions document
+  `/vibes:grill` writes: each decision is the user's answer, and each
+  fact is settled with its note. Write them into the spec, and ask none
+  of them again.
 - **In revise mode, the round directory and its phase,** `spec`, `design`
   or `spike`, any decision the main agent has made about a finding, such as
   the user's answer to a question, and whether to add change log entries.
@@ -96,6 +100,16 @@ describes, replacing the comments.
   command does when its output file exists, is a decision even when one
   option is clearly better: never settle it as an assumption. The
   recommendation lets the user accept it with one word.
+- **Mark what each question waits on,** as the template says: `after Qn`
+  when it only arises, or its options change, once Qn is answered, such
+  as a CSV delimiter after the file format, or a decision that needs a
+  fact after that fact's question. The user is asked in rounds, each
+  holding only questions whose prerequisites are answered, so a question
+  you'd have to guess at waits instead of being asked or assumed.
+- **When the brief gives answers to open questions,** write each into the
+  spec, remove the questions it settles or makes moot, and add any new
+  question an answer raises, with what it waits on, numbered after the
+  highest number the spec has used.
 - **When the brief gives research notes,** write each answer into the
   spec as a requirement or an assumption, citing its note as
   `(source: research/<topic>.md)`, and remove the question. When a note
@@ -251,8 +265,8 @@ Reply with:
   vouch for without building it, such as a new way to walk a directory
   tree, with its findings.
 - **Open questions:** in spec mode, each one, marked `(fact)` or
-  `(decision)`, each decision with your recommended answer and the other
-  options; in design mode, each decision record the task can't keep to;
+  `(decision)`, with what it waits on, each decision with your
+  recommended answer and the other options; in design mode, each decision record the task can't keep to;
   and in revise mode, each fix you didn't make because it would change
   what the user asked for. Give each decision a recommendation worded so
   "yes" accepts it. Write `None.` when there are none.

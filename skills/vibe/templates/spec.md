@@ -102,11 +102,17 @@ Each question the spec can't settle yet, numbered, and marked as one of:
   "- **Q1 (fact):** How many orders does the export API return per page?"
 - A decision, which only the user can make. Word it so "yes" accepts the
   recommended answer, and give the other options:
-  "- **Q2 (decision):** Export cancelled orders too? Recommended: yes,
-  marked as cancelled, since refunds need them. Otherwise: leave them
-  out."
+  "- **Q2 (decision):** Write the export as CSV? Recommended: yes, since
+  the finance team opens it in a spreadsheet. Otherwise: JSON lines."
 
-The spec isn't complete until this section says "None.".
+A question that only arises, or whose options change, once another is
+answered says which, and is asked only after it:
+"- **Q3 (decision, after Q2):** Separate the CSV's fields with commas?
+Recommended: yes. Otherwise: semicolons, for spreadsheets set to a
+European locale."
+
+Answered questions leave this section for the requirements. Never reuse a
+number. The spec isn't complete until this section says "None.".
 -->
 
 ## Change log
