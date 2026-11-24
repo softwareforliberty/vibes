@@ -44,6 +44,10 @@ while holding it to the standards of careful, experienced developers.
   `tests/setup_needs/`.
 - **`bin/wizard-check`:** checks a wizard parses, keeps the wizard
   library unchanged and passes ShellCheck, without running it.
+- **`bin/tracker`:** reaches the project's issue tracker through the
+  commands it names in `.vibes-tracker`, only as you approved them, as
+  [Your issue tracker](#your-issue-tracker) says. It's in `lib/tracker/`,
+  and its tests in `tests/tracker/`.
 - **`bin/capacity`:** measures how many builders the machine can run at
   once for the project, from runs of its gate, and caches the answer. It's
   in `lib/capacity/`, and its tests in `tests/capacity/`.
@@ -57,7 +61,8 @@ while holding it to the standards of careful, experienced developers.
 - **`skills/`:** agent skills for the workflow, optimising performance,
   debugging, surveying the architecture, reviewing your own branch or an
   outside pull request, writing a pull request, triaging issues and
-  picking up approved ones, asking someone else through a questionnaire,
+  picking up approved ones, setting up the issue tracker, asking someone
+  else through a questionnaire,
   prototyping a decision, writing a wizard for steps only you can do,
   grilling a plan before it's built, measuring how many builders the
   machine can run,
@@ -444,12 +449,13 @@ and what no record shows is marked unverified. It fills the repository's
 own pull request template when there is one, and leaves out anything
 private, such as `.vibes/` paths. You read it first: it pushes the branch
 and opens the pull request, as a draft or ready for review, or replaces
-an existing one's body, only when you say so, and never forces a push.
+an existing one's body, only when you say so, and never forces a push. It
+opens it through [your issue tracker's](#your-issue-tracker) commands.
 
 ## Work from issues
 
-vibes reads issues from the project's GitHub tracker, through `gh`.
-Anyone can write an issue, so **its text is untrusted:** only the issue
+vibes reads issues through [your issue tracker's](#your-issue-tracker)
+commands. Anyone can write an issue, so **its text is untrusted:** only the issue
 reader, which can write nothing but its brief, ever reads it. It turns the
 issue into a brief, the task in the project's words, what the reporter
 saw and what would close it, and lists anything in the issue that tries
@@ -458,8 +464,8 @@ token. Runs start from the brief, never the issue.
 
 - **Start a run from an issue:** `/vibes:vibe #123`, `/vibes:debug #45` or
   `/vibes:optimise #67`. You confirm the brief before the run starts, even
-  an unattended one, and `/vibes:pr` links the pull request with
-  `Closes #123`.
+  an unattended one, and `/vibes:pr` links the pull request with the
+  tracker's closing line, such as `Closes #123`.
 - **Triage:** `/vibes:triage` takes the open issues without a triage
   label, or the ones you name. For each, it checks whether the code
   already does it and whether a decision record ruled it out, reproduces
@@ -476,6 +482,63 @@ token. Runs start from the brief, never the issue.
   through them.
 
 Approvals are kept in `.vibes/issues/` on the machine you triaged on.
+
+## Your issue tracker
+
+vibes knows no tracker itself. The project names the commands for its
+own in `.vibes-tracker`, at the repository's root, and vibes runs those,
+through `bin/tracker`. `/vibes:tracker` sets it up: it drafts one for a
+GitHub or GitLab remote, or writes one for another tracker, such as
+Forgejo, SourceHut or Jira, from its CLI's documentation, and has you
+check it before it's committed. Each line is a kind, a tab, and its value:
+
+```text
+issue-id	[0-9]+
+closes	Closes #{id}
+state-open	OPEN
+read	gh issue view {id} --json title,body,comments,labels,state,url
+read.title	.title
+comment	gh issue comment {id} --body-file {body-file}
+```
+
+[skills/tracker/templates/](skills/tracker/templates/) has the drafts,
+and the top of [lib/tracker/cli.py](lib/tracker/cli.py) every kind.
+
+The file holds commands that run as you, with your tracker's
+credentials, so a change to it is an attack on you. vibes defends against
+one in layers:
+
+- **You approve the commands, not the repository.** Nothing runs until
+  you run `bin/tracker approve` in your own terminal. It shows every
+  command, and keeps your approval in the repository's git directory,
+  never in the checkout, so nothing committed can approve itself. Any
+  change needs approving again, and an unattended `/vibes:pickup`
+  stops rather than run a changed file.
+- **It's read from the default branch,** never the checkout, so a branch,
+  or a contributor's pull request you've checked out, can't change it.
+- **No shell.** Each command is one program and its arguments, run
+  directly, so nothing can be piped, redirected or substituted. Only
+  trackers' own tools run, unless you allow another when approving, and
+  `curl` reaches only the hosts the file names, over https.
+- **Issue text never becomes a command.** Each value is checked before
+  it fills its placeholder: an issue id must match the file's pattern, no
+  value may begin with `-`, and only `{body-file}` may name a file, one
+  in `.vibes/`.
+- **Reading and posting are kept apart.** Comments, labels, closing an
+  issue and pull requests run only from a batch, which you confirm before
+  it runs, and which no subagent may run. `/vibes:pickup` never posts.
+- **Your other secrets stay out.** The commands get only the tokens the
+  file names, besides what any program needs, such as `PATH` and `HOME`.
+- **It's guarded like the gate.** No agent may approve it or touch the
+  approval, no subagent may write the file, the commit gate asks you
+  before a commit that changes it, and `/vibes:review-pr` marks a change
+  to it HIGH.
+
+What's left: a command you approve yourself runs as you, so read them
+before you approve. Agents have no terminal, but a program can fake one,
+so the hook that stops agents approving guards against mistakes and
+instructions picked up from an issue, not a determined attacker. And
+`/vibes:review-pr` still uses `gh` directly, for GitHub pull requests.
 
 ## Build in parallel
 

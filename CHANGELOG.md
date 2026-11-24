@@ -142,6 +142,25 @@ guides behave, and says so under **Changed**.
   - **Skills and agents** say what `${CLAUDE_PLUGIN_ROOT}` stands for
     where it isn't filled in, and skills pass the folder to each agent.
 
+- **`/vibes:tracker` and `bin/tracker`: any issue tracker.** The project
+  names its tracker's commands in `.vibes-tracker`, and vibes runs only
+  those: issue intake, `/vibes:triage`, `/vibes:pickup` and `/vibes:pr`
+  no longer call `gh` themselves. `/vibes:tracker` drafts the file for
+  GitHub or GitLab, or writes one for another tracker from its CLI's
+  documentation.
+  - **You approve the commands** in your own terminal, with `tracker
+    approve`, and any change needs approving again. The file is read from
+    the default branch, never the checkout.
+  - **No shell:** each command is one program and its arguments, each
+    value is checked before it fills a placeholder, only `{body-file}`
+    names a file, and the commands get only the tokens the file names.
+  - **Posting needs your confirmation:** public operations run only from
+    a batch, which you confirm, and which no subagent may run.
+  - **Guarded like the gate:** a hook stops agents approving or touching
+    the approval, and subagents writing the file; the commit gate asks
+    before a commit that changes it; and `/vibes:review-pr` marks a
+    change to it HIGH.
+
 ### Changed
 
 - **Open questions are asked in rounds.** The designer marks what each
