@@ -21,7 +21,9 @@ for each:
     ELSEWHERE <patch>   scripts/check failed, but not saying what's expected
     STALE <patch>       the breach no longer applies to the code
 
-Each run's output is kept in .vibes/rules-bite/<patch>.log. A breach that
+Each run's output is kept in .vibes/rules-bite/<patch>.log. Curly and
+straight quotes count as the same, since a tool's quotes can depend on the
+locale. A breach that
 adds a new file, rather than changing one, stays applicable as the code
 changes. Prints NO BREACHES when there are none. Exits 0 when every breach
 bites or there are none, 1 when any doesn't, and 2 on an error.
@@ -43,6 +45,16 @@ CHECK = Path("scripts") / "check"
 LOGS = Path(".vibes") / "rules-bite"
 HEADER = re.compile(r"^(Rule|Fails with):\s*(.*?)\s*$")
 TIMEOUT = 3600
+# Quotes a tool may print curly or straight, depending on the locale, as
+# gfortran does: compared as straight ones.
+QUOTES = str.maketrans({"\u2018": "'", "\u2019": "'", "\u201c": '"',
+                        "\u201d": '"', "`": "'"})
+
+
+def plain(text: str) -> str:
+    return text.translate(QUOTES)
+
+
 # What git sets for a hook, which would point the throwaway worktree's
 # commands at the real repository's index and tree.
 HOOK_VARIABLES = ("GIT_INDEX_FILE", "GIT_DIR", "GIT_WORK_TREE", "GIT_PREFIX",
@@ -107,7 +119,7 @@ def check(root: Path, work: Path, commit: str, patch: Path,
     log.write_text(output, encoding="utf-8")
     if status == 0:
         return "MISSED"
-    return "BITES" if fails in output else "ELSEWHERE"
+    return "BITES" if plain(fails) in plain(output) else "ELSEWHERE"
 
 
 def main(argv: Sequence[str]) -> int:

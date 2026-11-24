@@ -118,6 +118,20 @@ class RulesBiteTest(Project):
         self.assertEqual(result.returncode, 1)
         self.assertIn("ELSEWHERE", result.stdout)
 
+    def test_quotes_count_as_the_same_in_any_form(self) -> None:
+        self.write("scripts/check", CHECK.replace(
+            "echo 'edge reaches into core/internal'",
+            "echo \"edge reaches into \u2018core/internal\u2019\""),
+            executable=True)
+        self.write("scripts/breaches/edge-entry-points.patch",
+                   BREACH.replace("Fails with: edge reaches into "
+                                  "core/internal",
+                                  "Fails with: edge reaches into "
+                                  "'core/internal'"))
+        self.git("commit", "-qam", "Quote the path")
+        result = self.bite()
+        self.assertEqual(result.returncode, 0, result.stdout)
+
     def test_a_breach_that_no_longer_applies(self) -> None:
         self.write("src/edge/breach.sh", "already here\n")
         self.git("add", ".")
