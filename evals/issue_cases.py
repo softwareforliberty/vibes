@@ -184,4 +184,9 @@ def build() -> None:
              "the Reply section tells the reporter, in plain words, that "
              "the CSV's columns are a fixed format other people's "
              "spreadsheets rely on, so they can't be changed in place, and "
-             "it doesn't mention agents, AI, vibes or labels")})
+             "it doesn't mention agents, AI, vibes or labels"),
+         "wontfix-says-closed": llm(
+             "the Label line isn't wontfix, or it is and the Reply tells "
+             "the reporter the issue is being closed as not planned, in "
+             "any wording, such as closing it because the project won't "
+             "do it")})
