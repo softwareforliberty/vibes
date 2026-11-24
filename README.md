@@ -769,6 +769,7 @@ and run `host-files` again after updating it.
 |---|---|---|---|---|
 | The commit gate on the agent's commits | Yes | Yes | Once you trust the hooks | Yes |
 | A commit that loosens the gate | Asks you | Asks you | Refused | Refused |
+| Posting to the issue tracker | Asks you | Asks you | You run the batch | You run the batch |
 | Formatting and linting each file written | Yes | Yes | Yes | Yes |
 | The guide check | Yes | Yes | Yes | Yes |
 | Reviewers write only their findings | Yes | Yes | Yes | No |
