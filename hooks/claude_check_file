@@ -141,15 +141,17 @@ after_bash() {
 
 main() {
   local input agent event tool
-  input="$(cat)"
+  hook::read_input "$0"
+  input="${HOOK_INPUT}"
   agent="$(hook::json_field "${input}" '.agent_type')"
-  [[ "${agent#vibes:}" != spiker ]] || exit 0
+  agent="${agent#vibes[:-]}"
+  [[ "${agent}" != spiker ]] || exit 0
   event="$(hook::json_field "${input}" '.hook_event_name')"
   tool="$(hook::json_field "${input}" '.tool_name')"
   case "${event}/${tool}" in
     PreToolUse/Bash) before_bash "${input}" || true ;;
     PostToolUse/Bash) after_bash "${input}" ;;
-    PreToolUse/*) ;;
+    PreToolUse/* | */Delete) ;;
     *) after_write "${input}" ;;
   esac
 }

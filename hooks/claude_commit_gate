@@ -232,7 +232,8 @@ check_commit() {
 main() {
   local input raw command cwd dir args length subject found_loose
   local -a found=() dirs=()
-  input="$(cat)"
+  hook::read_input "$0"
+  input="${HOOK_INPUT}"
   raw="$(hook::json_field "${input}" '.tool_input.command')"
   command="$(hook::strip_text <<<"${raw}")"
   cwd="$(hook::json_field "${input}" '.cwd')"
@@ -290,11 +291,18 @@ main() {
   # Bash 3.2 treats an empty array as unset, which set -u rejects.
   ((${#dirs[@]} > 0)) || exit 0
   found_loose="$(loosenings "${dirs[@]}")"
-  if [[ -n "${found_loose}" ]]; then
-    hook::pre_tool_ask "This commit loosens the vibes commit gate:"$'\n'"$(
-      sed 's/^/- /' <<<"${found_loose}")"$'\n'"Allow it only if you meant to \
-remove or weaken these checks."
+  [[ -n "${found_loose}" ]] || exit 0
+  found_loose="- ${found_loose//$'\n'/$'\n'- }"
+  if ! hook::can_ask "${input}"; then
+    gate::err "this commit loosens the gate, which needs the user's"
+    gate::err "confirmation, and this host can't ask for it from a hook:"
+    printf '%s\n' "${found_loose}" >&2
+    gate::err "Report it to the user, who can make the commit themselves."
+    exit 2
   fi
+  hook::pre_tool_ask "This commit loosens the vibes commit gate:"$'\n'"\
+${found_loose}"$'\n'"Allow it only if you meant to remove or weaken these \
+checks."
 }
 
 main "$@"

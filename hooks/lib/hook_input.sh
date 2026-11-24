@@ -1,8 +1,71 @@
 # shellcheck shell=bash
 #
-# Helpers for the Claude Code hooks: read a field of the hook's JSON input,
-# and reduce a shell command to its structure, so quoted text can't look
-# like code.
+# Helpers for the vibes tool hooks: read the hook's JSON input, whichever
+# host sent it, read a field of it, and reduce a shell command to its
+# structure, so quoted text can't look like code.
+
+# Reads the hook's JSON input on stdin into HOOK_INPUT, in Claude Code's
+# shape whichever host sent it, as hooks/lib/host_input.py describes. A
+# Codex patch that touches several files is checked one file at a time:
+# this runs the hook, given as its argument, again for each, passes on the
+# first one's output, and exits with the status of the first that fails.
+hook::read_input() {
+  local hook="$1" raw one first="" status=0 out err
+  local -a inputs=()
+  raw="$(cat)"
+  # shellcheck disable=SC2034 # The hook that calls this reads it.
+  HOOK_INPUT="${raw}"
+  if [[ "${raw}" != *'"turn_id"'* && "${raw}" != *'"BeforeTool"'* \
+    && "${raw}" != *'"AfterTool"'* ]] || ! command -v python3 >/dev/null; then
+    return 0
+  fi
+  while IFS= read -r one; do
+    inputs+=("${one}")
+  done < <(python3 -I -S "${BASH_SOURCE[0]%/*}/host_input.py" <<<"${raw}")
+  # Bash 3.2 treats an empty array as unset, which set -u rejects.
+  ((${#inputs[@]} > 0)) || return 0
+  # shellcheck disable=SC2034 # The hook that calls this reads it.
+  HOOK_INPUT="${inputs[0]}"
+  ((${#inputs[@]} > 1)) || return 0
+  err="$(mktemp)"
+  for one in "${inputs[@]}"; do
+    out="$("${hook}" <<<"${one}" 2>"${err}")" || status=$?
+    if ((status != 0)); then
+      cat -- "${err}" >&2
+      rm -f -- "${err}"
+      exit "${status}"
+    fi
+    [[ -n "${first}" ]] || first="${out}"
+  done
+  rm -f -- "${err}"
+  [[ -z "${first}" ]] || printf '%s\n' "${first}"
+  exit 0
+}
+
+# Prints the host that sent the hook's input: claude, copilot, codex or
+# gemini.
+hook::host() {
+  local input="$1" host
+  host="$(hook::json_field "${input}" '.vibes_host')"
+  if [[ -z "${host}" ]]; then
+    if [[ -n "${COPILOT_PLUGIN_ROOT:-}" ]]; then
+      host=copilot
+    else
+      host=claude
+    fi
+  fi
+  printf '%s\n' "${host}"
+}
+
+# Succeeds when the host can have the user confirm a tool call from a hook.
+# Codex skips a hook that asks and runs the call, and Gemini CLI reads its
+# own decision field, so there a call that needs confirming is refused.
+hook::can_ask() {
+  case "$(hook::host "$1")" in
+    claude | copilot) return 0 ;;
+    *) return 1 ;;
+  esac
+}
 
 # Prints one field of the hook's JSON input, or nothing if no parser exists.
 hook::json_field() {

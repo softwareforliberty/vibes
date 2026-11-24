@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Claude Code PreToolUse hook that points each agent at the vibes guide for
+# PreToolUse hook that points each agent at the vibes guide for
 # each kind of file it writes, the first time in each conversation, so a new
 # language or tool midway through a project isn't written blind.
 #
@@ -25,10 +25,11 @@ temp=""
 trap 'rm -f -- "${temp}"' EXIT
 
 # Prints the transcript of the agent the hook fires in: the conversation's
-# own, or a subagent's, which Claude Code keeps beside it.
+# own, or a subagent's, which Claude Code keeps beside it. Other hosts keep
+# no such file for a subagent, so there it's the conversation's own.
 transcript_of() {
-  local main="$1" agent="$2"
-  if [[ -z "${agent}" ]]; then
+  local main="$1" agent="$2" host="$3"
+  if [[ -z "${agent}" || "${host}" != claude ]]; then
     printf '%s\n' "${main}"
   else
     printf '%s/subagents/agent-%s.jsonl\n' "${main%.jsonl}" \
@@ -38,18 +39,24 @@ transcript_of() {
 
 # Returns 0 when the transcript shows the agent read coding-style.md and
 # idioms.md of one of an entry's guides since the last compaction, so they're
-# still in its context.
+# still in its context. Another host's transcript has its own format, so
+# there any mention of both files counts, even one before a compaction.
 has_read() {
-  local transcript="$1" entry="$2" reads choice
+  local transcript="$1" entry="$2" host="$3" reads choice end='"'
   local -a choices
   [[ -f "${transcript}" ]] || return 1
-  reads="$(awk '/"subtype":"compact_boundary"/ { reads = ""; next }
-    /"name":"Read"/ { reads = reads $0 "\n" }
-    END { printf "%s", reads }' "${transcript}")"
+  if [[ "${host}" == claude ]]; then
+    reads="$(awk '/"subtype":"compact_boundary"/ { reads = ""; next }
+      /"name":"Read"/ { reads = reads $0 "\n" }
+      END { printf "%s", reads }' "${transcript}")"
+  else
+    reads="$(cat -- "${transcript}")"
+    end=""
+  fi
   IFS='|' read -r -a choices <<<"${entry}"
   for choice in "${choices[@]}"; do
-    if grep -qF "/guides/${choice}/coding-style.md\"" <<<"${reads}" \
-      && grep -qF "/guides/${choice}/idioms.md\"" <<<"${reads}"; then
+    if grep -qF "/guides/${choice}/coding-style.md${end}" <<<"${reads}" \
+      && grep -qF "/guides/${choice}/idioms.md${end}" <<<"${reads}"; then
       return 0
     fi
   done
@@ -91,7 +98,12 @@ guide_line() {
 main() {
   local input path cwd root relative session agent seen content first_line
   local entries entry marker transcript note declared="" lines="" notes=""
-  input="$(cat)"
+  local host
+  hook::read_input "$0"
+  input="${HOOK_INPUT}"
+  # A file being deleted needs no guide.
+  [[ "$(hook::json_field "${input}" '.tool_name')" != Delete ]] || exit 0
+  host="$(hook::host "${input}")"
   path="$(hook::json_field "${input}" '.tool_input.file_path')"
   [[ -n "${path}" ]] \
     || path="$(hook::json_field "${input}" '.tool_input.notebook_path')"
@@ -138,14 +150,14 @@ main() {
   mkdir -p -- "${seen}"
   transcript="$(transcript_of \
     "$(hook::json_field "${input}" '.transcript_path')" \
-    "${agent#main}")"
+    "${agent#main}" "${host}")"
 
   while IFS= read -r entry; do
     [[ "${entry}" != "-" ]] || continue
     marker="${seen}/${entry//[\/|]/_}"
     [[ ! -e "${marker}" ]] || continue
     : >"${marker}"
-    if has_read "${transcript}" "${entry}"; then
+    if has_read "${transcript}" "${entry}" "${host}"; then
       note="$(gate_note "${entry}" "${declared}")"
       if [[ -n "${note}" ]]; then
         notes+="- ${relative} needs ${entry}."$'\n'"${note}"$'\n'
