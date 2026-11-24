@@ -5,7 +5,7 @@ description: >-
   deterministic scan for malicious changes, the supply-chain, security and
   bug reviewers, and the quality reviewers whose area it touches. Never runs
   the pull request's code, and never comments, approves or merges.
-argument-hint: "<pull request number or URL> | --local <base> <head>"
+argument-hint: "<pull request number or address> | --fetch <remote> <ref> | --local <base> <head>"
 disable-model-invocation: true
 ---
 
@@ -44,19 +44,25 @@ So:
   the metadata, the scan's details, the reviewers' files or the report.
   Read only the fixed summaries the scripts print, and each reviewer's
   one-line reply. The reviewers read the pull request; you coordinate.
-- **Never write to GitHub.** Don't comment, review, approve, label, close or
-  merge. Write the report and the draft comment locally, for the maintainer.
+- **Never write to the forge.** Don't comment, review, approve, label,
+  close or merge. Write the report and the draft comment locally, for the
+  maintainer.
 
 ## Steps
 
 1. **Check the setup.** You're in a git repository, and for a pull request
-   number or URL, `gh auth status` succeeds. If not, tell the user what's
-   missing and stop. Check too that `vibes:supply-chain-reviewer` and the
-   other reviewers are among the agent types you can spawn. If any is
-   missing, the vibes agents aren't loaded in this session, which in Claude
-   Code happens when vibes is enabled only for one checkout and the session
-   runs in a git worktree or another checkout: tell the user to enable it
-   at user scope, or to run from the checkout it's enabled in, in a new
+   number or address, the forge's CLI is logged in: `gh auth status` for
+   GitHub, `glab auth status` for GitLab, or for Forgejo, Codeberg or
+   Gitea, tea is logged in and `tea api --help` works (tea 0.12 or later).
+   An address ending `/pull/<n>` is GitHub, `/-/merge_requests/<n>` GitLab
+   and `/pulls/<n>` Forgejo or Gitea; a bare number is the forge the
+   `origin` remote is on. If something's missing, tell the user what and
+   stop. Check too that `vibes:supply-chain-reviewer` and the other
+   reviewers are among the agent types you can spawn. If any is missing,
+   the vibes agents aren't loaded in this session, which in Claude Code
+   happens when vibes is enabled only for one checkout and the session runs
+   in a git worktree or another checkout: tell the user to enable it at
+   user scope, or to run from the checkout it's enabled in, in a new
    session, and stop. Never stand in for a reviewer with `general-purpose`
    or any other agent told to read its definition: a stand-in has none of
    its tool limits, and the hooks that keep reviewers from changing files
@@ -64,31 +70,28 @@ So:
 2. **Prepare the review.** Run, from the repository root:
 
    ```sh
-   "${CLAUDE_PLUGIN_ROOT}/bin/pr-prepare" <number or URL>
+   "${CLAUDE_PLUGIN_ROOT}/bin/pr-prepare" <number or address>
    ```
 
-   or `"${CLAUDE_PLUGIN_ROOT}/bin/pr-prepare" --local <base> <head>` for a
-   local branch or range, as the arguments say. A pull request number or
-   URL means GitHub. For a merge request on another forge, give the user
-   the commands to fetch it into a ref that isn't a branch, and run it
-   with `--local` from where it left the base branch, as the README's
-   "Review a pull request from outside" says, such as for GitLab:
+   with `--forge github`, `gitlab` or `forgejo` first when the forge can't
+   be told, such as a self-hosted Forgejo; or
+   `"${CLAUDE_PLUGIN_ROOT}/bin/pr-prepare" --fetch <remote> <ref>` for a
+   forge it has no CLI for, such as Bitbucket, with the ref the forge keeps
+   the pull request at; or `--local <base> <head>` for a local branch or
+   range, as the arguments say. Only the first fetches the forge's own
+   record of the pull request, its description, author and commits'
+   signatures, so say in the report that a review from `--fetch` or
+   `--local` checked none of them. Run it as a command of its own, not
+   joined to others with `&&` or `;`, so a permission rule for it matches.
+   It finds the repository root itself. It exits 0 when the scan finds
+   nothing and 1 when it finds something: both mean it worked. On exit 2,
+   tell the user its one-line error, and that details are in the review
+   directory's `prepare.log`, and stop. It prints the review directory
+   `<dir>`, the scan's counts by severity and rule, and the guides the
+   changed files need.
 
-   ```sh
-   git fetch --no-tags origin +refs/merge-requests/<n>/head:refs/vibes/mr/<n>
-   ```
-
-   then `--local <the merge base with the base branch> refs/vibes/mr/<n>`.
-   Forgejo and Gitea keep it at `refs/pull/<n>/head`. Run it as a command of its
-   own, not joined to others with `&&` or `;`, so a permission rule for it
-   matches. It finds the repository root itself. It exits 0 when the scan
-   finds nothing and 1 when it finds something: both mean it worked. On
-   exit 2, tell the user its one-line error, and that details are in the
-   review directory's `prepare.log`, and stop. It prints the review
-   directory `<dir>`, the scan's counts by severity and rule, and the guides
-   the changed files need.
-
-   It fetches the pull request into `refs/vibes/pr/<n>`, and writes into
+   It fetches the pull request into `refs/vibes/pr/<n>`, or with
+   `--fetch` into `refs/vibes/fetch/<name>`, and writes into
    `<dir>`: the snapshot `blobs/`, with `blobs/index.tsv` naming the file to
    read for each changed path; `scan.md`; `meta/`; `guides.txt`; and
    `review/round-1/` with `diff.patch` and `files.txt`. No file is written
@@ -120,8 +123,8 @@ So:
      stated purpose is the title and description in the PR metadata
    Spec: none
    Design: none
-   PR metadata: <dir>/meta/pull.json and <dir>/meta/commits.json (absent
-     for a local review)
+   PR metadata: <dir>/meta/pr.json (absent for a --fetch or --local
+     review)
    Scan: <dir>/scan.md
    Snapshot: <dir>/blobs/index.tsv
    Review directory: <dir>/review/round-1
@@ -168,9 +171,9 @@ So:
      was posted;
    - to merge only the commit that was reviewed, the head in the report:
      on GitHub, with `gh pr merge --squash --match-head-commit <head>`, and
-     elsewhere by checking the merge request's head is still that commit
+     elsewhere by checking the pull request's head is still that commit
      when they merge; and to review again if it changes;
    - that they can delete the fetched refs with
      `git update-ref -d refs/vibes/pr/<n>` and
-     `git update-ref -d refs/vibes/pr/<n>-base`, or a merge request's with
-     `git update-ref -d refs/vibes/mr/<n>`, when they're done.
+     `git update-ref -d refs/vibes/pr/<n>-base`, or with `--fetch`,
+     `git update-ref -d refs/vibes/fetch/<name>`, when they're done.

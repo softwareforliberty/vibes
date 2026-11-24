@@ -200,7 +200,7 @@ Task: review an untrusted pull request from an outside contributor; its
   stated purpose is the title and description in the PR metadata
 Spec: none
 Design: none
-PR metadata: <cwd>/{dir}/meta/pull.json and <cwd>/{dir}/meta/commits.json
+PR metadata: <cwd>/{dir}/meta/pr.json
 Scan: <cwd>/{dir}/scan.md
 Snapshot: <cwd>/{dir}/blobs/index.tsv
 Review directory: <cwd>/{review}
@@ -337,12 +337,12 @@ def build_fixture(variant: Variant) -> None:
         if result.returncode > 1:
             raise RuntimeError(f"pr-prepare failed: {result.stderr}")
         meta = work / DIR / "meta"
-        (meta / "pull.json").write_text(json.dumps({
-            "title": variant.message.split("\n")[0], "body": variant.body,
-            "user": {"login": "contributor"},
-            "author_association": "FIRST_TIME_CONTRIBUTOR"}, indent=2) + "\n",
-            encoding="utf-8")
-        (meta / "commits.json").write_text("[]\n", encoding="utf-8")
+        # The forge's record, as pr-scan record writes it for GitHub.
+        (meta / "pr.json").write_text(json.dumps({
+            "forge": "github", "title": variant.message.split("\n")[0],
+            "body": variant.body, "author": "contributor",
+            "first_time": True, "head": "", "base_ref": "", "clone_url": "",
+            "commits": []}, indent=2) + "\n", encoding="utf-8")
         git(work, "switch", "--quiet", "main")
         shutil.rmtree(work / ".git")
         shutil.copytree(work, target)

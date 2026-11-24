@@ -243,32 +243,44 @@ on battery, in Low Power Mode or busy.
 
 ## Review a pull request from outside
 
-`/vibes:review-pr <number or URL>` reviews a pull request from someone
-outside the project, above all for malicious changes, such as the XZ Utils
-backdoor (CVE-2024-3094), which hid its payload in test data and pulled it
-into the build. It's separate from `/vibes:vibe`, which never uses it.
-`/vibes:review-pr --local <base> <head>` reviews a local branch instead.
+`/vibes:review-pr <number or address>` reviews a pull request from
+someone outside the project, above all for malicious changes, such as the
+XZ Utils backdoor (CVE-2024-3094), which hid its payload in test data and
+pulled it into the build. It's separate from `/vibes:vibe`, which never
+uses it.
 
-On GitHub it fetches the pull request and its metadata with `gh`. On
-another forge, fetch the merge request yourself into a ref that isn't a
-branch, so it's never checked out by mistake, and review it with
-`--local` from where it left the base branch. GitLab keeps a merge request
-at `refs/merge-requests/<n>/head`, for 14 days after it's closed or
-merged, and Forgejo and Gitea keep a pull request at `refs/pull/<n>/head`:
+It fetches the pull request, and the forge's own record of it, through
+the forge's own CLI and your login there:
 
-```sh
-git fetch --no-tags origin +refs/merge-requests/12/head:refs/vibes/mr/12
-/vibes:review-pr --local $(git merge-base main refs/vibes/mr/12) refs/vibes/mr/12
-```
+| Forge | CLI | Pull request kept at |
+|---|---|---|
+| GitHub | `gh` | `refs/pull/<n>/head` |
+| GitLab | `glab` | `refs/merge-requests/<n>/head` |
+| Forgejo, Codeberg, Gitea | `tea` 0.12 or later | `refs/pull/<n>/head` |
 
-That review has everything but the forge's own record of the pull
-request, such as its description, which only GitHub's gives the
-reviewers.
+It tells the forge from the address, `/pull/<n>`, `/-/merge_requests/<n>`
+or `/pulls/<n>`, or for a bare number from the `origin` remote's host,
+and `--forge github`, `gitlab` or `forgejo` names it where it can't tell,
+such as a self-hosted Forgejo. The record, its title, description,
+author, and each commit's signature and account, goes into one shape for
+every forge, so the same checks run on each. Where a forge doesn't say
+something, the check says it couldn't check it, and never passes: GitLab
+doesn't link commits to accounts, Forgejo and Gitea don't say whether
+someone is a first-time contributor, and an unsigned or unknown
+signature is treated as no signature.
 
-1. **Prepare.** `bin/pr-prepare` fetches the pull request and its metadata
-   with `gh` and git, and reads it only from git objects, with hooks,
-   filters, textconv, LFS and submodules turned off. Nothing from the pull
-   request is checked out, built, tested or run.
+For a forge with no CLI here, such as Bitbucket,
+`/vibes:review-pr --fetch <remote> <ref>` fetches the ref the forge keeps
+the pull request at, into `refs/vibes/fetch/`, never a branch, and
+reviews it from where it left the base branch, without the forge's
+record. `/vibes:review-pr --local <base> <head>` reviews a local branch.
+GitLab deletes a merge request's ref 14 days after it's closed or merged.
+
+1. **Prepare.** `bin/pr-prepare` fetches the pull request and the forge's
+   record of it with the forge's CLI and git, checks the fetched head is
+   the commit the forge reports, and reads it only from git objects, with
+   hooks, filters, textconv, LFS and submodules turned off. Nothing from
+   the pull request is checked out, built, tested or run.
 2. **Scan.** `bin/pr-scan` checks every changed file, and every commit on
    its own, against about twenty families of rules: binaries and what they
    hide, encoded payloads, hidden Unicode, build-time code, code that runs
@@ -571,8 +583,8 @@ when it could.
 What's left: a command you approve yourself runs as you, so read them
 before you approve. An agent outside a sandbox can use your credentials
 directly anyway, without the tracker. And
-`/vibes:review-pr` still fetches GitHub pull requests with `gh` directly,
-as [Review a pull request from outside](#review-a-pull-request-from-outside)
+`/vibes:review-pr` fetches pull requests with each forge's own CLI
+directly, as [Review a pull request from outside](#review-a-pull-request-from-outside)
 says, since its commands are fixed and part of vibes, not the project's.
 
 ## Build in parallel

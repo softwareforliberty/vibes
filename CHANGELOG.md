@@ -174,6 +174,16 @@ guides behave, and says so under **Changed**.
   shows the steps and changes nothing. `/vibes:pr` offers one for a
   one-way door someone must deploy.
 
+- **`/vibes:review-pr` on GitLab, Forgejo, Codeberg and Gitea,** through
+  each forge's own CLI: `glab` for GitLab and `tea` for Forgejo and
+  Gitea, beside `gh` for GitHub. The forge is told by the pull request's
+  address or the `origin` remote, or named with `--forge`. Each forge's
+  record of the pull request goes into one shape, `meta/pr.json`, so the
+  same checks run on each, and a check the forge's data can't settle,
+  such as GitLab's commits having no accounts, says so rather than pass.
+  `--fetch <remote> <ref>` reviews a pull request on any other forge
+  without the record.
+
 ### Changed
 
 - **Open questions are asked in rounds.** The designer marks what each

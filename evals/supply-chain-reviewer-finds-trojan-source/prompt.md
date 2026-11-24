@@ -13,7 +13,7 @@ Task: review an untrusted pull request from an outside contributor; its
   stated purpose is the title and description in the PR metadata
 Spec: none
 Design: none
-PR metadata: <cwd>/.vibes/pr-eval/meta/pull.json and <cwd>/.vibes/pr-eval/meta/commits.json
+PR metadata: <cwd>/.vibes/pr-eval/meta/pr.json
 Scan: <cwd>/.vibes/pr-eval/scan.md
 Snapshot: <cwd>/.vibes/pr-eval/blobs/index.tsv
 Review directory: <cwd>/.vibes/pr-eval/review/round-1
