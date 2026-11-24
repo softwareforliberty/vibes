@@ -36,13 +36,22 @@ Code must pass all three checks with **no errors, warnings or notes**:
 
 ```sh
 Rscript -e 'styler::style_pkg(dry = "fail")'
-Rscript -e 'if (length(lintr::lint_package())) quit(status = 1)'
+lib="$(mktemp -d)"
+R CMD INSTALL --library="${lib}" .
+R_LIBS="${lib}" \
+  Rscript -e 'if (length(lintr::lint_package())) quit(status = 1)'
 out="$(mktemp -d)"
 (cd "${out}" && R CMD build "${OLDPWD}" &&
   _R_CHECK_CRAN_INCOMING_=false R CMD check --as-cran --no-manual ./*.tar.gz)
 grep -qx 'Status: OK' "${out}"/*.Rcheck/00check.log
 ```
 
+- **Install the package before linting it.** lintr's
+  `object_usage_linter()` finds a package's imports through its installed
+  copy. Without one, it reports every function imported from another
+  package, such as `read_xml` from `@importFrom xml2 read_xml`, as `no
+  visible global function definition`. Installing into a temporary
+  library leaves nothing in the project.
 - **`R CMD check` exits 0 on warnings and notes,** and fails only on
   errors. The last line fails the check unless the log's status is `OK`.
 - **Build and check in a temporary directory.** Run in the project, they
