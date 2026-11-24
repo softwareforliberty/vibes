@@ -7,13 +7,21 @@
 # runs the tests. Projects without one are left alone. A commit of
 # documents only runs scripts/check --static, its checks without the tests,
 # since a document can't break a test; a script that takes no arguments runs
-# everything anyway.
+# everything anyway. A commit that changes scripts/check, scripts/check-file
+# or a breach in scripts/breaches/ also has bin/rules-bite apply each breach
+# that proved a boundary rule, and is blocked if the rule no longer catches
+# it.
 
 # shellcheck source=hooks/lib/guides.sh
 source "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/guides.sh"
 
 readonly GATE_CHECK_SCRIPT="scripts/check"
 readonly GATE_OUTPUT_LINES=60
+# Applies each breach that proved a boundary rule, and checks the rule
+# still catches it.
+GATE_RULES_BITE="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")"
+GATE_RULES_BITE="${GATE_RULES_BITE%/hooks/lib}/bin/rules-bite"
+readonly GATE_RULES_BITE
 # The tag /vibes:debug puts on its temporary debug logs, such as
 # vibes-debug-month-end, so none reaches a commit.
 readonly GATE_DEBUG_TAG_RE='vibes-debug-[a-z0-9]'
@@ -128,6 +136,26 @@ gate::check_debug_tags() {
 
 # Runs the gate in the repository containing the current directory. Returns
 # 0 when the commit may go ahead, and 1 when it must be blocked.
+# Returns 1 when a commit changes the checks or a breach, and a boundary
+# rule no longer fails on the breach that proved it.
+gate::check_breaches() {
+  local output
+  if git diff --cached --quiet -- "${GATE_CHECK_SCRIPT}" \
+    scripts/check-file scripts/breaches; then
+    return 0
+  fi
+  [[ -x "${GATE_RULES_BITE}" ]] || return 0
+  if ! output="$("${GATE_RULES_BITE}" --staged 2>&1)"; then
+    gate::err "a boundary rule no longer fails on the breach that proved it,"
+    gate::err "so the commit is blocked. Fix the rule, or the breach in"
+    gate::err "scripts/breaches/, then commit again. Each run's output is in"
+    gate::err ".vibes/rules-bite/."
+    printf '%s\n' "${output}" | tail -n "${GATE_OUTPUT_LINES}" >&2
+    return 1
+  fi
+  return 0
+}
+
 gate::run() {
   local root
   if ! root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
@@ -174,6 +202,10 @@ gate::run() {
     gate::err "${GATE_CHECK_SCRIPT} failed, so the commit is blocked."
     gate::err "Fix the problems below, then commit again."
     printf '%s\n' "${output}" | tail -n "${GATE_OUTPUT_LINES}" >&2
+    return 1
+  fi
+
+  if ! gate::check_breaches; then
     return 1
   fi
 
