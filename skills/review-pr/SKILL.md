@@ -68,7 +68,18 @@ So:
    ```
 
    or `"${CLAUDE_PLUGIN_ROOT}/bin/pr-prepare" --local <base> <head>` for a
-   local branch or range, as the arguments say. Run it as a command of its
+   local branch or range, as the arguments say. A pull request number or
+   URL means GitHub. For a merge request on another forge, give the user
+   the commands to fetch it into a ref that isn't a branch, and run it
+   with `--local` from where it left the base branch, as the README's
+   "Review a pull request from outside" says, such as for GitLab:
+
+   ```sh
+   git fetch --no-tags origin +refs/merge-requests/<n>/head:refs/vibes/mr/<n>
+   ```
+
+   then `--local <the merge base with the base branch> refs/vibes/mr/<n>`.
+   Forgejo and Gitea keep it at `refs/pull/<n>/head`. Run it as a command of its
    own, not joined to others with `&&` or `;`, so a permission rule for it
    matches. It finds the repository root itself. It exits 0 when the scan
    finds nothing and 1 when it finds something: both mean it worked. On
@@ -155,9 +166,11 @@ So:
      said, and the report lists the files to inspect;
    - the paths of `pr-review.md` and `comment-draft.md`, and that nothing
      was posted;
-   - to merge only with `gh pr merge --squash --match-head-commit <head>`,
-     with the head from the report, and to review again if the pull
-     request changes;
+   - to merge only the commit that was reviewed, the head in the report:
+     on GitHub, with `gh pr merge --squash --match-head-commit <head>`, and
+     elsewhere by checking the merge request's head is still that commit
+     when they merge; and to review again if it changes;
    - that they can delete the fetched refs with
      `git update-ref -d refs/vibes/pr/<n>` and
-     `git update-ref -d refs/vibes/pr/<n>-base` when they're done.
+     `git update-ref -d refs/vibes/pr/<n>-base`, or a merge request's with
+     `git update-ref -d refs/vibes/mr/<n>`, when they're done.

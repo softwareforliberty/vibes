@@ -248,6 +248,22 @@ backdoor (CVE-2024-3094), which hid its payload in test data and pulled it
 into the build. It's separate from `/vibes:vibe`, which never uses it.
 `/vibes:review-pr --local <base> <head>` reviews a local branch instead.
 
+On GitHub it fetches the pull request and its metadata with `gh`. On
+another forge, fetch the merge request yourself into a ref that isn't a
+branch, so it's never checked out by mistake, and review it with
+`--local` from where it left the base branch. GitLab keeps a merge request
+at `refs/merge-requests/<n>/head`, for 14 days after it's closed or
+merged, and Forgejo and Gitea keep a pull request at `refs/pull/<n>/head`:
+
+```sh
+git fetch --no-tags origin +refs/merge-requests/12/head:refs/vibes/mr/12
+/vibes:review-pr --local $(git merge-base main refs/vibes/mr/12) refs/vibes/mr/12
+```
+
+That review has everything but the forge's own record of the pull
+request, such as its description, which only GitHub's gives the
+reviewers.
+
 1. **Prepare.** `bin/pr-prepare` fetches the pull request and its metadata
    with `gh` and git, and reads it only from git objects, with hooks,
    filters, textconv, LFS and submodules turned off. Nothing from the pull
@@ -538,7 +554,9 @@ What's left: a command you approve yourself runs as you, so read them
 before you approve. Agents have no terminal, but a program can fake one,
 so the hook that stops agents approving guards against mistakes and
 instructions picked up from an issue, not a determined attacker. And
-`/vibes:review-pr` still uses `gh` directly, for GitHub pull requests.
+`/vibes:review-pr` still fetches GitHub pull requests with `gh` directly,
+as [Review a pull request from outside](#review-a-pull-request-from-outside)
+says, since its commands are fixed and part of vibes, not the project's.
 
 ## Build in parallel
 
