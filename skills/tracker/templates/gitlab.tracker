@@ -17,6 +17,8 @@ list	glab issue list --output json --per-page 100
 list.items	[]
 list.id	.iid
 list.labels	.labels[]
+# There's no labels command here, so /vibes:triage asks you to make sure
+# the labels it uses exist.
 read	glab issue view {id} --comments --output json
 read.title	.title
 read.body	.description

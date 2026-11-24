@@ -15,6 +15,9 @@ list	gh issue list --state open --limit 1000 --json number,labels
 list.items	[]
 list.id	.number
 list.labels	.labels[].name
+labels	gh label list --limit 1000 --json name
+labels.items	[]
+labels.name	.name
 read	gh issue view {id} --json title,body,comments,labels,state,url
 read.title	.title
 read.body	.body

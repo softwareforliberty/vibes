@@ -45,6 +45,8 @@ elif args[:2] == ["issue", "view"]:
 elif args[:2] == ["issue", "list"]:
     print(json.dumps([{{"number": 12, "labels": [{{"name": "bug"}}]}},
                       {{"number": 13, "labels": []}}]))
+elif args[:2] == ["label", "list"]:
+    print(json.dumps([{{"name": "bug"}}, {{"name": "needs-info"}}]))
 elif args[:2] == ["pr", "list"]:
     print("[]")
 """
@@ -271,7 +273,7 @@ class OperationsTest(Case):
     def test_reads_an_issue_without_printing_it(self) -> None:
         result = self.tracker("read", "#12", "--out", ".vibes/issues/12/i")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout, "READ 12 open\n")
+        self.assertEqual(result.stdout, "READ 12 open bug\n")
         with open(os.path.join(self.repo, ".vibes/issues/12/i"),
                   encoding="utf-8") as stream:
             issue = json.load(stream)
@@ -296,6 +298,9 @@ class OperationsTest(Case):
 
     def test_lists_open_issues(self) -> None:
         self.assertEqual(self.tracker("list").stdout, "12\tbug\n13\t\n")
+
+    def test_lists_labels(self) -> None:
+        self.assertEqual(self.tracker("labels").stdout, "bug\nneeds-info\n")
 
     def test_passes_only_the_environment_it_needs(self) -> None:
         self.tracker("whoami", env={"GH_TOKEN": "t1", "AWS_SECRET": "s",
@@ -336,7 +341,7 @@ class GitLabTest(Case):
             stream.write(FAKE_GLAB.format())
         os.chmod(glab, 0o755)
         result = self.tracker("read", "1", "--out", ".vibes/i.json")
-        self.assertEqual(result.stdout, "READ 1 open\n", result.stderr)
+        self.assertEqual(result.stdout, "READ 1 open bug\n", result.stderr)
         with open(os.path.join(self.repo, ".vibes/i.json"),
                   encoding="utf-8") as stream:
             issue = json.load(stream)
@@ -373,6 +378,17 @@ class PostTest(Case):
     def test_only_public_operations(self) -> None:
         batch = self.write(".vibes/issues/batch.tsv", "read\tid=12\n")
         self.assertEqual(self.tracker("post", batch).returncode, 2)
+        self.assertEqual(self.calls(), [])
+
+
+class LintTest(Case):
+    def test_checks_a_draft_without_approval(self) -> None:
+        good = self.write("draft", GITHUB)
+        self.assertEqual(self.tracker("lint", good).stdout,
+                         "OK: programs gh\n")
+        bad = self.write("bad", GITHUB + "close\tgh x | sh\n")
+        result = self.tracker("lint", bad)
+        self.assertEqual(result.returncode, 2)
         self.assertEqual(self.calls(), [])
 
 

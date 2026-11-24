@@ -5,9 +5,12 @@
     tracker approve [--allow-program NAME]...
                                       approve it, in your own terminal
     tracker draft                     print a draft for the git remote
+    tracker lint <file>               check a draft against the rules
     tracker whoami                    print the user's login
     tracker list                      print each open issue: id, tab, labels
-    tracker read <id> --out <file>    save an issue in vibes' format
+    tracker labels                    print the project's labels
+    tracker read <id> --out <file>    save an issue in vibes' format, and
+                                      print its id, state and labels
     tracker pr-find <branch>          print the branch's pull request's URL
     tracker closes <id>               print the line that closes an issue
     tracker post <batch file>         run the public operations in a batch
@@ -24,8 +27,8 @@ runs. Each line is a kind, a tab, and its value; # starts a comment:
     <operation>  its command: a program and its arguments, with placeholders
     <op>.<field> where a field is in the operation's JSON output
 
-The operations that only read are whoami, list, read, comments and
-pr-find; the public ones are comment, label, create-label, close, pr-open,
+The operations that only read are whoami, list, labels, read, comments
+and pr-find; the public ones are comment, label, create-label, close, pr-open,
 pr-open-draft and pr-edit, which run only from `tracker post`. A command
 is never run by a shell: it can't pipe, redirect or substitute, its
 program must be a tracker's own tool, or one the user allowed when
@@ -72,12 +75,13 @@ TEMPLATES = Path(__file__).resolve().parents[2] / "skills" / "tracker" / \
 # by one.
 KNOWN_PROGRAMS = ("gh", "glab", "tea", "fj", "berg", "hut", "jira", "acli",
                   "curl")
-READ_OPS = ("whoami", "list", "read", "comments", "pr-find")
+READ_OPS = ("whoami", "list", "labels", "read", "comments", "pr-find")
 PUBLIC_OPS = ("comment", "label", "create-label", "close", "pr-open",
               "pr-open-draft", "pr-edit")
 PLACEHOLDERS = {
     "whoami": set(),
     "list": set(),
+    "labels": set(),
     "read": {"id"},
     "comments": {"id"},
     "pr-find": {"branch"},
@@ -90,7 +94,8 @@ PLACEHOLDERS = {
     "pr-edit": {"branch", "title", "body-file", "body"},
 }
 FIELDS = {
-    "whoami.login", "list.items", "list.id", "list.labels", "read.title",
+    "whoami.login", "list.items", "list.id", "list.labels",
+    "labels.items", "labels.name", "read.title",
     "read.body", "read.state", "read.url", "read.labels", "comments.items",
     "comments.author", "comments.body", "comments.skip", "pr-find.url",
 }
@@ -531,6 +536,17 @@ def list_issues(tracker: Tracker, root: Path) -> list[str]:
     return lines
 
 
+def labels(tracker: Tracker, root: Path) -> list[str]:
+    out = parse_json(run(tracker, fill(tracker, "labels", {}, root), root),
+                     "labels")
+    names = []
+    for item in select(out, tracker.fields.get("labels.items", "[]")):
+        name = first_text(item, tracker.fields.get("labels.name", ".name"))
+        if name:
+            names.append(printable(name, 50))
+    return names
+
+
 def read_issue(tracker: Tracker, issue: str, root: Path) -> dict[str, Any]:
     out = parse_json(run(tracker, fill(tracker, "read", {"id": issue}, root),
                          root), "read")
@@ -738,6 +754,14 @@ def main(argv: Sequence[str]) -> int:
         if command == "draft":
             sys.stdout.write(draft(root))
             return 0
+        if command == "lint" and len(rest) == 1:
+            tracker = Tracker(Path(rest[0]).read_text(encoding="utf-8"))
+            print(f"OK: programs {', '.join(tracker.programs())}")
+            unknown = tracker.unknown_programs()
+            if unknown:
+                print(f"UNKNOWN PROGRAMS: {', '.join(unknown)}, which "
+                      "approving needs --allow-program for")
+            return 0
         tracker = approved_tracker(root)
         if command == "check":
             print(f"APPROVED: {FILE} on {default_branch(root)}")
@@ -746,6 +770,9 @@ def main(argv: Sequence[str]) -> int:
         elif command == "list":
             for line in list_issues(tracker, root):
                 print(line)
+        elif command == "labels":
+            for name in labels(tracker, root):
+                print(name)
         elif command == "read" and len(rest) == 3 and rest[1] == "--out":
             issue = rest[0].lstrip("#")
             check_value(tracker, "id", issue, root, {})
@@ -757,7 +784,9 @@ def main(argv: Sequence[str]) -> int:
             out.parent.mkdir(parents=True, exist_ok=True)
             out.write_text(json.dumps(found, indent=2) + "\n",
                            encoding="utf-8")
-            print(f"READ {issue} {found['state']}")
+            shown = ",".join(printable(label, 50)
+                             for label in found["labels"])
+            print(f"READ {issue} {found['state']} {shown}".rstrip())
         elif command == "pr-find" and len(rest) == 1:
             url = pr_find(tracker, rest[0], root)
             print(url or "NONE")
