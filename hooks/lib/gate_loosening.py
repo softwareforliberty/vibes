@@ -10,7 +10,9 @@ the gate keeps every word, such as adding a guide to the "# Guides:" line
 or a file to a lint command, so it passes; dropping a check, an option or a
 guide doesn't. A changed line that gains a way to ignore a failure, such as
 "|| true" or "--exit-zero", doesn't keep the old one. Blank lines and
-comments other than the "# Guides:" line don't count.
+comments other than the "# Guides:" line don't count. Any staged change to
+.vibes-tracker, the issue tracker's commands, counts too: they run as the
+user.
 
 Prints nothing for a file HEAD doesn't have, outside a repository, and on a
 spike branch, where the gate doesn't run.
@@ -23,6 +25,8 @@ import sys
 from collections import Counter
 
 FILES = ("scripts/check", "scripts/check-file")
+# The issue tracker's commands: any change to them needs confirming.
+TRACKER = ".vibes-tracker"
 GUIDES = "# Guides:"
 SHOWN = 10
 # Words that, gained by a changed line, can turn a failure into a pass.
@@ -120,6 +124,14 @@ def loosenings(directory):
         for new in versions:
             lost += [item for item in loosened(old, new) if item not in lost]
         found += [f"{path}: {item}" for item in lost]
+    if git(root, "rev-parse", "--verify", "--quiet", "HEAD") is None:
+        tracker = git(root, "ls-files", "--", TRACKER)
+    else:
+        tracker = git(root, "diff", "--cached", "--name-only", "HEAD", "--",
+                      TRACKER)
+    if (tracker or "").strip():
+        found.append(f"{TRACKER}: changes the commands vibes runs against "
+                     "the issue tracker, as you")
     if len(found) > SHOWN:
         found = found[:SHOWN] + [f"and {len(found) - SHOWN} more"]
     return found

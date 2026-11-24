@@ -7,6 +7,9 @@ from typing import Iterator
 from ..escape import ascii_only
 from ..model import CONFIG_FILE, HIGH, REVIEW, Context, Finding, matches
 
+# The issue tracker's commands, which bin/tracker runs.
+TRACKER_FILE = ".vibes-tracker"
+
 
 def check(ctx: Context) -> Iterator[Finding]:
     if ctx.config_changed:
@@ -19,6 +22,10 @@ def check(ctx: Context) -> Iterator[Finding]:
                       f"{ascii_only(line, 80)}")
     for change in ctx.files:
         paths = {change.path, change.change.old_path or change.path}
+        if TRACKER_FILE in paths:
+            yield Finding(HIGH, "tracker-changed", change.path, 0,
+                          "the pull request changes the commands vibes runs "
+                          "against the issue tracker with your credentials")
         if any(matches(path, ctx.config.protected) for path in paths):
             yield Finding(HIGH, "config-protected", change.path, 0,
                           f"a protected path is "

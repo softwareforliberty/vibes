@@ -219,6 +219,8 @@ ATTACKS = [
     Case("config-changed", {".vibes-review": "binary-allowed\t**\n"},
          ["config-changed"], base={**C_BASE, ".vibes-review": "protected\t"
                                    "vendor/**\n"}),
+    Case("tracker-changed", {".vibes-tracker": "issue-id\t[0-9]+\n"},
+         ["tracker-changed"]),
     Case("env-command", {"src/main.c": "int main(void) { system(getenv(\"X\"));"
                          " return 0; }\n"}, ["exec-env-command"]),
     Case("auto-run", {"conftest.py": "import os\n"}, ["build-auto-run"]),

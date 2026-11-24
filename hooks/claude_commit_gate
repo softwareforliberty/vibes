@@ -294,15 +294,16 @@ main() {
   [[ -n "${found_loose}" ]] || exit 0
   found_loose="- ${found_loose//$'\n'/$'\n'- }"
   if ! hook::can_ask "${input}"; then
-    gate::err "this commit loosens the gate, which needs the user's"
+    gate::err "this commit loosens the gate, or changes what vibes runs as"
+    gate::err "the user, which needs the user's"
     gate::err "confirmation, and this host can't ask for it from a hook:"
     printf '%s\n' "${found_loose}" >&2
     gate::err "Report it to the user, who can make the commit themselves."
     exit 2
   fi
-  hook::pre_tool_ask "This commit loosens the vibes commit gate:"$'\n'"\
-${found_loose}"$'\n'"Allow it only if you meant to remove or weaken these \
-checks."
+  hook::pre_tool_ask "This commit loosens the vibes commit gate, or changes \
+what vibes runs as you:"$'\n'"${found_loose}"$'\n'"Allow it only if you \
+meant to make these changes."
 }
 
 main "$@"

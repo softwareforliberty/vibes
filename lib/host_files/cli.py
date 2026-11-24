@@ -223,10 +223,12 @@ def gemini_hooks() -> str:
             {"matcher": shell,
              "hooks": [hook("claude_commit_gate"),
                        hook("claude_read_only_agents"),
+                       hook("claude_tracker_guard"),
                        hook("claude_check_file")]},
             {"matcher": writes,
              "hooks": [hook("claude_guide_check"),
-                       hook("claude_read_only_agents")]},
+                       hook("claude_read_only_agents"),
+                       hook("claude_tracker_guard")]},
         ],
         "AfterTool": [
             {"matcher": "^(write_file|replace|run_shell_command)$",
