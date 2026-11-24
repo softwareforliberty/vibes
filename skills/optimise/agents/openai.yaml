@@ -1,0 +1,4 @@
+# Codex runs this skill only when the user asks for it, as
+# disable-model-invocation in SKILL.md does for Claude Code and Copilot CLI.
+policy:
+  allow_implicit_invocation: false
