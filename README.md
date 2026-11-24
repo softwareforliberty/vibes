@@ -34,6 +34,10 @@ while holding it to the standards of careful, experienced developers.
   into one page to open in a browser. It's in `lib/report_page/`.
 - **`bin/issue-digest`:** prints a digest of what other people wrote in
   an issue, so an issue changed after you approved it is never picked up.
+- **`bin/prototype-check`:** checks a logic prototype loads nothing from
+  outside, keeps its logic apart from the page, and has its question and
+  scenarios. It's in `lib/prototype_check/`, and its tests in
+  `tests/prototype_check/`.
 - **`bin/session-digest`:** prints a compact digest of a Claude Code
   session's transcript, for a retrospective. It's in
   `lib/session_digest/`, and its tests in `tests/session_digest/`.
@@ -41,6 +45,7 @@ while holding it to the standards of careful, experienced developers.
   debugging, surveying the architecture, reviewing your own branch or an
   outside pull request, writing a pull request, triaging issues and
   picking up approved ones, asking someone else through a questionnaire,
+  prototyping a decision,
   looking back on a session, test-driven development, atomic commits and setting up the
   commit gate.
 - **`principles.md`:** the programming principles every change is held
@@ -58,7 +63,8 @@ while holding it to the standards of careful, experienced developers.
   reviewer agents, the profiler and optimiser, the diagnoser, the
   researcher, the surveyor
   and interface designer, the commit message suggester, the
-  retrospective, the pull request writer and the issue reader.
+  retrospective, the pull request writer, the issue reader and the
+  prototyper.
 - **`hooks/`:** the commit gate, for Claude Code and for git; a guide
   check that makes the agent read the guide for each kind of file before
   writing it; and a guard that keeps the reviewers, the commit message
@@ -451,6 +457,33 @@ token. Runs start from the brief, never the issue.
   through them.
 
 Approvals are kept in `.vibes/issues/` on the machine you triaged on.
+
+## Prototype a decision
+
+Some decisions you can only judge once you can click them: whether an
+order can be cancelled after part of it ships, or how a settings page
+should be laid out. `/vibes:prototype <the question>` builds a throwaway
+prototype that answers one, on a `spike/prototype-<slug>` branch that's
+never merged.
+
+- **A logic prototype,** for how something should behave, is one HTML
+  file anyone can open: free-play buttons, the state after every click,
+  and scenarios that walk through the awkward cases, in the business's
+  words. You confirm or correct what each scenario does, and the
+  confirmed scenarios become examples in the spec, which the build turns
+  into its first tests. Send it to someone who knows the domain with a
+  questionnaire, if they're the one to judge. `bin/prototype-check`
+  checks it loads nothing from outside and keeps its logic apart from
+  the page.
+- **A UI prototype,** for how a screen should look, builds three variants
+  of the real page, each under a different constraint: everything at
+  once, one main action, or in steps. A check makes sure they differ in
+  structure, and a bar on the page, hidden in production builds, flips
+  between them. You pick one, or parts of each.
+
+The answer goes into `answer.md`, which a vibes run's designer writes
+into the spec. A run offers a prototype for a decision that's hard to
+judge in words; an unattended run never builds one.
 
 ## Ask someone else
 

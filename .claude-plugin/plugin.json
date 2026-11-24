@@ -1,7 +1,7 @@
 {
   "name": "vibes",
   "version": "0.6.1",
-  "description": "Clean vibe coding: write a complete spec and design, spike to them, review with a panel of critic agents, then rebuild test-first in atomic, gated commits, using style, idiom and tool guides for each language, format and tool. Also optimises performance from real profiles, reviews your own branch, debugs from a reproduction, surveys the architecture for modules worth deepening, reviews outside pull requests for malicious changes, writes pull requests from the evidence a run kept, triages GitHub issues and works on the ones you approve, writes questionnaires for questions only someone else can answer, and looks back on a session to suggest checks that would have caught its mistakes.",
+  "description": "Clean vibe coding: write a complete spec and design, spike to them, review with a panel of critic agents, then rebuild test-first in atomic, gated commits, using style, idiom and tool guides for each language, format and tool. Also optimises performance from real profiles, reviews your own branch, debugs from a reproduction, surveys the architecture for modules worth deepening, reviews outside pull requests for malicious changes, writes pull requests from the evidence a run kept, triages GitHub issues and works on the ones you approve, writes questionnaires for questions only someone else can answer, prototypes decisions you can't judge in words, and looks back on a session to suggest checks that would have caught its mistakes.",
   "author": {
     "name": "Reece Fowell"
   },

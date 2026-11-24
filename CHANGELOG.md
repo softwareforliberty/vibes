@@ -39,6 +39,14 @@ guides behave, and says so under **Changed**.
   you pick, three new interface designers each design it under a
   different constraint, and the surveyor compares them and recommends
   one, as a task for `/vibes:vibe`. It changes nothing.
+- **`/vibes:prototype`** answers one design question you can't judge in
+  words with a throwaway prototype on a branch that's never merged: a
+  single HTML file to click through a state model's scenarios, or three
+  structurally different variants of a screen on the real page. The
+  confirmed scenarios become examples in the spec, and a run offers a
+  prototype for such a decision. The new prototyper builds them, and
+  `bin/prototype-check` checks a logic prototype loads nothing from
+  outside and keeps its logic apart from the page.
 - **A guide for the instructions agents read:** `CLAUDE.md`, `AGENTS.md`,
   rules, skills and subagents. It covers their layout, and how to word
   them so an agent takes the same path every run: pointers that decide
