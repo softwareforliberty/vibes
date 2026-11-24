@@ -49,13 +49,19 @@ using at least these flags:
 uasm -win64 -Zi -W3 -WX buf.asm
 
 # 32-bit Windows (COFF)
-uasm -coff -Zi -W3 -WX buf.asm
+uasm -coff -safeseh -Zi -W3 -WX buf.asm
 ```
 
 - `-W3` raises the warning level, and `-WX` turns warnings into errors, so a
   warning can't slip through a build.
 - `-Zi` emits debug information, so debuggers and profilers can map addresses
   back to source lines.
+- `-safeseh`, for 32-bit code, marks the object safe for SafeSEH: it has no
+  exception handler, or declares each one with `.SAFESEH`. Without it,
+  `lld-link` refuses to link the object, and Microsoft's `link` quietly
+  builds the whole program without its table of safe exception handlers,
+  turning the protection off for every object, not just this one. 64-bit
+  code has no SafeSEH, so `-win64` takes no such flag.
 - When a warning fires, change the code so it no longer triggers. Never lower
   the warning level for the whole build.
 - When reviewing instruction encodings, generate a listing with `-Fl`.
@@ -352,6 +358,7 @@ was checked with UASM 2.59, JWasm 2.21 and LLVM 19.
 
 ## Sources
 
+- [Microsoft: /SAFESEH (image has safe exception handlers)](https://learn.microsoft.com/en-us/cpp/build/reference/safeseh-image-has-safe-exception-handlers)
 - [universalmutator](https://github.com/agroce/universalmutator)
 - [universalmutator on PyPI](https://pypi.org/project/universalmutator/1.14.1/)
 - [llvm-nm](https://llvm.org/docs/CommandGuide/llvm-nm.html)
