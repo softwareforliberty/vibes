@@ -239,6 +239,12 @@ class WizardWriterTest(unittest.TestCase):
     AGENT = "vibes:wizard-writer"
     WIZARD = "/p/.vibes/sales-csv/wizard.sh"
 
+    def test_writes_its_runbook(self) -> None:
+        self.assertEqual(hook(self.AGENT, "Write",
+                              file_path="/p/.vibes/db-move/runbook.sh"), 0)
+        self.assertEqual(hook(self.AGENT, "Write",
+                              file_path="/p/scripts/runbook.sh"), 2)
+
     def test_writes_its_wizard(self) -> None:
         self.assertEqual(hook(self.AGENT, "Write", file_path=self.WIZARD), 0)
         self.assertEqual(hook(self.AGENT, "Bash", command=(

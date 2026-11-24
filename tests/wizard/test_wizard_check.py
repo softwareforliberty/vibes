@@ -78,5 +78,48 @@ class WizardCheckTest(unittest.TestCase):
                 self.assertEqual(result.returncode, 2)
 
 
+
+RUNBOOK = os.path.join(ROOT, "skills", "runbook", "templates", "runbook.sh")
+
+
+class RunbookCheckTest(unittest.TestCase):
+    def setUp(self) -> None:
+        self.dir = tempfile.mkdtemp()
+        self.addCleanup(shutil.rmtree, self.dir)
+        with open(RUNBOOK, encoding="utf-8") as stream:
+            self.template = stream.read()
+        self.env = {"PATH": "/usr/bin:/bin"}
+
+    def check(self, text: str) -> subprocess.CompletedProcess:
+        path = os.path.join(self.dir, "runbook.sh")
+        with open(path, "w", encoding="utf-8") as stream:
+            stream.write(text)
+        return subprocess.run([SCRIPT, path], text=True, capture_output=True,
+                              check=False, env=self.env)
+
+    def test_passes_the_template(self) -> None:
+        result = self.check(self.template)
+        self.assertEqual(result.returncode, 0, result.stdout)
+        self.assertIn("LIBRARY INTACT\nSTEPS OK\n", result.stdout)
+
+    def test_steps_lists_only_steps_with_their_own_names(self) -> None:
+        text = self.template.replace(
+            '  runbook::always ready "<Check everything is ready>" '
+            'step_ready',
+            '  runbook::always ready "<Check everything is ready>" '
+            'step_ready\n  rm -rf build\n  runbook::do ready "Again" '
+            'step_ready')
+        result = self.check(text)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("not a step: rm -rf build", result.stdout)
+        self.assertIn("used twice: ready", result.stdout)
+
+    def test_the_runbook_library_is_checked_too(self) -> None:
+        text = self.template.replace('    if [[ "${reply}" != "${id}" ]]; then',
+                                     '    if false; then')
+        result = self.check(text)
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("LIBRARY CHANGED", result.stdout)
+
 if __name__ == "__main__":
     unittest.main()

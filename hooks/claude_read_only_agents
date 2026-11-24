@@ -139,11 +139,13 @@ is_issue_file() {
   [[ "${rest}" =~ ^[0-9]+/(brief|triage)\.md$ ]]
 }
 
-# Succeeds when the path is a run's wizard, .vibes/<run>/wizard.sh.
+# Succeeds when the path is a run's wizard or runbook,
+# .vibes/<run>/wizard.sh or runbook.sh.
 is_wizard_file() {
   local path="$1"
   [[ "${path}" == /* && "${path}" != *"/../"* ]] \
-    && [[ "${path}" == */.vibes/*/wizard.sh ]] \
+    && [[ "${path}" == */.vibes/*/wizard.sh \
+      || "${path}" == */.vibes/*/runbook.sh ]] \
     && [[ "${path#*/.vibes/}" != */*/* ]]
 }
 
@@ -341,7 +343,8 @@ main() {
     path="$(hook::json_field "${input}" '.tool_input.file_path')"
     if ! is_wizard_file "${path}"; then
       printf 'vibes: %s may write only ' "${agent}" >&2
-      printf 'the wizard, .vibes/<run>/wizard.sh.\n' >&2
+      printf 'the wizard or runbook, .vibes/<run>/wizard.sh or ' >&2
+      printf 'runbook.sh.\n' >&2
       exit 2
     fi
   elif [[ "${ISSUE_READERS}" == *" ${agent} "* ]]; then

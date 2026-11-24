@@ -1,33 +1,60 @@
 #!/usr/bin/env bash
 #
-# Checks a wizard written onto the vibes wizard library, without running
-# it:
+# Checks a wizard or a runbook written onto the vibes library, without
+# running it:
 #
-#   wizard-check <wizard.sh>
+#   wizard-check <wizard.sh or runbook.sh>
 #
-# Prints one line for each check:
+# A runbook is a script with a STEPS line. Prints one line for each check:
 #
 #   SYNTAX OK            bash -n parses it
-#   LIBRARY INTACT       the library, from its first line to the STAGES
-#                        line, is the template's, unchanged
+#   LIBRARY INTACT       the library, from its first line to the STAGES or
+#                        STEPS line, is the template's, unchanged
+#   STEPS OK             for a runbook: steps() lists only steps, each with
+#                        runbook::always, runbook::do or runbook::one_way,
+#                        and no two share a name
 #   SHELLCHECK OK        ShellCheck finds nothing, run from the PATH, or
 #                        with Docker when it isn't installed
 #
-# A failing check prints BROKEN, CHANGED or PROBLEMS instead, with
-# ShellCheck's findings after it; SHELLCHECK NOT AVAILABLE means neither
-# was found. Exits 0 when every check that ran passed, 1 when one failed,
+# A failing check prints BROKEN, CHANGED or PROBLEMS instead, with the
+# problems after it; SHELLCHECK NOT AVAILABLE means neither was found. Exits 0 when every check that ran passed, 1 when one failed,
 # and 2 on an error.
 
 set -euo pipefail
 
 ROOT="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/.."
 readonly ROOT
-readonly TEMPLATE="${ROOT}/skills/wizard/templates/wizard.sh"
+readonly WIZARD_TEMPLATE="${ROOT}/skills/wizard/templates/wizard.sh"
+readonly RUNBOOK_TEMPLATE="${ROOT}/skills/runbook/templates/runbook.sh"
 readonly SHELLCHECK_IMAGE="koalaman/shellcheck:v0.10.0"
 
-# Prints the library: from its first line to the STAGES line.
+# Prints the library: from its first line to the line that ends it, STAGES
+# or STEPS.
 library() {
-  sed -n '/^# ── The vibes wizard library/,/^# ── STAGES/p' "$1"
+  sed -n "/^# ── The vibes wizard library/,/^# ── $2/p" "$1"
+}
+
+# Prints each problem with a runbook's steps() function: a line that isn't
+# a step, or a name used twice. Continued lines are joined first.
+step_problems() {
+  awk '
+    /^steps\(\) \{/ { inside = 1; next }
+    inside && /^\}/ { inside = 0 }
+    !inside { next }
+    {
+      line = line $0
+      if (line ~ /\\$/) { sub(/\\$/, " ", line); next }
+      gsub(/^[ \t]+|[ \t]+$/, "", line)
+      if (line != "" && line !~ /^#/) {
+        if (line !~ /^runbook::(always|do|one_way) [a-z0-9][a-z0-9-]* /) {
+          print "not a step: " substr(line, 1, 60)
+        } else {
+          split(line, words, " ")
+          if (seen[words[2]]++) print "used twice: " words[2]
+        }
+      }
+      line = ""
+    }' "$1"
 }
 
 # Runs ShellCheck on the wizard, and prints its verdict and findings.
@@ -53,24 +80,41 @@ shellcheck_wizard() {
 }
 
 main() {
-  local wizard failed=0
+  local wizard template end problems failed=0
   if (($# != 1)) || [[ ! -f "$1" ]]; then
     printf 'usage: wizard-check <wizard.sh>\n' >&2
     exit 2
   fi
   wizard="$(realpath -- "$1")"
+  if grep -q '^# ── STEPS' "${wizard}"; then
+    template="${RUNBOOK_TEMPLATE}"
+    end=STEPS
+  else
+    template="${WIZARD_TEMPLATE}"
+    end=STAGES
+  fi
   if bash -n "${wizard}" 2>/dev/null; then
     printf 'SYNTAX OK\n'
   else
     printf 'SYNTAX BROKEN\n'
     failed=1
   fi
-  if [[ -n "$(library "${wizard}")" ]] \
-    && [[ "$(library "${wizard}")" == "$(library "${TEMPLATE}")" ]]; then
+  if [[ -n "$(library "${wizard}" "${end}")" ]] \
+    && [[ "$(library "${wizard}" "${end}")" \
+      == "$(library "${template}" "${end}")" ]]; then
     printf 'LIBRARY INTACT\n'
   else
     printf 'LIBRARY CHANGED\n'
     failed=1
+  fi
+  if [[ "${end}" == STEPS ]]; then
+    problems="$(step_problems "${wizard}")"
+    if [[ -z "${problems}" ]] && grep -q '^steps() {' "${wizard}"; then
+      printf 'STEPS OK\n'
+    else
+      printf 'STEPS PROBLEMS\n%s\n' "${problems:-no steps() function}"
+      failed=1
+    fi
   fi
   shellcheck_wizard "${wizard}" || failed=1
   exit "${failed}"
