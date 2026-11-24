@@ -38,6 +38,12 @@ while holding it to the standards of careful, experienced developers.
   outside, keeps its logic apart from the page, and has its question and
   scenarios. It's in `lib/prototype_check/`, and its tests in
   `tests/prototype_check/`.
+- **`bin/setup-needs`:** lists the settings a branch needs a person to
+  provide, such as an API key the code now reads or a secret a workflow
+  now names. It's in `lib/setup_needs/`, and its tests in
+  `tests/setup_needs/`.
+- **`bin/wizard-check`:** checks a wizard parses, keeps the wizard
+  library unchanged and passes ShellCheck, without running it.
 - **`bin/session-digest`:** prints a compact digest of a Claude Code
   session's transcript, for a retrospective. It's in
   `lib/session_digest/`, and its tests in `tests/session_digest/`.
@@ -45,7 +51,7 @@ while holding it to the standards of careful, experienced developers.
   debugging, surveying the architecture, reviewing your own branch or an
   outside pull request, writing a pull request, triaging issues and
   picking up approved ones, asking someone else through a questionnaire,
-  prototyping a decision,
+  prototyping a decision, writing a wizard for steps only you can do,
   looking back on a session, test-driven development, atomic commits and setting up the
   commit gate.
 - **`principles.md`:** the programming principles every change is held
@@ -63,14 +69,14 @@ while holding it to the standards of careful, experienced developers.
   reviewer agents, the profiler and optimiser, the diagnoser, the
   researcher, the surveyor
   and interface designer, the commit message suggester, the
-  retrospective, the pull request writer, the issue reader and the
-  prototyper.
+  retrospective, the pull request writer, the issue reader, the
+  prototyper and the wizard writer.
 - **`hooks/`:** the commit gate, for Claude Code and for git; a guide
   check that makes the agent read the guide for each kind of file before
   writing it; and a guard that keeps the reviewers, the commit message
   suggester, the retrospective, the survey's agents, the pull request
-  writer and the issue reader from changing anything but their own
-  findings files and reports,
+  writer, the issue reader and the wizard writer from changing anything
+  but their own findings files and reports,
   and the
   profiler from changing the code. The commit gate also refuses a subject
   longer than 50 characters, and asks you before a commit that loosens
@@ -457,6 +463,30 @@ token. Runs start from the brief, never the issue.
   through them.
 
 Approvals are kept in `.vibes/issues/` on the machine you triaged on.
+
+## Steps only you can do
+
+Some steps need a person: signing in to a provider's dashboard, creating
+an API key, setting a CI secret. Instead of a list in the report,
+`/vibes:wizard <the procedure>` writes a **wizard**, a bash script you run
+in your own terminal. It walks you through one stage at a time: it opens
+each page, says exactly what to click, and saves what you paste back in
+`.env`, created readable only by you, or as a GitHub secret or variable.
+Secrets go into hidden prompts, straight to where they're saved, so they
+never pass through the conversation. It asks before anything that can't
+be undone, and you can stop and run it again: it keeps what it saved.
+
+Each step comes from the provider's own documentation, found by the
+researcher, and the wizard names its source and the date it was checked;
+a step the documentation doesn't settle is marked for you to check. The
+stages are written onto a small wizard library, tested on Bash 3.2 and
+later, and the script is checked with `bash -n` and ShellCheck, but never
+run by an agent.
+
+A run writes one for you at its end when `bin/setup-needs` finds the
+branch needs settings nobody has provided, such as a key the code now
+reads, and the report gives the command. Keep a wizard you'll need again,
+such as for each new developer, as `scripts/setup-<thing>`.
 
 ## Prototype a decision
 

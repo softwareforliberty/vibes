@@ -39,6 +39,16 @@ guides behave, and says so under **Changed**.
   you pick, three new interface designers each design it under a
   different constraint, and the surveyor compares them and recommends
   one, as a task for `/vibes:vibe`. It changes nothing.
+- **`/vibes:wizard`** writes a wizard for steps only you can do, such as
+  creating an API key in a dashboard or setting a CI secret: a bash script
+  you run in your own terminal that opens each page, says what to click,
+  and saves what you paste in `.env` or as a GitHub secret or variable,
+  with secrets in hidden prompts that never reach the agent. Each step
+  comes from the provider's documentation, with its date. The new wizard
+  writer writes the stages onto a tested library, and a run writes a
+  wizard at its end when the new `bin/setup-needs` finds settings the
+  branch needs that nobody has provided. `bin/wizard-check` checks a
+  wizard without running it.
 - **`/vibes:prototype`** answers one design question you can't judge in
   words with a throwaway prototype on a branch that's never merged: a
   single HTML file to click through a state model's scenarios, or three
