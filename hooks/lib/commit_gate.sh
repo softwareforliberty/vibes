@@ -10,7 +10,7 @@
 # everything anyway. A commit that changes scripts/check, scripts/check-file
 # or a breach in scripts/breaches/ also has bin/rules-bite apply each breach
 # that proved a boundary rule, and is blocked if the rule no longer catches
-# it.
+# it. A commit is also refused when files change while the checks run.
 
 # shellcheck source=hooks/lib/guides.sh
 source "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/guides.sh"
@@ -136,6 +136,34 @@ gate::check_debug_tags() {
 
 # Runs the gate in the repository containing the current directory. Returns
 # 0 when the commit may go ahead, and 1 when it must be blocked.
+# Prints what the commit is about to take, to compare before and after the
+# checks: the staged tree, the unstaged changes and the untracked files.
+gate::snapshot() {
+  git write-tree
+  git diff --name-only
+  git ls-files --others --exclude-standard
+}
+
+# Returns 1, naming the files, when the staged tree, a tracked file or the
+# untracked files changed while the checks ran, such as when an agent went
+# on editing while a slow gate ran in the background: the checks may then
+# have seen something other than what's committed.
+gate::check_unchanged() {
+  local before="$1" after tree
+  after="$(gate::snapshot)"
+  [[ "${after}" != "${before}" ]] || return 0
+  tree="${before%%$'\n'*}"
+  gate::err "files changed while the gate was checking them, so it can't"
+  gate::err "tell what it checked. Change nothing while a commit runs, then"
+  gate::err "stage and commit again. Changed:"
+  {
+    git diff --name-only "${tree}" "$(git write-tree)"
+    git diff --name-only
+    git ls-files --others --exclude-standard
+  } | sort -u | sed 's/^/  /' >&2
+  return 1
+}
+
 # Returns 1 when a commit changes the checks or a breach, and a boundary
 # rule no longer fails on the breach that proved it.
 gate::check_breaches() {
@@ -193,8 +221,9 @@ gate::run() {
     return 1
   fi
 
-  local output
+  local output before
   local -a mode=()
+  before="$(gate::snapshot)"
   if gate::docs_only; then
     mode=(--static)
   fi
@@ -206,6 +235,10 @@ gate::run() {
   fi
 
   if ! gate::check_breaches; then
+    return 1
+  fi
+
+  if ! gate::check_unchanged "${before}"; then
     return 1
   fi
 

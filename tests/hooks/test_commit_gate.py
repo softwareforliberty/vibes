@@ -287,5 +287,65 @@ class LooseningTest(unittest.TestCase):
         self.assertEqual(self.decision(), "")
 
 
+
+class ChangedWhileCheckingTest(unittest.TestCase):
+    """A file that changes while scripts/check runs, as when an agent goes
+    on editing during a slow gate, refuses the commit."""
+
+    def setUp(self) -> None:
+        self.repo = os.path.realpath(tempfile.mkdtemp())
+        self.git("init", "-q", "-b", "main")
+        self.write("scripts/build.sh", "true\n")
+        self.write("scripts/check", "#!/bin/sh\n# Guides: languages/SH\n")
+        os.chmod(os.path.join(self.repo, "scripts", "check"), 0o755)
+        self.git("add", ".")
+        self.git("-c", "user.name=t", "-c", "user.email=t@example.com",
+                 "commit", "-q", "--no-verify", "-m", "Add the checks")
+        self.write("scripts/build.sh", "true\ntrue\n")
+        self.git("add", "scripts/build.sh")
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.repo)
+
+    git = DocsOnlyTest.git
+    write = DocsOnlyTest.write
+
+    def gate(self, during: str) -> subprocess.CompletedProcess:
+        """Runs the gate with a scripts/check that does `during`, standing
+        in for whatever else changes the checkout while it runs."""
+        self.write("scripts/check", "#!/bin/sh\n# Guides: languages/SH\n"
+                   + during + "\n")
+        self.git("add", "scripts/check")
+        return subprocess.run([HOOK], cwd=self.repo, capture_output=True,
+                              text=True, check=False)
+
+    def test_an_edit_to_a_tracked_file(self) -> None:
+        result = self.gate("echo more >> scripts/build.sh")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("files changed while the gate was checking them",
+                      result.stderr)
+        self.assertIn("  scripts/build.sh", result.stderr)
+
+    def test_a_new_file(self) -> None:
+        result = self.gate("echo x > scripts/new.sh")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("  scripts/new.sh", result.stderr)
+
+    def test_a_change_to_what_is_staged(self) -> None:
+        result = self.gate("echo x > scripts/other.sh && "
+                           "git add scripts/other.sh")
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("  scripts/other.sh", result.stderr)
+
+    def test_nothing_changing_passes(self) -> None:
+        result = self.gate("true")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_an_ignored_file_is_fine(self) -> None:
+        self.write(".gitignore", "build/\n")
+        self.git("add", ".gitignore")
+        result = self.gate("mkdir -p build && echo x > build/out.o")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
 if __name__ == "__main__":
     unittest.main()
