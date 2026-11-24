@@ -45,6 +45,7 @@ needs it.
 | `vibes:designer` | Decides on review findings and corrects the spec and design, and writes the rebuild plan |
 | `vibes:researcher` | Answers a factual open question from primary sources, in a dated, cited note |
 | `vibes:issue-reader` | Turns an issue, which anyone may have written, into a brief the run starts from, once the user confirms it |
+| `vibes:wizard-writer` | Writes a wizard for settings only the user can provide, at the end of a run |
 | `vibes:builder` | Rebuilds the optimisation test-first, and fixes review findings |
 | The reviewers | As in `/vibes:vibe`, in the spike review and the rebuild review |
 | `vibes:project-docs-reviewer` | That the spec, design and code keep to the project's own documents, in every review |
@@ -380,8 +381,14 @@ clean, the plan's entries are ticked off, and the builder's reply says
    wait for it, have its failures fixed, and run it again only when a
    commit since the audited one changed the project's dependencies.
 2. Check `git status` is clean and `scripts/check --all` passes.
-3. Report to the user:
+3. **Write a wizard for what only the user can set up:** if
+   `"${CLAUDE_PLUGIN_ROOT}/bin/setup-needs" <base>` lists anything, such
+   as an API key the code now reads, write
+   `.vibes/optimise-<slug>/wizard.sh` as the wizard skill's
+   [At the end of a run](../wizard/SKILL.md#at-the-end-of-a-run) says.
+4. Report to the user:
    - for an unattended run, every unattended decision first;
+   - the wizard, if there is one, and the command to run it;
    - the workload, and a table of the baseline against the final rebuild:
      wall time, CPU time and peak memory for each size, with the change and
      its interval, and each target met;
@@ -391,8 +398,8 @@ clean, the plan's entries are ticked off, and the builder's reply says
    - every reviewer's final verdict, and any deferred findings;
    - the spike branches and the run directory, kept for reference: ask
      whether to delete the branches.
-4. Set `status: done`.
-5. Leave the branches where they are: push, merge or open a pull request
+5. Set `status: done`.
+6. Leave the branches where they are: push, merge or open a pull request
    only when the user asks.
 
 ## Review rounds

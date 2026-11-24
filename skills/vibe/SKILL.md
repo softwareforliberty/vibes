@@ -44,6 +44,7 @@ carries every phase, and the details belong in theirs.
 | `vibes:designer` | Writes the spec, then the design, decides on their review findings and revises them, and writes the rebuild plan |
 | `vibes:researcher` | Answers a factual open question from primary sources, in a dated, cited note |
 | `vibes:issue-reader` | Turns an issue, which anyone may have written, into a brief the run starts from, once the user confirms it |
+| `vibes:wizard-writer` | Writes a wizard for settings only the user can provide, at the end of a run |
 | `vibes:prototyper` | Builds a throwaway prototype, when the user wants one, for a decision hard to judge in words |
 | `vibes:spiker` | Builds the spike to the spec and design, and tries out a design change the spike review makes |
 | `vibes:builder` | Builds the task test-first, a batch at a time, and decides on and fixes its review findings |
@@ -780,9 +781,16 @@ with `git worktree remove --force .vibes/<name>/audit`.
    project's dependencies, such as a manifest or lock file. The review's
    fixes went through the gate and the reviewers.
 2. Check `git status` is clean and `scripts/check --all` passes.
-3. Report to the user:
+3. **Write a wizard for what only the user can set up:** if
+   `"${CLAUDE_PLUGIN_ROOT}/bin/setup-needs" <base>` lists anything, such
+   as an API key the code now reads, write `.vibes/<name>/wizard.sh` as
+   the wizard skill's
+   [At the end of a run](../wizard/SKILL.md#at-the-end-of-a-run) says.
+4. Report to the user:
    - for an unattended run, every unattended decision first, with the
      options not chosen
+   - the wizard, if there is one: what it asks for, and
+     `bash .vibes/<name>/wizard.sh`, to run in their own terminal
    - the task's size, and any move to a larger size, with why
    - the guides the task added to the gate, and any files no guide covers
    - the rebuild branch and its commits (`git log --oneline <base>..HEAD`),
@@ -798,6 +806,6 @@ with `git worktree remove --force .vibes/<name>/audit`.
      reviews and why, and any deferred MINOR findings
    - for a large task, the spike branch, kept for reference: ask whether to
      delete it
-4. Set `status: done` in `state.md`.
-5. Leave the branches where they are: push, merge or open a pull request
+5. Set `status: done` in `state.md`.
+6. Leave the branches where they are: push, merge or open a pull request
    only when the user asks.

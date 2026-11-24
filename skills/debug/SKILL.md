@@ -46,6 +46,7 @@ hypotheses; leave the probes and the code to the agents.
 | `vibes:builder` | Rebuilds the fix test-first, and fixes review findings |
 | `vibes:researcher` | Answers a factual question the bug spec needs, from primary sources, in a dated, cited note |
 | `vibes:issue-reader` | Turns an issue, which anyone may have written, into a brief the run starts from, once the user confirms it |
+| `vibes:wizard-writer` | Writes a wizard for settings only the user can provide, at the end of a run |
 | `vibes:spec-reviewer`, `vibes:project-docs-reviewer` | Review the bug spec, and the fix |
 | `vibes:bug-reviewer`, `vibes:cleanliness-reviewer`, `vibes:test-reviewer`, and `vibes:security-reviewer`, `vibes:performance-reviewer`, `vibes:resource-leak-reviewer` when they apply | Review the fix |
 | `vibes:commit-message-suggester` | Suggests the message for each commit you make yourself |
@@ -309,11 +310,17 @@ round limit is 5.
 2. **No debug tag is left:** `git diff <base commit>...HEAD` has no
    `vibes-debug-<slug>`. The gate refuses one, so this should hold.
 3. **Check `git status` is clean** and `scripts/check --all` passes.
+4. **Write a wizard for what only the user can set up:** if
+   `"${CLAUDE_PLUGIN_ROOT}/bin/setup-needs" <base commit>` lists anything,
+   such as an API key the fix now reads, write
+   `.vibes/debug-<slug>/wizard.sh` as the wizard skill's
+   [At the end of a run](../wizard/SKILL.md#at-the-end-of-a-run) says.
 
 ## Phase 8: Finish
 
 1. Report to the user:
    - for an unattended run, every unattended decision first;
+   - the wizard, if there is one, and the command to run it;
    - the symptom, and the `bin/repro` lines before and after;
    - each hypothesis, in a line: its claim, and confirmed or refuted with
      the evidence;
