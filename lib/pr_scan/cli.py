@@ -2,10 +2,18 @@
 
     pr-scan scan --repo <dir> --base <commit> --head <commit> --out <dir>
                  [--meta <dir>]
+    pr-scan record --forge github|gitlab|forgejo --meta <dir>
+    pr-scan commits --forge gitlab --meta <dir>
     pr-scan report --out <dir> [--branch]
 
-Both print only a fixed summary of validated SHAs and counts, so no text
-from the pull request reaches the agent that runs them.
+record turns what a forge's CLI said about a pull request, saved raw in
+the meta directory, into pr.json, as forge.py describes, and prints its
+head commit, base branch and clone address, each checked. commits prints
+the SHAs of the commits GitLab listed, for pr-prepare to fetch each one's
+signature.
+
+Each prints only a fixed summary of validated SHAs, names and counts, so
+no text from the pull request reaches the agent that runs them.
 """
 
 from __future__ import annotations
@@ -18,7 +26,7 @@ import sys
 from collections import Counter
 from typing import Dict, List, Optional, Sequence, Set, Tuple
 
-from . import report, rules, snapshot
+from . import forge, report, rules, snapshot
 from .escape import ascii_only
 from .gitio import Change, Commit, Git
 from .model import (CONFIG_FILE, SEVERITIES, Config, Context, FileChange,
@@ -36,6 +44,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     scan.add_argument("--head", required=True)
     scan.add_argument("--out", required=True)
     scan.add_argument("--meta")
+    record = commands.add_parser("record")
+    record.add_argument("--forge", required=True,
+                        choices=("github", "gitlab", "forgejo"))
+    record.add_argument("--meta", required=True)
+    listing = commands.add_parser("commits")
+    listing.add_argument("--forge", required=True, choices=("gitlab",))
+    listing.add_argument("--meta", required=True)
     build = commands.add_parser("report")
     build.add_argument("--out", required=True)
     build.add_argument("--branch", action="store_true")
@@ -44,31 +59,54 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
         if args.command == "scan":
             return run_scan(args.repo, args.base, args.head, args.out,
                             args.meta)
+        if args.command == "record":
+            return write_record(args.forge, args.meta)
+        if args.command == "commits":
+            for sha in forge.shas(args.forge, args.meta):
+                print(sha)
+            return 0
         return report.build(args.out, args.branch)
     except (RuntimeError, OSError, ValueError) as error:
         print(f"pr-scan: {ascii_only(str(error), 300)}", file=sys.stderr)
         return 2
 
 
+def write_record(name: str, directory: str) -> int:
+    record = forge.checked(forge.load(name, directory))
+    with open(os.path.join(directory, "pr.json"), "w",
+              encoding="utf-8") as stream:
+        json.dump(record, stream, indent=2)
+    print(f"HEAD {record['head']}")
+    print(f"BASE {record['base_ref']}")
+    print(f"URL {record['clone_url']}")
+    return 0
+
+
 def load_meta(directory: Optional[str]) -> Dict[str, object]:
+    """The forge's record of the pull request, from pr.json, or from the
+    raw GitHub files an earlier pr-prepare saved."""
     meta: Dict[str, object] = {}
     if not directory:
         return meta
-    for key in ("pull", "commits"):
-        path = os.path.join(directory, f"{key}.json")
-        if os.path.exists(path):
-            with open(path, encoding="utf-8") as stream:
-                text = stream.read()
-            try:
-                meta[key] = json.loads(text)
-            except ValueError:
-                # gh --paginate --jq '.[]' writes one object per line.
-                meta[key] = [json.loads(line) for line in text.splitlines()
-                             if line.strip()]
-    pull = meta.get("pull")
-    if isinstance(pull, dict):
-        meta["title"] = pull.get("title") or ""
-        meta["body"] = pull.get("body") or ""
+    path = os.path.join(directory, "pr.json")
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as stream:
+            meta["record"] = json.load(stream)
+    elif os.path.exists(os.path.join(directory, "pull.json")):
+        meta["record"] = forge.load("github", directory)
+    return with_record(meta)
+
+
+def with_record(meta: Dict[str, object]) -> Dict[str, object]:
+    """meta with its record, made from GitHub's raw pull and commits when
+    that's what it holds, and the record's title and body for the rules
+    that read text."""
+    if "record" not in meta and isinstance(meta.get("pull"), dict):
+        meta["record"] = forge.from_github(meta["pull"], meta.get("commits"))
+    record = meta.get("record")
+    if isinstance(record, dict):
+        meta["title"] = record.get("title") or ""
+        meta["body"] = record.get("body") or ""
     return meta
 
 
@@ -85,7 +123,7 @@ def context(repo: str, base_name: str, head_name: str,
     config, config_changed = read_config(git, base, changes)
     return Context(git, base, head, [FileChange(c, git) for c in changes],
                    commits, history_only(git, commits, head), config,
-                   config_changed, meta)
+                   config_changed, with_record(meta))
 
 
 def run_scan(repo: str, base_name: str, head_name: str, out: str,
