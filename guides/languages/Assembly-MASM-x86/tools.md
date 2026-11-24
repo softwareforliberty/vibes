@@ -12,7 +12,7 @@ listed here. The open-source assemblers below accept the MASM language.
 | [UASM](https://github.com/Terraspace/UASM) | Sybase Open Watcom Public License 1.0 | Linting | Assembling 32- and 64-bit code, and linting through its warnings |
 | [JWasm](https://github.com/Baron-von-Riedesel/JWasm) | Sybase Open Watcom Public License 1.0 | Linting | A second assembler, to check that code doesn't depend on one assembler's extensions |
 | [llvm-ml](https://llvm.org/) (part of LLVM) | Apache-2.0 with LLVM exception | Linting | A MASM-compatible assembler that covers part of the MASM language |
-| `llvm-readobj`, `llvm-objdump` (LLVM) | Apache-2.0 WITH LLVM-exception | Auditing, Code quality | Checking Windows images for DEP, ASLR and unwind data, and reviewing disassembly |
+| `llvm-readobj`, `llvm-objdump`, `llvm-nm` (LLVM) | Apache-2.0 WITH LLVM-exception | Auditing, Code quality | Checking Windows images for DEP, ASLR and unwind data, reviewing disassembly, and checking the layers |
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
 | [DynamoRIO](https://dynamorio.org/) (drcov) | BSD-3-Clause | Code quality | Measuring line coverage of the tests on Windows |
@@ -218,7 +218,140 @@ down. Write the test that fails on the mutant, not one that just runs the line.
 A mutant that can't change behaviour needs no test; the threshold allows for
 it.
 
+### Architecture
+
+An architecture test in `scripts/check` enforces the layers, as the
+[architecture guide](../../../architecture/README.md#enforce-it) asks, with
+`llvm-nm`. Assembly has no modules, and `OPTION PROC:PRIVATE` hides a
+procedure only from other files. A layer's own files call each other through
+`PUBLIC` symbols, and `EXTERN` reaches a `PUBLIC` symbol in any file, so
+`PUBLIC` can't mark the layer's boundary. Nor can the linker: Microsoft's
+`link` and `lld-link` can't join a layer's objects into one with a partial
+link, and GNU ld's partial link drops the CodeView debug information that
+`-Zi` writes.
+
+Instead, check which symbols each object uses. Keep each layer's sources in
+its own directory under `src`, and list its entry points in an
+`exports.txt` beside them, one symbol per line. `#` starts a comment. The
+layer names are examples: replace them with the layers in the project's
+`design.md`. `src/core/exports.txt`:
+
+```text
+# The core's entry points, declared in src/core/price.h.
+price_parse
+```
+
+The build assembles each layer's files into its own directory. It clears
+the directory first, so an object left over from a deleted file can't slip
+in. Compile the tests into `build/tests` too, so the check covers them:
+
+```sh
+for layer in core adapters cli; do
+  rm -rf "build/$layer"
+  mkdir -p "build/$layer"
+  for f in "src/$layer"/*.asm; do
+    uasm -win64 -Zi -W3 -WX -Fo "build/$layer/$(basename "$f" .asm).obj" \
+      "$f"
+  done
+done
+```
+
+`scripts/check` then checks the objects, before linking. First, the core
+never uses an edge: no symbol the core leaves undefined may be one an edge
+defines.
+
+```sh
+llvm-nm -u build/core/* | awk 'NF > 1 {print $NF}' | sort -u \
+  >build/core.uses
+for edge in adapters cli; do
+  llvm-nm -g --defined-only "build/$edge"/* | awk 'NF > 1 {print $NF}' |
+    sort -u | comm -12 build/core.uses - >build/core.breach
+  if [ -s build/core.breach ]; then
+    sed "s/^/the core must not use $edge: /" build/core.breach >&2
+    exit 1
+  fi
+done
+```
+
+A breach prints each symbol, such as
+`the core must not use adapters: console_write`.
+
+Second, code outside a layer, and the layer's tests, use only its entry
+points. The check lists each layer's internal symbols, its `PUBLIC` ones
+that aren't in `exports.txt`, and fails when any object outside the layer
+uses one:
+
+```sh
+: >build/breaches.txt
+for layer in core adapters cli; do
+  awk 'NF && $1 !~ /^#/ {print $1}' "src/$layer/exports.txt" | sort -u \
+    >"build/$layer.exports"
+  llvm-nm -g --defined-only "build/$layer"/* | awk 'NF > 1 {print $NF}' |
+    sort -u | comm -23 - "build/$layer.exports" >"build/$layer.internal"
+done
+for obj in build/*/*; do
+  owner=${obj#build/}
+  owner=${owner%%/*}
+  for layer in core adapters cli; do
+    if [ "$layer" != "$owner" ]; then
+      llvm-nm -u "$obj" | awk 'NF > 1 {print $NF}' | sort -u |
+        comm -12 - "build/$layer.internal" |
+        sed "s|.*|$obj uses &, internal to $layer|" >>build/breaches.txt
+    fi
+  done
+done
+if [ -s build/breaches.txt ]; then
+  cat build/breaches.txt >&2
+  exit 1
+fi
+```
+
+A breach names the object and the symbol, such as
+`build/adapters/peek.obj uses digit_value, internal to core`. The core's
+own files still share `digit_value`, because the check only looks outside
+the layer. In 32-bit code, list each name in `exports.txt` as `llvm-nm`
+prints it, with its decoration, such as `_price_parse`.
+
+To prove the first check bites, add a core file that refers to an edge, and
+keep it as `scripts/breaches/core-uses-edge.patch`:
+
+```text
+Rule: the core never uses an edge
+Fails with: the core must not use adapters: console_write
+diff --git a/src/core/leak.asm b/src/core/leak.asm
+new file mode 100644
+index 0000000..2b51cb8
+--- /dev/null
++++ b/src/core/leak.asm
+@@ -0,0 +1,11 @@
++; leak.asm - Breach: the core refers to an edge.
++
++OPTION	CASEMAP:NONE
++OPTION	PROC:PRIVATE
++
++EXTERN	console_write:PROC
++
++.DATA
++leak	QWORD	console_write
++
++END
+```
+
+Prove the second the same way, with a file such as `src/adapters/peek.asm`
+that refers to `digit_value`. It fails with
+`build/adapters/peek.obj uses digit_value, internal to core`.
+
+The check reads names, not addresses. An entry point that hands out the
+address of an internal procedure or table, a file that reaches into another
+layer's data at a fixed offset, and a file that includes another layer's
+private `.inc` file for its constants and macros all pass, so review must
+catch them. When existing code must use an internal symbol, add it to that
+layer's `exports.txt`, with a comment naming the breach and how to fix it.
+That opens it to every caller: the check can't exempt a single one. This
+was checked with UASM 2.59, JWasm 2.21 and LLVM 19.
+
 ## Sources
 
 - [universalmutator](https://github.com/agroce/universalmutator)
 - [universalmutator on PyPI](https://pypi.org/project/universalmutator/1.14.1/)
+- [llvm-nm](https://llvm.org/docs/CommandGuide/llvm-nm.html)

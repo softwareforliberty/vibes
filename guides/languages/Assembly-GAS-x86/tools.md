@@ -9,7 +9,7 @@ code, and how to run them. They enforce the rules in
 | [GNU as](https://sourceware.org/binutils/) (GNU Binutils) | GPLv3 | Linting | Assembling, and linting through its warnings |
 | [GCC](https://gcc.gnu.org/) | GPLv3 | Linting | Running the C preprocessor over `.S` files and driving `as` |
 | [checksec](https://github.com/slimm609/checksec) | BSD-3-Clause | Auditing | Checking that ELF programs keep NX, PIE and RELRO |
-| `readelf`, `objdump` (GNU Binutils) | GPLv3 | Auditing, Code quality | Inspecting linked programs, and reviewing disassembly |
+| `readelf`, `objdump`, `ld`, `objcopy`, `nm` (GNU Binutils) | GPLv3 | Auditing, Code quality | Inspecting linked programs, reviewing disassembly, and enforcing the layers |
 | `llvm-readobj` (LLVM) | Apache-2.0 WITH LLVM-exception | Auditing | Checking Windows images for DEP, ASLR and unwind data |
 | [gitleaks](https://github.com/gitleaks/gitleaks) | MIT | Auditing | Finding secrets committed to the repository |
 | [jscpd](https://github.com/kucherenko/jscpd) | MIT | Code quality | Finding duplicated code |
@@ -236,7 +236,117 @@ down. Write the test that fails on the mutant, not one that just runs the line.
 A mutant that can't change behaviour needs no test; the threshold allows for
 it.
 
+### Architecture
+
+The linker enforces the layers, as the
+[architecture guide](../../../architecture/README.md#enforce-it) asks, with
+`ld`, `objcopy` and `nm` from GNU Binutils. Assembly has no modules: `.globl`
+makes a symbol visible to every object in the program. A layer's own files
+call each other through global symbols, so `.globl` can't mark the layer's
+boundary. Nor can `.hidden`: it keeps a symbol out of a shared library's
+exports, but every object linked into that library or program still sees it.
+
+Instead, build each layer as one object that exports only its entry points.
+Keep each layer's sources in its own directory under `src`, and list its
+entry points in an `exports.txt` beside them, one symbol per line. `#` starts
+a comment. The layer names are examples: replace them with the layers in the
+project's `design.md`. `src/core/exports.txt`:
+
+```text
+# The core's entry points, declared in src/core/price.h.
+price_parse
+```
+
+The build assembles each layer's files, joins them into one object with a
+partial link (`ld -r`), and has `objcopy` make every other global symbol
+local. It clears each layer's directory first, so an object left over from a
+deleted file can't slip in:
+
+```sh
+for layer in core adapters cli; do
+  rm -rf "build/$layer"
+  mkdir -p "build/$layer"
+  for f in "src/$layer"/*.S; do
+    gcc -c -g -Wall -Werror -Wa,--fatal-warnings \
+      -o "build/$layer/$(basename "$f" .S).o" "$f"
+  done
+  ld -r -o "build/$layer.o" "build/$layer"/*.o
+  objcopy --keep-global-symbols="src/$layer/exports.txt" "build/$layer.o"
+done
+```
+
+Link the program from the layer objects. Link each layer's tests as their
+own program, with that layer's object alone, so they see only its entry
+points, as callers do:
+
+```sh
+gcc -o build/app build/cli.o build/adapters.o build/core.o
+gcc -o build/core_tests tests/core/*.c build/core.o
+```
+
+The core's own files still share `digit_value`, because the partial link
+joins them before `objcopy` hides it. An edge or a core test that uses it
+fails to link, and the linker names the symbol and where it's used:
+``undefined reference to `digit_value'``. On Windows, MinGW-w64's
+`x86_64-w64-mingw32-ld`, `-objcopy` and `-nm` do the same.
+
+The core's tests link the core alone, so they also fail when the core uses
+an edge. To fail with the rule's name, `scripts/check` also checks the layer
+objects, after the loop above and before linking: no symbol the core leaves
+undefined may be one an edge defines.
+
+```sh
+nm -u build/core/* | awk 'NF > 1 {print $NF}' | sort -u >build/core.uses
+for edge in adapters cli; do
+  nm -g --defined-only "build/$edge"/* | awk 'NF > 1 {print $NF}' |
+    sort -u | comm -12 build/core.uses - >build/core.breach
+  if [ -s build/core.breach ]; then
+    sed "s/^/the core must not use $edge: /" build/core.breach >&2
+    exit 1
+  fi
+done
+```
+
+A breach prints each symbol, such as
+`the core must not use adapters: console_write`. To prove it bites, add a
+core file that refers to an edge, and keep it as
+`scripts/breaches/core-uses-edge.patch`:
+
+```text
+Rule: the core never uses an edge
+Fails with: the core must not use adapters: console_write
+diff --git a/src/core/leak.S b/src/core/leak.S
+new file mode 100644
+index 0000000..5a8d22c
+--- /dev/null
++++ b/src/core/leak.S
+@@ -0,0 +1,6 @@
++/* leak.S - Breach: the core refers to an edge. */
++
++.data
++leak:	.quad	console_write
++
++.section .note.GNU-stack, "", @progbits
+```
+
+Prove the entry points the same way, with a file such as
+`src/adapters/peek.S` that refers to `digit_value`. It fails with
+``undefined reference to `digit_value'``.
+
+The linker checks names, not addresses. An entry point that hands out the
+address of an internal routine or table, a file that reaches into another
+layer's data at a fixed offset, and a file that includes another layer's
+private header for its constants and macros all pass, so review must catch
+them. When existing code must use an internal symbol, add it to that layer's
+`exports.txt`, with a comment naming the breach and how to fix it. That
+opens it to every caller: the linker can't exempt a single one. This was
+checked with GNU Binutils 2.44.
+
 ## Sources
 
 - [universalmutator](https://github.com/agroce/universalmutator)
 - [universalmutator on PyPI](https://pypi.org/project/universalmutator/1.14.1/)
+- [GNU ld: command-line options](https://sourceware.org/binutils/docs/ld/Options.html),
+  for partial linking with `-r`
+- [GNU objcopy](https://sourceware.org/binutils/docs/binutils/objcopy.html)
+- [GNU nm](https://sourceware.org/binutils/docs/binutils/nm.html)
