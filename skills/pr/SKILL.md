@@ -115,7 +115,9 @@ knows it only by its agent type.
    `pr.md` and `sources.md` in the directory, all as absolute paths.
 8. **Show the body.** Print `pr.md` in full. Then say, in a line each:
    the merge risk; anything the body says isn't verified; and that
-   `sources.md` lists where each claim came from. If `check.txt` shows a
+   `sources.md` lists where each claim came from. When the merge risk is a
+   one-way door that someone must deploy, such as a migration or a public
+   format, offer `/vibes:runbook` to write the runbook for deploying it. If `check.txt` shows a
    failure, say so first: a pull request whose checks fail is rarely ready
    to open.
 9. **Ask what to do,** in one question, recommending one answer:

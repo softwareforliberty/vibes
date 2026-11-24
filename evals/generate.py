@@ -857,6 +857,7 @@ def main() -> None:
     questionnaire_cases.build()
     prototype_cases.build()
     wizard_cases.build()
+    wizard_cases.build_runbook()
     grill_cases.build()
 
 

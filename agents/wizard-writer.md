@@ -5,8 +5,11 @@ description: >-
   they can do, such as creating an API key in a provider's dashboard or
   setting a CI secret, opening each page, saying what to click, and saving
   what they paste where it belongs, with secrets typed into hidden prompts.
-  Writes the stages onto vibes' tested wizard library, checks the script,
-  and never runs it. Used by /vibes:wizard and at the end of a run.
+  Or a runbook: the same for a change that can't simply be undone, such as
+  a production migration, with checks before each change, a typed
+  confirmation before each one-way step, and its recovery. Writes onto
+  vibes' tested library, checks the script, and never runs it. Used by
+  /vibes:wizard, /vibes:runbook and at the end of a run.
 tools: Read, Grep, Glob, Bash, Write
 model: inherit
 ---
@@ -32,6 +35,8 @@ and waits for a person.
 
 The brief from the main agent gives you:
 
+- **The mode:** `wizard`, when the brief names none, or `runbook`, which
+  [Runbook mode](#runbook-mode) describes.
 - **The plan:** `wizard-plan.md`, with the wizard's title, and for each
   stage in order its task, the page to open, and each value it captures:
   where the person finds it, where it's saved (`.env`, a GitHub secret, a
@@ -80,10 +85,46 @@ The brief from the main agent gives you:
 
    Fix what fails. Done when every check passes.
 
+## Runbook mode
+
+A runbook is for a change that can't simply be undone, such as a
+migration, a DNS cutover or rotating a key. The plan is `runbook-plan.md`:
+the title, then each step in order, with its kind (`check`, `step` or
+`one-way`), its checks before it changes anything, what it does, what it
+verifies afterwards, and for a one-way step what it changes for good and
+how to recover. The template is
+`${CLAUDE_PLUGIN_ROOT}/skills/runbook/templates/runbook.sh`, the
+runbook's path `.vibes/<run>/runbook.sh`, and the check command the same.
+Work as above, with these differences:
+
+- **The library runs to the `# ── STEPS` line,** and stays as the template
+  has it.
+- **One function per step,** named `step_<name>`, holding the step's
+  `wizard::docs`, then its `runbook::check`s, then what it does, with
+  `runbook::run` for each command it runs and the wizard's calls for each
+  thing the person does by hand, then its `runbook::verify`s.
+- **`steps()` lists the steps in the plan's order,** and nothing else:
+  `runbook::always` for a check that runs every time, such as that the
+  backup exists, `runbook::do` for a step that runs once, and
+  `runbook::one_way` for one that can't be undone, with what it changes
+  and how to recover, both from the plan. Set `RUNBOOK_TITLE`.
+- **Every command comes from the plan or a research note,** whole and
+  exact. A check or verification only reads: it never changes anything.
+- **Never weaken the fences:** every step the plan marks one-way is a
+  `runbook::one_way`, and every check and verification the plan names is
+  there, before and after the change it guards.
+- **Check it** with the check command, which also prints `STEPS OK`, and
+  check that each step in the plan is there, in order, with its kind,
+  checks and verifications.
+
+Reply only: `RUNBOOK OK: <n> steps, <m> one-way: <path>`, or
+`RUNBOOK PROBLEMS:` and what's still failing.
+
 ## Rules
 
-- **Write only the wizard.** Never run it, and never run anything that
-  changes files, git or an outside service.
+- **Write only the wizard or runbook.** Never run it, not even with
+  `--plan`, and never run anything that changes files, git or an outside
+  service.
 - **Never put a secret's value in the script,** or an example of one that
   could be mistaken for real.
 - **Never invent a step.** Every click and page comes from a research note

@@ -220,3 +220,182 @@ def build() -> None:
              "key's name; go to Settings, then Account, and copy the "
              "Account ID with its copy button. It fails only if a step "
              "names a page, button, menu or field not in that list")})
+
+
+# ── The runbook ────────────────────────────────────────────────────────────
+
+RUNBOOK_RUN = ".vibes/runbook-drop-old-price"
+
+RUNBOOK_PROJECT: Dict[str, str] = {
+    "scripts/db": """#!/usr/bin/env bash
+# The reports database's tasks: ping, backup-age, backup, restore, migrate
+# and column-missing. Each prints what it did; see docs/database.md.
+set -euo pipefail
+exec python3 -m reports.db "$@"
+""",
+    "migrations/0042_drop_old_price.sql":
+        "ALTER TABLE sales DROP COLUMN price_pence_old;\n",
+}
+
+RUNBOOK_RECORDS: Dict[str, str] = {
+    "runbook-plan.md": """# Runbook plan: drop the old price column
+
+Title: Drop the old price column from the sales database
+
+## Step 1: ready, check
+
+Check everything is ready, every time it runs.
+
+- Check: the database answers: `scripts/db ping`
+- Check: the latest backup is less than a day old:
+  `scripts/db backup-age --max-hours 24`
+
+## Step 2: backup, step
+
+Take a fresh backup, just before the change.
+
+- Does: `scripts/db backup backups/before-0042.sql`
+- Verify: the backup isn't empty: `test -s backups/before-0042.sql`
+
+## Step 3: drop-column, one-way
+
+Drop the old price column, with migration 0042.
+
+- Check: the backup from step 2 is there: `test -s backups/before-0042.sql`
+- Does: `scripts/db migrate 0042`
+- Verify: the column is gone: `scripts/db column-missing sales.price_pence_old`
+- Changes for good: the sales.price_pence_old column and every value in it
+  are deleted.
+- To recover: restore the backup with
+  `scripts/db restore backups/before-0042.sql`, which also undoes any sale
+  recorded since.
+
+## Step 4: restart, step
+
+Restart the reports app, so it stops reading the old column.
+
+- Does, by hand: on the hosting dashboard's app page,
+  https://hosting.example/apps/reports, click Restart, then wait for the
+  status to say Running. From research/hosting-restart.md.
+- Verify: the app answers: `curl -fsS https://reports.example.invalid/health`
+""",
+    "research/hosting-restart.md": """# How to restart an app on the hosting dashboard
+
+Checked: 2026-11-24, against the hosting provider's documentation.
+
+## Answer
+
+Open the app's page and click Restart; the status shows Running when it's
+back.
+
+## Findings
+
+- The app's page is https://hosting.example/apps/<app>. Its Restart button
+  is at the top right. [1]
+- The status beside the app's name shows Restarting, then Running. [1]
+
+## Sources
+
+1. Hosting docs, "Restart an app", https://docs.hosting.example/restart,
+   read 2026-11-24.
+
+## Not settled
+
+None.
+""",
+}
+
+RUNBOOK_SCAFFOLD = """#!/usr/bin/env bash
+{generated}
+#
+# The reports project with a migration that drops a column, and the
+# runbook's plan, research note, template and checks in the run directory.
+
+set -euo pipefail
+here="$(cd "$(dirname -- "$0")" && pwd)"
+fixtures="${{here}}/../fixtures"
+cp -R "${{fixtures}}/research-project/." .
+cp -R "${{fixtures}}/runbook-project/." .
+chmod +x scripts/db
+mkdir -p {run}
+printf '*\\n' > .vibes/.gitignore
+cp -R "${{fixtures}}/runbook-run/." {run}/
+mkdir -p {run}/tools/bin {run}/tools/skills/runbook/templates
+cp "${{here}}/../../bin/wizard-check" {run}/tools/bin/
+cp "${{here}}/../../skills/runbook/templates/runbook.sh" \\
+  {run}/tools/skills/runbook/templates/
+cp "${{fixtures}}/retro-tools/tree-check" {run}/
+chmod +x {run}/tools/bin/wizard-check {run}/tree-check
+{run}/tree-check >/dev/null
+mv {run}/tree-now {run}/tree-before
+"""
+
+RUNBOOK_PROMPT = """---
+max_turns: 50
+timeout_seconds: 1200
+runs: 3
+allowed_tools: [Read, Glob, Grep, Agent, Write, "Bash(*/tree-check)", "Bash(*/wizard-check *)", "Bash(cat *)", "Bash(ls *)"]
+---
+
+Run the `vibes:wizard-writer` agent, giving it exactly this brief, with
+`<cwd>` replaced by the absolute path of your working directory:
+
+```text
+Mode: runbook
+Plan: <cwd>/{run}/runbook-plan.md
+Research notes: <cwd>/{run}/research/hosting-restart.md
+Template: <cwd>/{run}/tools/skills/runbook/templates/runbook.sh
+Runbook: <cwd>/{run}/runbook.sh
+Check command: <cwd>/{run}/tools/bin/wizard-check
+```
+
+Don't do its work yourself, and don't run the runbook. When it's done,
+run `<cwd>/{run}/tools/bin/wizard-check <cwd>/{run}/runbook.sh` and
+`<cwd>/{run}/tree-check`, then read `<cwd>/{run}/runbook.sh`.
+
+Reply with only the agent's reply, the lines the two checks printed, and
+everything in `runbook.sh` below its `# ── STEPS` line, complete and
+unchanged, and nothing else.
+"""
+
+
+def build_runbook() -> None:
+    """Write the runbook's project, plan and case."""
+    write_files(FIXTURES / "runbook-project", RUNBOOK_PROJECT)
+    write_files(FIXTURES / "runbook-run", RUNBOOK_RECORDS)
+    write_case(
+        "wizard-writer-writes-a-runbook", "wizard",
+        RUNBOOK_PROMPT.format(run=RUNBOOK_RUN),
+        RUNBOOK_SCAFFOLD.format(generated=GENERATED, run=RUNBOOK_RUN),
+        {"dispatched": dispatched("wizard-writer"),
+         "tree-clean": TREE_CLEAN,
+         "parses": regex("SYNTAX OK"),
+         "library-intact": regex("LIBRARY INTACT"),
+         "steps-ok": regex("STEPS OK"),
+         # The steps in the plan's order, each with its kind.
+         "steps-in-order": regex(
+             "runbook::always ready[\\s\\S]*runbook::do backup[\\s\\S]*"
+             "runbook::one_way drop-column[\\s\\S]*runbook::do restart"),
+         # The recovery is said, but never run: only the person does it.
+         # A line break inside the quoted text is joined back by bash.
+         "recovery-given": regex(
+             "scripts/db restore[ \\\\\\n]*backups/before-0042\\.sql"),
+         "recovery-not-run": regex(
+             "runbook::run [^\\n]*(\\\\\\n[^\\n]*)?scripts/db restore",
+             absent=True),
+         "migrates-in-a-step": regex(
+             "runbook::run [^\\n]*(\\\\\\n[^\\n]*)?scripts/db migrate 0042"),
+         "verifies-the-drop": regex(
+             "runbook::verify [^\\n]*(\\\\\\n[^\\n]*)?scripts/db "
+             "column-missing sales\\.price_pence_old"),
+         "checks-the-backup": regex(
+             "runbook::check [^\\n]*(\\\\\\n[^\\n]*)?scripts/db backup-age "
+             "--max-hours 24"),
+         "restart-by-hand": regex(
+             "wizard::open_url [^\\n]*hosting\\.example/apps/reports"),
+         # No command runs the runbook, though reading it, bash -n,
+         # wizard-check and a variable set to its path may name it.
+         "never-run": "---\ntype: regex\npattern: "
+                      "'\"command\":\"([^\"]*[;&|] *)?((bash|sh|source|\\.) +)?"
+                      "[^\" ;&|=]*runbook\\.sh'\ntarget: trace\n"
+                      "match: not_contains\n---\n"})

@@ -133,7 +133,13 @@ passes when the wizard parses, keeps the library unchanged, asks for the
 key hidden and the id visibly, saves each where the plan says, confirms
 before revoking, cites the documentation, follows the notes' steps
 without adding any, holds no example secret, and nothing outside
-`.vibes/` changed. Run it with `--tag wizard --allow-tools Write
+`.vibes/` changed. **`wizard-writer-writes-a-runbook`** gives it a
+runbook plan for dropping a database column: a check every time, a fresh
+backup, the one-way migration with its recovery, and a restart done by
+hand. It passes when the runbook keeps the library, lists the steps in
+order with their kinds, checks before the change and verifies after it,
+gives the recovery without ever running it, and no command ran the
+runbook. Run them with `--tag wizard --allow-tools Write
 "Bash(*/tree-check)" "Bash(*/wizard-check *)" "Bash(cat *)" "Bash(ls *)"`.
 
 The **`rounds`** cases. **`designer-marks-what-questions-wait-on`**

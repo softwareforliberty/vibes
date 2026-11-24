@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# The reports database's tasks: ping, backup-age, backup, restore, migrate
+# and column-missing. Each prints what it did; see docs/database.md.
+set -euo pipefail
+exec python3 -m reports.db "$@"

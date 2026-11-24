@@ -61,7 +61,9 @@ gives the cause and the fix, and why no other agent may stand in for one.
    produce. At the end of a run, start from what
    `"${CLAUDE_PLUGIN_ROOT}/bin/setup-needs" <base>` lists. For a change of
    state, such as moving to a new provider, find where things stand, where
-   they must end, and each action between that can't be undone.
+   they must end, and each action between that can't be undone. When the
+   procedure is mostly such changes, such as a migration or a cutover,
+   recommend `/vibes:runbook` instead, which checks and fences each one.
 
    Write the stages in order. For each value, know where the user finds
    it, where it's saved (`.env`, a GitHub secret, a GitHub variable, or
