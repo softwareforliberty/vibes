@@ -12,6 +12,14 @@ disable-model-invocation: true
 
 # Vibe: spec, design, spike, review, rebuild
 
+**Outside Claude Code,** a path here may still begin with the
+`CLAUDE_PLUGIN_ROOT` variable. It stands for vibes' own folder, the one
+holding the `skills/` folder this file is in: use that folder in its place.
+Start the brief of each vibes agent you spawn with `Vibes root:` and that
+folder, and spawn each with a fresh context, not a copy of this
+conversation. An agent named here as `vibes:<agent>` may be listed as
+`<agent>` or `vibes-<agent>`.
+
 Task: $ARGUMENTS
 
 Build the task from a complete spec. First the **spec** says everything the
@@ -66,11 +74,13 @@ directory, without the `vibes:` prefix.
 
 **Check they're loaded before anything else,** even before resuming: each
 agent above must be among the agent types you can spawn, with or without
-the prefix. If any is missing, stop and tell the user the vibes agents
-aren't loaded in this session. This happens when vibes is enabled only for
-one checkout and the session runs in a git worktree or another checkout;
-enabling it at user scope, or running from the checkout it's enabled in,
-then starting a new session, fixes it. Never stand in for an agent with
+the prefix, or as `vibes-<agent>`. If any is missing, stop and tell the
+user the vibes agents aren't loaded in this session. In Claude Code, this
+happens when vibes is enabled only for one checkout and the session runs
+in a git worktree or another checkout; enabling it at user scope, or
+running from the checkout it's enabled in, then starting a new session,
+fixes it. Codex and Gemini CLI get the agents from `bin/host-files`, as
+vibes' README says under "Other agents". Never stand in for an agent with
 `general-purpose` or any other agent told to read its definition: a
 stand-in has none of its tool limits, and the hooks that keep the reviewers
 from changing files know them only by their agent type.

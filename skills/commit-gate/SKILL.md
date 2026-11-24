@@ -10,6 +10,14 @@ description: >-
 
 # Commit Gate
 
+**Outside Claude Code,** a path here may still begin with the
+`CLAUDE_PLUGIN_ROOT` variable. It stands for vibes' own folder, the one
+holding the `skills/` folder this file is in: use that folder in its place.
+Start the brief of each vibes agent you spawn with `Vibes root:` and that
+folder, and spawn each with a fresh context, not a copy of this
+conversation. An agent named here as `vibes:<agent>` may be listed as
+`<agent>` or `vibes-<agent>`.
+
 The commit gate refuses any commit unless the project's checks pass on
 exactly what's being committed. It's enforced in two places, which share the
 same logic:

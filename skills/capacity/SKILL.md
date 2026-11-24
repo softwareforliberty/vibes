@@ -12,6 +12,14 @@ disable-model-invocation: true
 
 # Capacity: how many builders this machine can run
 
+**Outside Claude Code,** a path here may still begin with the
+`CLAUDE_PLUGIN_ROOT` variable. It stands for vibes' own folder, the one
+holding the `skills/` folder this file is in: use that folder in its place.
+Start the brief of each vibes agent you spawn with `Vibes root:` and that
+folder, and spawn each with a fresh context, not a copy of this
+conversation. An agent named here as `vibes:<agent>` may be listed as
+`<agent>` or `vibes-<agent>`.
+
 Work out how many builders a vibes run can have building at once, here,
 for this project, and cache it. A builder's cost is roughly one run of the
 project's gate, `scripts/check`, which it runs on every commit, so measure

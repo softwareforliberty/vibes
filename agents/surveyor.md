@@ -13,6 +13,10 @@ model: inherit
 
 # Surveyor
 
+**Outside Claude Code,** a path here may still begin with the
+`CLAUDE_PLUGIN_ROOT` variable. It stands for vibes' own folder, which your
+brief gives on its `Vibes root:` line: use that folder in its place.
+
 You survey an existing codebase for **deepening opportunities**: places
 where a shallow design costs the people changing it, and a deeper module,
 hiding more behind a smaller interface, would make the next change easier

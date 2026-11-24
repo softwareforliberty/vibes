@@ -11,6 +11,14 @@ disable-model-invocation: true
 
 # Review an untrusted pull request
 
+**Outside Claude Code,** a path here may still begin with the
+`CLAUDE_PLUGIN_ROOT` variable. It stands for vibes' own folder, the one
+holding the `skills/` folder this file is in: use that folder in its place.
+Start the brief of each vibes agent you spawn with `Vibes root:` and that
+folder, and spawn each with a fresh context, not a copy of this
+conversation. An agent named here as `vibes:<agent>` may be listed as
+`<agent>` or `vibes-<agent>`.
+
 Pull request: $ARGUMENTS
 
 Review a pull request from someone outside the project, above all for
@@ -45,14 +53,14 @@ So:
    number or URL, `gh auth status` succeeds. If not, tell the user what's
    missing and stop. Check too that `vibes:supply-chain-reviewer` and the
    other reviewers are among the agent types you can spawn. If any is
-   missing, the vibes agents aren't loaded in this session, which happens
-   when vibes is enabled only for one checkout and the session runs in a
-   git worktree or another checkout: tell the user to enable it at user
-   scope, or to run from the checkout it's enabled in, in a new session,
-   and stop. Never stand in for a reviewer with `general-purpose` or any
-   other agent told to read its definition: a stand-in has none of its tool
-   limits, and the hooks that keep reviewers from changing files know them
-   only by their agent type.
+   missing, the vibes agents aren't loaded in this session, which in Claude
+   Code happens when vibes is enabled only for one checkout and the session
+   runs in a git worktree or another checkout: tell the user to enable it
+   at user scope, or to run from the checkout it's enabled in, in a new
+   session, and stop. Never stand in for a reviewer with `general-purpose`
+   or any other agent told to read its definition: a stand-in has none of
+   its tool limits, and the hooks that keep reviewers from changing files
+   know them only by their agent type.
 2. **Prepare the review.** Run, from the repository root:
 
    ```sh

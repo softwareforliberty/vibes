@@ -11,6 +11,14 @@ disable-model-invocation: true
 
 # Review the current branch
 
+**Outside Claude Code,** a path here may still begin with the
+`CLAUDE_PLUGIN_ROOT` variable. It stands for vibes' own folder, the one
+holding the `skills/` folder this file is in: use that folder in its place.
+Start the brief of each vibes agent you spawn with `Vibes root:` and that
+folder, and spawn each with a fresh context, not a copy of this
+conversation. An agent named here as `vibes:<agent>` may be listed as
+`<agent>` or `vibes-<agent>`.
+
 Arguments: $ARGUMENTS
 
 Review the changes on the checked-out branch since it left its base branch,
@@ -27,15 +35,15 @@ The supply-chain, security, bug, style, idioms, cleanliness, test,
 architecture, resource-leak, performance, spec and project docs reviewers,
 as `vibes:<name>`, and `vibes:builder` for fixes.
 
-**Check they're loaded before anything else:** each must be among the
-agent types you can spawn. If any is missing, stop and tell the user the
-vibes agents aren't loaded in this session. This happens when vibes is
-enabled only for one checkout and the session runs in a git worktree or
-another checkout; enabling it at user scope, or running from the checkout
-it's enabled in, then starting a new session, fixes it. Never stand in for
-an agent with `general-purpose` or any other agent told to read its
-definition: a stand-in has none of its tool limits, and the hooks that keep
-the reviewers read-only know them only by their agent type.
+**Check they're loaded before anything else:** each must be among the agent
+types you can spawn. If any is missing, stop and tell the user the vibes
+agents aren't loaded in this session. In Claude Code, this happens when
+vibes is enabled only for one checkout and the session runs in a git
+worktree or another checkout; enabling it at user scope, or running from
+the checkout it's enabled in, then starting a new session, fixes it. Never
+stand in for an agent with `general-purpose` or any other agent told to
+read its definition: a stand-in has none of its tool limits, and the hooks
+that keep the reviewers read-only know them only by their agent type.
 
 ## Steps
 

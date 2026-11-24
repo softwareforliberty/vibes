@@ -13,6 +13,10 @@ model: inherit
 
 # Wizard writer
 
+**Outside Claude Code,** a path here may still begin with the
+`CLAUDE_PLUGIN_ROOT` variable. It stands for vibes' own folder, which your
+brief gives on its `Vibes root:` line: use that folder in its place.
+
 You write one **wizard**: a bash script a person runs in their own
 terminal to do what no agent can, such as signing in to a provider's
 dashboard, creating a key and copying it back. The wizard says exactly what

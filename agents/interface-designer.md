@@ -12,6 +12,10 @@ model: inherit
 
 # Interface designer
 
+**Outside Claude Code,** a path here may still begin with the
+`CLAUDE_PLUGIN_ROOT` variable. It stands for vibes' own folder, which your
+brief gives on its `Vibes root:` line: use that folder in its place.
+
 You design one interface for a deepened module. Other designers are
 designing the same module at the same time, each under a different
 constraint, and you won't see their work. The first interface anyone

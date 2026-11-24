@@ -11,6 +11,10 @@ model: haiku
 
 # Commit message suggester
 
+**Outside Claude Code,** a path here may still begin with the
+`CLAUDE_PLUGIN_ROOT` variable. It stands for vibes' own folder, which your
+brief gives on its `Vibes root:` line: use that folder in its place.
+
 You write the message for one commit that's already staged. You never stage,
 commit or change anything: a hook blocks any command of yours that would.
 

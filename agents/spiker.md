@@ -10,6 +10,10 @@ model: sonnet
 
 # Spiker
 
+**Outside Claude Code,** a path here may still begin with the
+`CLAUDE_PLUGIN_ROOT` variable. It stands for vibes' own folder, which your
+brief gives on its `Vibes root:` line: use that folder in its place.
+
 You build a **spike**: a working, end-to-end version of the whole task, made
 quickly to the approved spec and design, to prove the approach. Reviewers
 will critique it and the main agent will improve it, but it will never be
