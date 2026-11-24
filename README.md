@@ -44,6 +44,13 @@ while holding it to the standards of careful, experienced developers.
   `tests/setup_needs/`.
 - **`bin/wizard-check`:** checks a wizard parses, keeps the wizard
   library unchanged and passes ShellCheck, without running it.
+- **`bin/capacity`:** measures how many builders the machine can run at
+  once for the project, from runs of its gate, and caches the answer. It's
+  in `lib/capacity/`, and its tests in `tests/capacity/`.
+- **`bin/plan-graph`:** reads the task graph in a rebuild plan: which
+  batches can start, how many could run at once, and any two that could
+  run at once but touch the same files. It's in `lib/plan_graph/`, and its
+  tests in `tests/plan_graph/`.
 - **`bin/session-digest`:** prints a compact digest of a Claude Code
   session's transcript, for a retrospective. It's in
   `lib/session_digest/`, and its tests in `tests/session_digest/`.
@@ -52,7 +59,8 @@ while holding it to the standards of careful, experienced developers.
   outside pull request, writing a pull request, triaging issues and
   picking up approved ones, asking someone else through a questionnaire,
   prototyping a decision, writing a wizard for steps only you can do,
-  grilling a plan before it's built,
+  grilling a plan before it's built, measuring how many builders the
+  machine can run,
   looking back on a session, test-driven development, atomic commits and setting up the
   commit gate.
 - **`principles.md`:** the programming principles every change is held
@@ -464,6 +472,32 @@ token. Runs start from the brief, never the issue.
   through them.
 
 Approvals are kept in `.vibes/issues/` on the machine you triaged on.
+
+## Build in parallel
+
+A rebuild plan is also a task graph: each batch says which batches it
+needs first, and which files it changes. Batches that don't need each
+other, such as two edges built on the same core, are built at once, each
+by its own builder in its own git worktree, `.vibes/workers/<n>`, on its
+own branch, through the gate as usual. As each finishes, it's brought up
+to date with the rebuild branch, checked again with `scripts/check --all`
+if anything moved under it, and joined, so the rebuild branch ends with
+every commit in a line, as if one builder had built them all.
+`bin/plan-graph` says which batches are ready, and catches two that could
+run at once but would change the same file.
+
+How many at once depends on the machine and the project, so it's
+measured, not guessed. `/vibes:capacity` runs the project's gate alone
+and then twice at the same time, sampling memory and CPU, Docker's too,
+and settles on a number: what memory and CPU allow, never more than 4,
+and 1 when two at once ran little faster than one after the other. It
+caches the answer in `.vibes/capacity.json`, and a run measures again by
+itself when the machine, the gate or the project's size has changed, or
+after 30 days, or uses fewer builders when memory is already in use. A
+builder that runs out of memory lowers the number for later runs. Run
+`/vibes:capacity` yourself after the project grows, or when you give
+Docker more or less. The worktrees are reused from run to run, so what
+they've built stays warm.
 
 ## Grill a plan
 

@@ -39,6 +39,15 @@ guides behave, and says so under **Changed**.
   you pick, three new interface designers each design it under a
   different constraint, and the surveyor compares them and recommends
   one, as a task for `/vibes:vibe`. It changes nothing.
+- **Batches that don't need each other are built at once.** The rebuild
+  plan marks what each batch waits for and which files it changes, and
+  the new `bin/plan-graph` says which are ready and catches two that would
+  change the same file. Each builds in its own worktree and branch, and
+  joins the rebuild branch in a line as it finishes. How many at once is
+  measured by the new `/vibes:capacity` and `bin/capacity`, from runs of
+  the project's gate alone and two at once, and cached per machine in
+  `.vibes/capacity.json`; it's measured again when the machine, the gate
+  or the project's size changes.
 - **`/vibes:grill`** stress-tests a plan before it's built: it maps every
   decision the plan leaves open and every fact it rests on, and asks you
   the decisions in rounds until nothing is left, ending with a decisions
