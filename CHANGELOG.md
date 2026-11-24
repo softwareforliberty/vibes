@@ -184,6 +184,15 @@ guides behave, and says so under **Changed**.
   `--fetch <remote> <ref>` reviews a pull request on any other forge
   without the record.
 
+- **Boundary rules stay proved.** The breach that proves each boundary
+  rule bites is kept in `scripts/breaches/<rule>.patch`. `bin/rules-bite`
+  applies each to a throwaway copy and checks `scripts/check` still
+  catches it, and the commit gate runs it on every commit that changes
+  the checks or a breach, refusing one that would let a rule stop
+  biting. A run checks every rule again before it finishes, and a
+  component the design gains after the first batch gets its rules and
+  their breaches in the batch that creates it.
+
 ### Changed
 
 - **Open questions are asked in rounds.** The designer marks what each

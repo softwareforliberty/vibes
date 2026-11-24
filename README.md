@@ -44,6 +44,10 @@ while holding it to the standards of careful, experienced developers.
   `tests/setup_needs/`.
 - **`bin/wizard-check`:** checks a wizard parses, keeps the wizard
   library unchanged and passes ShellCheck, without running it.
+- **`bin/rules-bite`:** applies each breach that proved a boundary rule,
+  kept in `scripts/breaches/`, to a throwaway copy, and checks
+  `scripts/check` still catches it. It's in `lib/rules_bite/`, and its
+  tests in `tests/rules_bite/`.
 - **`bin/tracker`:** reaches the project's issue tracker through the
   commands it names in `.vibes-tracker`, only as you approved them, as
   [Your issue tracker](#your-issue-tracker) says. It's in `lib/tracker/`,
@@ -890,6 +894,12 @@ Once it exists, the gate:
 - blocks a commit whose subject is longer than 50 characters
 - blocks a commit that adds a line carrying a `/vibes:debug` run's debug
   tag, such as `vibes-debug-month-end`
+- blocks a commit that changes `scripts/check`, `scripts/check-file` or a
+  breach, when a boundary rule no longer catches the breach that proved
+  it. Each rule's breach, such as a new file that imports a component's
+  internals, is kept in `scripts/breaches/<rule>.patch`, starting with the
+  rule and the text its failure prints, and `bin/rules-bite` applies each
+  to a throwaway copy and runs `scripts/check` there
 - runs no checks on `spike/*` branches, apart from the subject's length
 - in an agent's session, also blocks `git commit -a` and `--no-verify`
 - in an agent's session, asks you to confirm a commit that loosens the gate
