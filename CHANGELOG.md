@@ -161,6 +161,16 @@ guides behave, and says so under **Changed**.
     before a commit that changes it; and `/vibes:review-pr` marks a
     change to it HIGH.
 
+- **`/vibes:runbook`: changes that can't be undone,** such as a
+  production migration, a DNS cutover or rotating a key. It writes a
+  script you run yourself, on the wizard library, where each step checks
+  what it needs first and verifies its change after; each one-way step
+  says what it changes for good and how to recover, and runs only once
+  you type its name; and each step is logged, so a second run starts
+  where the first stopped and never repeats a finished step. `--plan`
+  shows the steps and changes nothing. `/vibes:pr` offers one for a
+  one-way door someone must deploy.
+
 ### Changed
 
 - **Open questions are asked in rounds.** The designer marks what each

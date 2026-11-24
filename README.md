@@ -63,7 +63,8 @@ while holding it to the standards of careful, experienced developers.
   outside pull request, writing a pull request, triaging issues and
   picking up approved ones, setting up the issue tracker, asking someone
   else through a questionnaire,
-  prototyping a decision, writing a wizard for steps only you can do,
+  prototyping a decision, writing a wizard for steps only you can do and a
+  runbook for changes that can't be undone,
   grilling a plan before it's built, measuring how many builders the
   machine can run,
   looking back on a session, test-driven development, atomic commits and setting up the
@@ -624,6 +625,35 @@ A run writes one for you at its end when `bin/setup-needs` finds the
 branch needs settings nobody has provided, such as a key the code now
 reads, and the report gives the command. Keep a wizard you'll need again,
 such as for each new developer, as `scripts/setup-<thing>`.
+
+### Changes that can't be undone
+
+`/vibes:runbook <the change>` writes a **runbook** for a change that can't
+simply be undone, such as a production migration, a DNS cutover or
+rotating a signing key. It's a script you run in your own terminal, like
+a wizard, and it builds on the wizard library, with fences around each
+change:
+
+- **Checks first:** each step checks what it needs before it changes
+  anything, such as that a fresh backup exists, and stops if one fails.
+- **One-way steps wait for you:** before each, it says what changes for
+  good and how to recover, and runs it only once you type the step's
+  name.
+- **Verification after:** each step checks its change worked before the
+  next starts, and stops with the recovery if it didn't, as it does when
+  any command fails.
+- **A log, and resuming:** each step is logged beside the script, and a
+  second run starts from the step that stopped, never repeating one that
+  finished.
+
+Read it first with `bash <runbook> --plan`, which shows every step, each
+one-way step with its recovery, and changes nothing. It refuses to run
+without a person at a terminal. Each command comes from the project's own
+scripts or the provider's documentation, found by the researcher, and the
+steps are confirmed with you before it's written. `/vibes:pr` offers one
+when it judges a change a one-way door someone must deploy, such as a
+migration. Keep one you'll need again, such as a yearly key rotation, as
+`scripts/runbook-<thing>`.
 
 ## Prototype a decision
 

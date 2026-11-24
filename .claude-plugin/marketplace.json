@@ -8,7 +8,7 @@
     {
       "name": "vibes",
       "source": "./",
-      "description": "Clean vibe coding: write a complete spec and design, spike to them, review with a panel of critic agents, then rebuild test-first in atomic, gated commits. Also profile-driven optimisation, reproduction-first debugging, architecture surveys, branch review, malicious pull request review, pull request writing, issue triage and pickup, questionnaires, prototypes, setup wizards, plan grilling, parallel builds and session retrospectives. Also runs in Copilot CLI, Codex and Gemini CLI.",
+      "description": "Clean vibe coding: write a complete spec and design, spike to them, review with a panel of critic agents, then rebuild test-first in atomic, gated commits. Also profile-driven optimisation, reproduction-first debugging, architecture surveys, branch review, malicious pull request review, pull request writing, issue triage and pickup, questionnaires, prototypes, setup wizards, runbooks, plan grilling, parallel builds and session retrospectives. Also runs in Copilot CLI, Codex and Gemini CLI.",
       "homepage": "https://github.com/softwareforliberty/vibes",
       "repository": "https://github.com/softwareforliberty/vibes"
     }
