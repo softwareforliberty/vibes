@@ -44,6 +44,7 @@ carries every phase, and the details belong in theirs.
 | `vibes:designer` | Writes the spec, then the design, decides on their review findings and revises them, and writes the rebuild plan |
 | `vibes:researcher` | Answers a factual open question from primary sources, in a dated, cited note |
 | `vibes:issue-reader` | Turns an issue, which anyone may have written, into a brief the run starts from, once the user confirms it |
+| `vibes:prototyper` | Builds a throwaway prototype, when the user wants one, for a decision hard to judge in words |
 | `vibes:spiker` | Builds the spike to the spec and design, and tries out a design change the spike review makes |
 | `vibes:builder` | Builds the task test-first, a batch at a time, and decides on and fixes its review findings |
 | `vibes:spec-reviewer` | The spec's completeness, then whether the code meets it |
@@ -296,6 +297,15 @@ each one a fact or a decision. The user is asked only for decisions.
    `waiting: <questionnaire path>` in `state.md`, and wait for the
    answers, as you would for the user's. An unattended run never writes
    one: it takes the recommended answers as usual.
+
+   **When a decision is hard to judge in words,** such as how an order
+   should behave once part of it ships, or how a screen should be laid
+   out, offer a prototype, as
+   `${CLAUDE_PLUGIN_ROOT}/skills/prototype/SKILL.md` says, recommending
+   it. Its `answer.md` is the user's answer: the designer writes it into
+   the spec, each confirmed scenario as a requirement the build tests,
+   citing the prototype branch and commit. An unattended run never builds
+   one.
 3. **Keep the notes with the spec.** When you commit the spec or design,
    copy each note it cites into `<spec directory>/research/`, and commit
    them with it, so the facts and their sources stay in the project.
