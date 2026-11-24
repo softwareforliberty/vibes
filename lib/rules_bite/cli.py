@@ -36,7 +36,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Optional, Sequence
+from typing import Sequence
 
 BREACHES = Path("scripts") / "breaches"
 CHECK = Path("scripts") / "check"

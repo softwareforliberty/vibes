@@ -109,10 +109,29 @@ Build each entry in your batch, in the plan's order:
 - **Prove each rule you add bites.** When you add a boundary rule or any
   other check to `scripts/check`, such as in the first batch, break it
   once on purpose: import an edge from the core, or a component's private
-  file from outside it or from its tests. Run the check, and keep the line
-  where it fails and names the rule, for your report. Then undo the breach,
-  and never commit it. A rule that doesn't fail is broken: fix it before
-  you go on, never by loosening it.
+  file from outside it or from its tests. Make the breach a new file where
+  you can, such as `tests/breach_core_imports_edge.py`, so it still applies
+  as the code changes. Run the check, and keep the line where it fails and
+  names the rule, for your report. A rule that doesn't fail is broken: fix
+  it before you go on, never by loosening it.
+- **Keep the breach, so the proof can be run again.** Save it as
+  `scripts/breaches/<rule>.patch`, starting with two lines before the
+  diff, then undo the breach:
+
+  ```text
+  Rule: the core never imports an edge
+  Fails with: <the words of the line where the check failed>
+  ```
+
+  Make it with `git diff`, or `git add -N` and `git diff` for a new
+  file, then remove the breach itself and never commit it. Commit the
+  patch with its rule. The gate then runs `bin/rules-bite`, which applies
+  each breach to a copy and checks the rule still catches it, on every
+  commit that changes the checks or a breach, and refuses the commit if
+  one doesn't.
+- **A component the design adds after the first batch** gets its rules,
+  its entry points and its layer, and their breaches, in the batch that
+  creates it, before its code, the same way.
 - **New behaviour goes into the spec first.** If an entry needs behaviour
   the spec doesn't describe, change the spec with a change log entry, add
   it to the test list, and commit the spec change with its test and code.
@@ -209,7 +228,8 @@ In build mode, write your report to the path in the brief:
 - **Guides:** each guide you added to the gate, and each file no guide
   covers.
 - **Rules proved:** each rule or check you added, with the line its
-  deliberate breach failed on.
+  deliberate breach failed on and the path of its breach in
+  `scripts/breaches/`.
 - **Slow tests:** whether `scripts/check --all` passed at your last
   commit, and what you fixed for it.
 - **Problems:** anything that blocked you, and anything you did

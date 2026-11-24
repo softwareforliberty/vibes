@@ -322,7 +322,11 @@ should run it too.
    run `scripts/check`, and see that check fail. Undo each breach before
    the next. A check that can't fail, because its pattern matches no files
    or its tool found nothing to check, looks just like one that passes:
-   fix it before you install the hooks.
+   fix it before you install the hooks. Keep the breach of each
+   architecture test, the layers and the entry points, as
+   `scripts/breaches/<rule>.patch`, as the builder's instructions
+   describe, so `bin/rules-bite` and the gate can prove it again whenever
+   the checks change.
 2. Install the git hooks:
 
    ```sh

@@ -262,8 +262,11 @@ write the plan as it describes. For a task that had a spike, the lessons
 are the findings marked `lesson` in the spike rounds' `responses.md`, and
 the spec changes are the change log entries in the patch. Keep the entries
 and batches as few as that section says, and give each entry the ids it
-covers. Give each batch its `After:` and `Touches:` lines, so batches that
-don't need each other can be built at once, then run
+covers. The first batch adds the design's boundary rules and their
+breaches; a component the first batch doesn't create gets its rules as
+the first entries of the batch that does. Give each batch its `After:`
+and `Touches:` lines, so batches that don't need each other can be built
+at once, then run
 `"${CLAUDE_PLUGIN_ROOT}/bin/plan-graph" <the plan>` and fix every problem
 it lists. Done when it lists none.
 

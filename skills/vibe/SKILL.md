@@ -782,8 +782,12 @@ below that mention one don't apply.
    `scripts/check`, as architecture tests or build structure from each
    guide's `tools.md`, so the gate holds every later commit to them: the
    layer rules, and each component's entry points. The builder proves each
-   rule bites by breaking it once on purpose. Where the spike needed guides
-   the gate doesn't check yet, it extends the gate for them first too.
+   rule bites by breaking it once on purpose, and keeps the breach in
+   `scripts/breaches/`, so the gate checks the rule still bites whenever
+   the checks change. A component the design gains later gets its rules
+   the same way, in the batch that creates it. Where the spike needed
+   guides the gate doesn't check yet, it extends the gate for them first
+   too.
 2. **Spawn a fresh `vibes:builder` in `build` mode for each batch,** one
    at a time, on the rebuild branch. When
    `"${CLAUDE_PLUGIN_ROOT}/bin/plan-graph" .vibes/<name>/rebuild-plan.md`
@@ -798,8 +802,9 @@ below that mention one don't apply.
 3. **Check each batch** before the next: its commits are on the rebuild
    branch, the working tree is clean, the plan's entries are ticked off,
    and the builder's reply says `scripts/check --all` passed. After the
-   first batch, check its report proves each boundary rule with the line
-   its breach failed on. Don't run
+   first batch, and any batch that creates a component, check its report
+   proves each of the component's boundary rules with the line its breach
+   failed on, and names its breach in `scripts/breaches/`. Don't run
    `scripts/check` yourself: the gate ran it on every commit, and the
    builder ran the slow tests. Check the guides on the branch's changes, as
    [Keep the guides current](#keep-the-guides-current) describes, and
@@ -847,7 +852,11 @@ with `git worktree remove --force .vibes/<name>/audit`.
    same way, only when a commit since the audited one changed the
    project's dependencies, such as a manifest or lock file. The review's
    fixes went through the gate and the reviewers.
-2. Check `git status` is clean and `scripts/check --all` passes.
+2. Check `git status` is clean and `scripts/check --all` passes, and that
+   every boundary rule still bites:
+   `"${CLAUDE_PLUGIN_ROOT}/bin/rules-bite"` prints `BITES` for each
+   breach, or `NO BREACHES` for a task with no design. Have anything else
+   fixed through the gate.
 3. **Write a wizard for what only the user can set up:** if
    `"${CLAUDE_PLUGIN_ROOT}/bin/setup-needs" <base>` lists anything, such
    as an API key the code now reads, write `.vibes/<name>/wizard.sh` as
