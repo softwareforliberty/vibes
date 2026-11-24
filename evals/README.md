@@ -130,6 +130,20 @@ without adding any, holds no example secret, and nothing outside
 `.vibes/` changed. Run it with `--tag wizard --allow-tools Write
 "Bash(*/tree-check)" "Bash(*/wizard-check *)" "Bash(cat *)" "Bash(ls *)"`.
 
+The **`rounds`** cases. **`designer-marks-what-questions-wait-on`**
+gives the designer a task whose choices depend on each other, and passes
+when some open questions wait on others for a real reason.
+**`main-agent-asks-the-first-round`** gives the main agent the vibe skill
+and a spec whose questions wait on each other, and passes when round one
+researches only the fact nothing waits on and asks only the decisions
+that wait on nothing. **`grill-maps-the-tree`** has the agent follow
+`/vibes:grill`'s first two steps on a plan the project's decision record
+constrains, and passes when the tree cites the record, marks what waits
+on what, asks nothing the code already answers, and changes nothing
+outside `.vibes/`. Run the first with the research cases' `--allow-tools`,
+the second with none, and the third with `--allow-tools Write Edit
+"Bash(mkdir *)" "Bash(ls *)" "Bash(*/tree-check)"`.
+
 The **`survey`** cases work on orders, a small Python library whose
 pricing is split into one-line modules that three callers sequence
 themselves, one in the wrong order, beside a deep storage module a
@@ -165,6 +179,7 @@ suggestions, cites the calls behind each one, and leaves the tree clean.
 | `research_cases.py` | The research project and cases, which `generate.py` writes too |
 | `design_cases.py` | The designer's design case, on the research project, which `generate.py` writes too |
 | `prbody_cases.py` | The pull request writer's branch, run records and case, which `generate.py` writes too |
+| `grill_cases.py` | The rounds' spec, the grill's plan and their cases, which `generate.py` writes too |
 | `issue_cases.py` | The issues and their cases, which `generate.py` writes too |
 | `prototype_cases.py` | The prototypes' projects and cases, which `generate.py` writes too |
 | `questionnaire_cases.py` | The questionnaire's project and case, which `generate.py` writes too |
