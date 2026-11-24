@@ -290,7 +290,212 @@ just runs the line. If a mutant can't change behaviour, declare it in
 `equivalents` with the reason, rather than writing a test that contorts the
 code; the run fails when a declaration goes stale.
 
+### Architecture
+
+PowerShell's modules don't enforce layers. A module can call any command
+imported into the session, so the core can call an edge's function without
+importing it. And exporting doesn't hide: Microsoft's documentation says it
+"does not hide the members", and the call operator, `&`, can run any
+function in a module's scope. Pester's `InModuleScope` exists to reach the
+functions a module doesn't export. So the manifests declare each layer's
+front door, and a script in `scripts/check` enforces the rest, as the
+[architecture guide](../../../architecture/README.md#enforce-it) asks.
+
+Make each layer a module, in its own folder under `src`. The names are
+examples: replace them with the layers in the project's `design.md`.
+
+```text
+src/AppCore/AppCore.psd1                  the core's manifest
+src/AppCore/AppCore.psm1                  its root module
+src/AppCore/Private/Format-CoreTitle.ps1  a function it doesn't export
+src/AppAdapters/AppAdapters.psd1          an edge
+src/AppCli/AppCli.psd1                    another edge
+tests/AppCore.Tests.ps1                   the core's tests
+```
+
+- A module's manifest is its front door. `FunctionsToExport` lists each
+  entry point by name. Without it, the module exports every function, and
+  a wildcard exports every function that matches.
+- Other modules, and the module's own tests, import it only through its
+  manifest, and call only what it exports. Importing the `.psm1` itself
+  skips the manifest: with no `Export-ModuleMember`, every function is
+  exported.
+- The core imports no edge and calls none of an edge's functions. An edge
+  may use the core.
+- Give every function the module's noun prefix, such as `Format-CoreTitle`
+  (see [Naming](coding-style.md#naming)), so no two modules share a name.
+
+`src/AppCore/AppCore.psd1`:
+
+```powershell
+@{
+    RootModule        = 'AppCore.psm1'
+    ModuleVersion     = '0.1.0'
+    GUID              = '0b9f5a3e-7c1d-4f7e-9a51-3d2c6e8b4f10'
+    FunctionsToExport = @('Get-Greeting')
+    CmdletsToExport   = @()
+    VariablesToExport = @()
+    AliasesToExport   = @()
+}
+```
+
+Save the check as `scripts/Test-Architecture.ps1`, and run it from
+`scripts/check`. It exits 1, and prints the file and line of each breach:
+
+```sh
+pwsh -NoProfile -File scripts/Test-Architecture.ps1
+```
+
+```powershell
+#Requires -Version 7.4
+using namespace System.Management.Automation.Language
+
+# Prints the file and line of each breach of a layer or a module's front
+# door, and fails if there are any.
+Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+# The modules, core first. Replace them with the layers in design.md.
+$core = 'AppCore'
+$edges = @('AppAdapters', 'AppCli')
+$found = [System.Collections.Generic.List[string]]::new()
+
+function Join-Name {
+    # A pattern that matches any of the names as a whole word.
+    param([string[]]$Name)
+    $escaped = $Name | ForEach-Object { [regex]::Escape($_) }
+    '(?<![\w-])(' + ($escaped -join '|') + ')(?![\w-])'
+}
+
+function Add-Breach {
+    # Records each line of code in the files that matches the pattern.
+    param([string[]]$Path, [string]$Pattern, [string]$Rule)
+    foreach ($file in $Path) {
+        $tokens = $null
+        $null = [Parser]::ParseFile($file, [ref]$tokens, [ref]$null)
+        foreach ($token in $tokens) {
+            $comment = $token.Kind -eq 'Comment'
+            if ($comment -and $token.Text -notmatch '^#requires') {
+                continue
+            }
+            if ($token.Text -match $Pattern) {
+                $where = Resolve-Path -LiteralPath $file -Relative
+                $line = $token.Extent.StartLineNumber
+                $found.Add("${where}:${line}: $Rule")
+            }
+        }
+    }
+}
+
+$all = @(Get-ChildItem -Path 'src', 'tests' -Recurse -File -Include @(
+        '*.ps1', '*.psm1', '*.psd1')).FullName
+$files = @{}
+$exports = @{}
+foreach ($name in @($core) + $edges) {
+    $files[$name] = @($all -like "*[\/]src[\/]$name[\/]*")
+    $manifest = "src/$name/$name.psd1"
+    $data = Import-PowerShellDataFile -LiteralPath $manifest
+    $exports[$name] = @($data['FunctionsToExport'] |
+            Where-Object { $_ -notmatch '^$|\*' })
+    $rule = "list what $name exports by name"
+    if (-not $data.ContainsKey('FunctionsToExport')) {
+        $found.Add("./${manifest}:1: $rule")
+    }
+    Add-Breach -Path $manifest -Pattern '^[''"].*\*' -Rule $rule
+}
+
+# The core never names an edge, or a function an edge exports.
+foreach ($edge in $edges) {
+    $pattern = Join-Name -Name (@($edge) + $exports[$edge])
+    $rule = "the core must not use $edge"
+    Add-Breach -Path $files[$core] -Pattern $pattern -Rule $rule
+}
+
+# Code outside a module names no file in it but its manifest, and none
+# of the functions it doesn't export.
+foreach ($name in $files.Keys) {
+    $pattern = "(?<![\w-])$name[\\/](?!$name\.psd1)"
+    $private = foreach ($file in $files[$name]) {
+        $ast = [Parser]::ParseFile($file, [ref]$null, [ref]$null)
+        $ast.FindAll({ $args[0] -is [FunctionDefinitionAst] }, $true) |
+            Where-Object Name -NotIn $exports[$name] |
+            ForEach-Object Name
+    }
+    if ($private) {
+        $pattern += '|' + (Join-Name -Name $private)
+    }
+    $outside = $all | Where-Object { $_ -notin $files[$name] }
+    $rule = "use $name only through its manifest and exports"
+    Add-Breach -Path $outside -Pattern $pattern -Rule $rule
+}
+
+$rule = 'InModuleScope reaches past a module''s exports'
+Add-Breach -Path $all -Pattern '^InModuleScope$' -Rule $rule
+
+$found | Select-Object -Unique
+if ($found.Count -gt 0) {
+    exit 1
+}
+```
+
+It reads each file with PowerShell's own parser, so comments don't count,
+but `#Requires` lines do. It searches `src` and `tests`; add any other
+folder that holds code.
+
+- Each manifest must list `FunctionsToExport`, and no string in it may
+  hold a wildcard, so `VariablesToExport = '*'` fails too.
+- The core must not name an edge or a function the edge exports. That
+  catches `Import-Module`, `using module`, `#Requires -Modules`,
+  `RequiredModules` and a call such as `AppAdapters\Write-Console`, or
+  just `Write-Console`.
+- Code outside a module, its tests included, must not name a file in the
+  module's folder other than its manifest, such as its `.psm1` or a
+  `Private` file. Nor may it name a function the module doesn't export, so
+  `& (Get-Module AppCore) { Format-CoreTitle }` fails too.
+- No file may use `InModuleScope`.
+
+A breach prints:
+
+```text
+./src/AppCore/Get-CoreBreach.ps1:5: the core must not use AppAdapters
+```
+
+The check reads names, so it misses one built at run time, such as
+`& ('Format-Core' + 'Title')`, a command found with `Get-Command`, and a
+path joined from parts, such as `Join-Path 'AppCore' 'Private'`. Review
+catches the rest.
+
+Prove the rules bite, as the
+[builder](../../../agents/builder.md) does, with a new file that breaks
+one. Kept as `scripts/breaches/core-uses-edge.patch`, the breach for the
+layer rule is:
+
+```text
+Rule: the core never uses an edge
+Fails with: the core must not use AppAdapters
+diff --git a/src/AppCore/Get-CoreBreach.ps1 b/src/AppCore/Get-CoreBreach.ps1
+new file mode 100644
+index 0000000..75123b4
+--- /dev/null
++++ b/src/AppCore/Get-CoreBreach.ps1
+@@ -0,0 +1,6 @@
++#Requires -Version 7.4
++
++# A breach: the core calls an edge.
++function Get-CoreBreach {
++    Write-Console -Text 'breach'
++}
+```
+
+The breach passes PSScriptAnalyzer, so `scripts/check` fails on the layer
+rule and not on a lint error first. To let one existing breach through,
+leave its file out of that rule's `-Path`, with a comment naming the breach
+and how to fix it.
+
 ## Sources
 
 - [PSMutant](https://github.com/Fortigi/PSMutant/blob/v0.9.1/README.md)
 - [PSMutant on the PowerShell Gallery](https://www.powershellgallery.com/packages/PSMutant/0.9.1)
+- [Export-ModuleMember](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/export-modulemember)
+- [about_Module_Manifests](https://learn.microsoft.com/powershell/module/microsoft.powershell.core/about/about_module_manifests)
+- [Pester: InModuleScope](https://pester.dev/docs/commands/InModuleScope)

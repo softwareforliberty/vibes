@@ -256,7 +256,135 @@ isn't pinned down. Write the test that fails on the mutant, not one that just
 runs the line. A mutant that can't change behaviour needs no test; the
 threshold allows for it.
 
+### Architecture
+
+POSIX sh has no modules and nothing private. `.` runs a file in the current
+shell, so every function it defines can be called by any code that runs
+after it. ShellCheck follows the files a script sources, but doesn't check
+which files may source which. So give the layers a layout and names that
+show each breach, and have `scripts/check` search for them, as the
+[architecture guide](../../../architecture/README.md#enforce-it) asks.
+
+Give each layer its own directory under `lib`. The names are examples:
+replace them with the layers in the project's `design.md`.
+
+```text
+lib/core/core.sh              the core's entry point
+lib/core/internal/format.sh   the rest of the core
+lib/adapters/adapters.sh      an edge's entry point
+lib/cli/cli.sh                another edge's entry point
+```
+
+- A layer's entry point is its front door. Its functions start with the
+  layer's name and `_`, such as `core_greet`, as for any
+  [library](coding-style.md#naming).
+- Keep the rest of the layer in its `internal` directory. Only the entry
+  point sources those files, and their functions start with `_` and the
+  layer's name, such as `_core_title`.
+- Code outside a layer, and the layer's own tests, source only its entry
+  point and call only its public functions.
+- The core sources no edge and calls none of an edge's functions. An edge
+  may use the core.
+
+A sourced file can't find its own path in POSIX sh, so the executable sets
+`APP_LIB` to the `lib` directory, and every `.` line starts from it.
+ShellCheck can't follow a path built from a variable, so name the file in a
+directive above it. The core's entry point loads its internals like this:
+
+```sh
+# shellcheck source=lib/core/internal/format.sh
+. "${APP_LIB}/core/internal/format.sh"
+```
+
+Add the check to `scripts/check`. It fails on the first rule a change
+breaks, and prints the file, line and text of each breach. Comment lines
+don't count.
+
+```sh
+# The layers, core first. Replace them with the layers in design.md.
+core='core'
+edges='adapters cli'
+
+# Prints the lines, outside comments, that match $1 in the files $2...
+uses() {
+  grep -rnE "$@" | grep -vE '^[^:]*:[0-9]+:[[:space:]]*#'
+}
+
+for edge in ${edges}; do
+  if uses "(^|[^[:alnum:]_])_?${edge}[/_]" "lib/${core}"; then
+    echo "the core must not use ${edge}" >&2
+    exit 1
+  fi
+done
+
+for c in ${core} ${edges}; do
+  if uses "${c}/internal/|(^|[^[:alnum:]_])_${c}_" bin lib test \
+    | grep -v "^lib/${c}/"; then
+    echo "use ${c} only through lib/${c}/${c}.sh" >&2
+    exit 1
+  fi
+  if grep -rnE '^[[:space:]]*[[:alnum:]_]+[[:space:]]*\(\)' "lib/${c}" \
+    | grep "^lib/${c}/internal/" | grep -vE ":[[:space:]]*_${c}_"; then
+    echo "name the functions in lib/${c}/internal _${c}_..." >&2
+    exit 1
+  fi
+done
+```
+
+- The first loop fails when the core names an edge's directory, such as
+  `adapters/`, or one of its functions, such as `adapters_print`.
+- The second fails when code outside a layer, in `bin`, `lib` or `test`,
+  names the layer's `internal` directory or one of its `_core_` functions.
+- The third fails when a function in an `internal` directory lacks its
+  layer's prefix, so that outside code could call it unseen.
+- Search only directories that exist: grep reports an error for a missing
+  one.
+- It's POSIX sh, and uses only grep options that GNU, BSD and BusyBox grep
+  all have, so it runs the same under dash, BusyBox and the Bash 3.2 that
+  macOS ships.
+
+A breach prints:
+
+```text
+lib/core/breach_uses_edge.sh:6:  adapters_print 'breach'
+the core must not use adapters
+```
+
+The check reads text, so it misses a path or a name built at run time,
+such as `. "${APP_LIB}/${layer}/${layer}.sh"`, and anything run through
+`eval`. It doesn't check global variables either. Review catches the rest.
+
+Prove the rules bite, as the
+[builder](../../../agents/builder.md) does, with a new file that breaks
+one. Kept as `scripts/breaches/core-uses-edge.patch`, the breach for the
+layer rule is:
+
+```text
+Rule: the core never uses an edge
+Fails with: the core must not use adapters
+diff --git a/lib/core/breach_uses_edge.sh b/lib/core/breach_uses_edge.sh
+new file mode 100644
+index 0000000..d7d2364
+--- /dev/null
++++ b/lib/core/breach_uses_edge.sh
+@@ -0,0 +1,7 @@
++# shellcheck shell=sh
++#
++# A breach: the core calls an edge.
++
++core_breach() {
++  adapters_print 'breach'
++}
+```
+
+The breach passes `shfmt` and ShellCheck, so `scripts/check` fails on the
+layer rule and not on a lint error first. To let one existing breach
+through, add a `grep -v` for its file to that rule's pipeline, with a
+comment naming the breach and how to fix it.
+
 ## Sources
 
 - [universalmutator](https://github.com/agroce/universalmutator)
 - [universalmutator on PyPI](https://pypi.org/project/universalmutator/1.14.1/)
+- [POSIX.1-2017: the dot utility](https://pubs.opengroup.org/onlinepubs/9699919799/utilities/V3_chap02.html#dot)
+- [ShellCheck directives](https://github.com/koalaman/shellcheck/wiki/Directive)
