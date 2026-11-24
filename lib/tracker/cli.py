@@ -43,10 +43,16 @@ list, such as .labels[].name. Issues are saved as JSON with id, title,
 body, state ("open" or "closed"), labels, url and comments, each comment
 with its author and body; nothing an issue says is printed.
 
-Approval is kept in the repository's git directory, never in the
-checkout: the file's hash, its text, and any program allowed beyond the
-known ones. Any change to the file needs approving again. Approving needs
-a terminal, so the user does it in their own; agents have none.
+Approval is kept outside the repository, in the user's configuration
+directory, $XDG_CONFIG_HOME/vibes/tracker-approvals/ or else
+~/.config/vibes/tracker-approvals/, one file for each repository and its
+worktrees: the file's hash, its text, and any program allowed beyond the
+known ones. A sandboxed agent, such as in Claude Code's sandbox, can
+write only its working directory, so it can't approve. Any change to the
+file needs approving again. Approving needs a terminal, so the user does
+it in their own; agents have none. check says on a second line whether
+this shell could write the approval itself: GUARDED when it can't, or
+UNGUARDED when only the hook and the terminal stand in the way.
 
 Exits 0; 1 when a command fails or a pull request isn't found; 2 on bad
 input or a file that breaks the rules; 3 when the tracker isn't approved
@@ -68,7 +74,8 @@ from pathlib import Path
 from typing import Any, Sequence
 
 FILE = ".vibes-tracker"
-APPROVAL = "vibes-tracker-approved.json"
+# Where approvals are kept, under the user's configuration directory.
+APPROVALS = Path("vibes") / "tracker-approvals"
 TEMPLATES = Path(__file__).resolve().parents[2] / "skills" / "tracker" / \
     "templates"
 # The tools trackers ship, which a file may run without being allowed one
@@ -332,11 +339,36 @@ def tracker_text(root: Path) -> tuple[str, str]:
         raise Missing(f"NO TRACKER: {branch} has no {FILE}") from None
 
 
+def approvals_dir() -> Path:
+    config = os.environ.get("XDG_CONFIG_HOME") or \
+        os.path.join(os.path.expanduser("~"), ".config")
+    return Path(config) / APPROVALS
+
+
 def approval_path(root: Path) -> Path:
+    """The repository's approval: named for its git directory, which its
+    worktrees share, so they share it too."""
     common = Path(git("rev-parse", "--git-common-dir", cwd=root).strip())
     if not common.is_absolute():
         common = root / common
-    return common / APPROVAL
+    common = common.resolve()
+    name = re.sub(r"[^A-Za-z0-9._-]", "-", common.parent.name) or "repo"
+    key = hashlib.sha256(str(common).encode()).hexdigest()[:16]
+    return approvals_dir() / f"{name}-{key}.json"
+
+
+def guarded() -> bool:
+    """Whether this shell is kept from writing approvals, as in a sandbox:
+    it tries to make a file where they're kept, and removes it."""
+    try:
+        directory = approvals_dir()
+        directory.mkdir(parents=True, exist_ok=True)
+        probe = directory / f".probe-{os.getpid()}"
+        probe.write_text("", encoding="utf-8")
+        probe.unlink()
+    except OSError:
+        return True
+    return False
 
 
 def digest(text: str) -> str:
@@ -708,6 +740,7 @@ def approve(root: Path, allowed: Sequence[str]) -> int:
         if terminal.readline().strip() != "approve":
             say("Not approved.\n")
             return 3
+        path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({
             "sha256": digest(text), "content": text,
             "programs": [p for p in allowed if p in tracker.programs()],
@@ -765,6 +798,14 @@ def main(argv: Sequence[str]) -> int:
         tracker = approved_tracker(root)
         if command == "check":
             print(f"APPROVED: {FILE} on {default_branch(root)}")
+            if guarded():
+                print("GUARDED: this shell can't write the approval, so no "
+                      "agent in it can approve for the user.")
+            else:
+                print("UNGUARDED: this shell could write the approval "
+                      "itself; only the hook and the terminal stop an "
+                      "agent approving. Run agents in a sandbox, as vibes' "
+                      "README says, so only the user can.")
         elif command == "whoami":
             print(whoami(tracker, root))
         elif command == "list":

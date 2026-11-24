@@ -149,8 +149,11 @@ guides behave, and says so under **Changed**.
   GitHub or GitLab, or writes one for another tracker from its CLI's
   documentation.
   - **You approve the commands** in your own terminal, with `tracker
-    approve`, and any change needs approving again. The file is read from
-    the default branch, never the checkout.
+    approve`, and any change needs approving again. The approval is kept
+    in `~/.config/vibes/tracker-approvals/`, outside the repository, where
+    an agent in Claude Code's sandbox can't write, and `tracker check`
+    says whether the session is so guarded. The file is read from the
+    default branch, never the checkout.
   - **No shell:** each command is one program and its arguments, each
     value is checked before it fills a placeholder, only `{body-file}`
     names a file, and the commands get only the tokens the file names.

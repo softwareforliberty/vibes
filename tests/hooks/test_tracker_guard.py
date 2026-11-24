@@ -46,10 +46,13 @@ class ApproveTest(unittest.TestCase):
                     self.assertIn("own terminal", result.stderr)
 
     def test_no_agent_touches_the_approval(self) -> None:
-        path = "/p/.git/vibes-tracker-approved.json"
-        self.assertEqual(guard(bash(f"echo '{{}}' > {path}")).returncode, 2)
-        self.assertEqual(guard({"tool_name": "Write", "tool_input": {
-            "file_path": path, "content": "{}"}}).returncode, 2)
+        for path in ("/home/u/.config/vibes/tracker-approvals/p-1.json",
+                     "/p/.git/vibes-tracker-approved.json"):
+            with self.subTest(path=path):
+                self.assertEqual(
+                    guard(bash(f"echo '{{}}' > {path}")).returncode, 2)
+                self.assertEqual(guard({"tool_name": "Write", "tool_input": {
+                    "file_path": path, "content": "{}"}}).returncode, 2)
 
     def test_reading_leaves_it_alone(self) -> None:
         for command in (f"{TRACKER} check", f"{TRACKER} list",

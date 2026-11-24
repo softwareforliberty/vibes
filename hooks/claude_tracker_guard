@@ -4,8 +4,10 @@
 # tracker, through bin/tracker and .vibes-tracker:
 #
 # - Only the user approves the tracker's commands, in their own terminal,
-#   so no agent may run `tracker approve`, or touch the approval kept in the
-#   git directory, vibes-tracker-approved.json.
+#   so no agent may run `tracker approve`, or touch the approvals kept in
+#   ~/.config/vibes/tracker-approvals/. In a sandbox, such as Claude
+#   Code's, the system stops agents writing there anyway; this hook is for
+#   sessions without one.
 # - Public operations, such as a comment or a pull request, run only from
 #   `tracker post <batch>`. A subagent may never run it; the main agent's
 #   batch is shown to the user to confirm, or refused where the host can't
@@ -21,7 +23,8 @@ set -euo pipefail
 # shellcheck source=hooks/lib/hook_input.sh
 source "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/lib/hook_input.sh"
 
-readonly APPROVAL='vibes-tracker-approved'
+# The approvals' directory, and the name approvals had before it.
+readonly APPROVALS_RE='tracker-approvals|vibes-tracker-approved'
 readonly TRACKER_FILE='.vibes-tracker'
 # bin/tracker, however it's named, then the command and its first argument.
 readonly TRACKER_RE='(^|[^A-Za-z0-9_.-])tracker["'"'"']?[[:space:]]+(approve|post)([[:space:]]+["'"'"']?([^"'"'"'[:space:];&|]+))?'
@@ -48,10 +51,10 @@ check_command() {
   local input="$1" agent="$2" command cwd lines
   command="$(hook::json_field "${input}" '.tool_input.command')"
   [[ -n "${command}" ]] || return 0
-  if [[ "${command}" == *"${APPROVAL}"* ]]; then
+  if [[ "${command}" =~ ${APPROVALS_RE} ]]; then
     refuse "only the user approves the tracker's commands, by running" \
       "\`tracker approve\` in their own terminal. No agent may touch" \
-      "${APPROVAL}.json."
+      "the approvals."
   fi
   [[ "${command}" =~ ${TRACKER_RE} ]] || return 0
   if [[ "${BASH_REMATCH[2]}" == approve ]]; then
@@ -77,7 +80,7 @@ check_write() {
   local input="$1" agent="$2" path
   path="$(hook::json_field "${input}" '.tool_input.file_path')"
   [[ -n "${path}" ]] || return 0
-  if [[ "${path}" == *"${APPROVAL}"* ]]; then
+  if [[ "${path}" =~ ${APPROVALS_RE} ]]; then
     refuse "only the user approves the tracker's commands, by running" \
       "\`tracker approve\` in their own terminal."
   fi

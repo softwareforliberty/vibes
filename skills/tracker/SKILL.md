@@ -31,9 +31,10 @@ repository's root. Its rules, at the top of
 doing harm:
 
 - **The user approves the commands, not the repository.** `tracker
-  approve` shows every command and records the user's approval in the git
-  directory, never the checkout. It needs a terminal, so the user runs it
-  in their own; no agent can, and a hook stops any that tries. Any change
+  approve` shows every command and records the user's approval outside
+  the repository, in `~/.config/vibes/tracker-approvals/`, where an agent
+  in a sandbox can't write. It needs a terminal, so the user runs it in
+  their own; no agent can, and a hook stops any that tries. Any change
   to the file needs approving again.
 - **It's read from the default branch,** so a branch, or a contributor's
   pull request checked out, can't change what runs.
@@ -87,7 +88,14 @@ doing harm:
    with `${CLAUDE_PLUGIN_ROOT}` written out as the path. It shows each
    command, and asks them to type `approve`. A program that isn't a known
    tracker tool needs `--allow-program <name>` too. Never run it yourself,
-   and never write or edit anything named `vibes-tracker-approved`.
+   and never write or edit anything in `tracker-approvals`.
+7. **Say whether the approval is guarded:** `tracker check`'s second
+   line is `GUARDED` when this session's shell can't write the approval,
+   as in a sandbox, or `UNGUARDED` when it could. When it's `UNGUARDED`,
+   tell the user once that an agent turned against them could approve
+   for them, and that running in Claude Code's sandbox, with
+   `sandbox.allowUnsandboxedCommands` set to `false`, stops that, as
+   vibes' README says under "Your issue tracker".
 
 ## Before using the tracker
 

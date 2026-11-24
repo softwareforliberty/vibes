@@ -10,14 +10,19 @@ import json
 import os
 import pty
 import shutil
+import stat
 import subprocess
 import tempfile
+import sys
 import unittest
 from datetime import date
+from pathlib import Path
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(
     os.path.abspath(__file__))))
 SCRIPT = os.path.join(ROOT, "bin", "tracker")
+sys.path.insert(0, os.path.join(ROOT, "lib"))
+from tracker.cli import approval_path  # noqa: E402
 with open(os.path.join(ROOT, "skills", "tracker", "templates",
                        "github.tracker"), encoding="utf-8") as _stream:
     GITHUB = _stream.read()
@@ -57,6 +62,7 @@ class Case(unittest.TestCase):
         self.tmp = os.path.realpath(tempfile.mkdtemp())
         self.repo = os.path.join(self.tmp, "repo")
         self.bin = os.path.join(self.tmp, "bin")
+        self.config = os.path.join(self.tmp, "config")
         self.log = os.path.join(self.tmp, "gh.log")
         os.makedirs(self.repo)
         os.makedirs(self.bin)
@@ -87,11 +93,23 @@ class Case(unittest.TestCase):
             stream.write(text)
         return full
 
+    def approval(self) -> Path:
+        """Where `tracker approve` keeps this repository's approval."""
+        saved = os.environ.get("XDG_CONFIG_HOME")
+        os.environ["XDG_CONFIG_HOME"] = self.config
+        try:
+            return approval_path(Path(self.repo))
+        finally:
+            if saved is None:
+                del os.environ["XDG_CONFIG_HOME"]
+            else:
+                os.environ["XDG_CONFIG_HOME"] = saved
+
     def approve_as_is(self, text: str = GITHUB) -> None:
         """Records an approval as `tracker approve` would."""
-        with open(os.path.join(self.repo, ".git",
-                               "vibes-tracker-approved.json"), "w",
-                  encoding="utf-8") as stream:
+        path = self.approval()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with path.open("w", encoding="utf-8") as stream:
             json.dump({"sha256": hashlib.sha256(text.encode()).hexdigest(),
                        "content": text, "programs": [],
                        "approved": date.today().isoformat()}, stream)
@@ -102,7 +120,7 @@ class Case(unittest.TestCase):
             [SCRIPT, *args], cwd=self.repo, text=True, capture_output=True,
             check=False,
             env={**os.environ, "PATH": f"{self.bin}:/usr/bin:/bin",
-                 **(env or {})})
+                 "XDG_CONFIG_HOME": self.config, **(env or {})})
 
     def calls(self) -> list[dict]:
         if not os.path.exists(self.log):
@@ -144,6 +162,7 @@ class ApprovalTest(Case):
         pid, fd = pty.fork()
         if pid == 0:
             os.chdir(self.repo)
+            os.environ["XDG_CONFIG_HOME"] = self.config
             os.execv(SCRIPT, [SCRIPT, "approve", *args])
         output = b""
         sent = False
@@ -167,6 +186,34 @@ class ApprovalTest(Case):
         self.assertIn("gh issue comment {id} --body-file {body-file}", shown)
         self.assertIn("Approved.", shown)
         self.assertEqual(self.tracker("check").returncode, 0)
+
+    def test_approval_is_kept_outside_the_repository(self) -> None:
+        self.answer(reply="approve")
+        self.assertTrue(self.approval().is_file())
+        self.assertTrue(str(self.approval()).startswith(self.config))
+        self.assertFalse(any("approv" in name for name in
+                             os.listdir(os.path.join(self.repo, ".git"))))
+
+    def test_worktrees_share_the_approval(self) -> None:
+        self.approve_as_is()
+        worktree = os.path.join(self.tmp, "wt")
+        self.git("worktree", "add", "-q", "--detach", worktree)
+        result = subprocess.run(
+            [SCRIPT, "check"], cwd=worktree, text=True, capture_output=True,
+            check=False, env={**os.environ, "XDG_CONFIG_HOME": self.config})
+        self.assertEqual(result.returncode, 0, result.stdout)
+
+    def test_says_whether_this_shell_could_approve(self) -> None:
+        self.approve_as_is()
+        self.assertIn("\nUNGUARDED:", self.tracker("check").stdout)
+        directory = self.approval().parent
+        directory.chmod(stat.S_IRUSR | stat.S_IXUSR)
+        try:
+            result = self.tracker("check")
+        finally:
+            directory.chmod(stat.S_IRWXU)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("\nGUARDED:", result.stdout)
 
     def test_anything_but_approve_is_no(self) -> None:
         self.assertIn("Not approved.", self.answer(reply="yes"))

@@ -530,10 +530,11 @@ one in layers:
 
 - **You approve the commands, not the repository.** Nothing runs until
   you run `bin/tracker approve` in your own terminal. It shows every
-  command, and keeps your approval in the repository's git directory,
-  never in the checkout, so nothing committed can approve itself. Any
-  change needs approving again, and an unattended `/vibes:pickup`
-  stops rather than run a changed file.
+  command, and keeps your approval outside the repository, in
+  `~/.config/vibes/tracker-approvals/`, so nothing committed can approve
+  itself, and an agent in a sandbox can't write it. Any change needs
+  approving again, and an unattended `/vibes:pickup` stops rather than
+  run a changed file.
 - **It's read from the default branch,** never the checkout, so a branch,
   or a contributor's pull request you've checked out, can't change it.
 - **No shell.** Each command is one program and its arguments, run
@@ -554,10 +555,22 @@ one in layers:
   before a commit that changes it, and `/vibes:review-pr` marks a change
   to it HIGH.
 
+**Run agents in a sandbox** for the approval to hold against an agent
+that's turned on you, such as by instructions planted in an issue. Agents
+have no terminal, but a program can fake one, and a command can write the
+approval without naming it, so outside a sandbox the hook only stops
+mistakes. In Claude Code's sandbox, commands can write only the working
+directory and a temporary one, so no agent, subagent or program they
+start can approve: vibes tested it, and both were refused with
+"Operation not permitted". Turn it on with `/sandbox`, and set
+`sandbox.allowUnsandboxedCommands` to `false`, so a refused command can't
+be run again outside it. `bin/tracker check` says which you have: a
+`GUARDED` line when its shell can't write the approval, or `UNGUARDED`
+when it could.
+
 What's left: a command you approve yourself runs as you, so read them
-before you approve. Agents have no terminal, but a program can fake one,
-so the hook that stops agents approving guards against mistakes and
-instructions picked up from an issue, not a determined attacker. And
+before you approve. An agent outside a sandbox can use your credentials
+directly anyway, without the tracker. And
 `/vibes:review-pr` still fetches GitHub pull requests with `gh` directly,
 as [Review a pull request from outside](#review-a-pull-request-from-outside)
 says, since its commands are fixed and part of vibes, not the project's.
