@@ -120,6 +120,16 @@ to answer, and carries none of the project's token, `.env` or code
 paths. Run it with `--tag questionnaire --allow-tools Write Edit
 "Bash(ls *)" "Bash(mkdir *)"`.
 
+**`wizard-writer-follows-the-plan`** gives the wizard writer a plan and
+research notes for setting up a made-up payment provider: a new secret
+key, revoking the old one, which can't be undone, and an account id. It
+passes when the wizard parses, keeps the library unchanged, asks for the
+key hidden and the id visibly, saves each where the plan says, confirms
+before revoking, cites the documentation, follows the notes' steps
+without adding any, holds no example secret, and nothing outside
+`.vibes/` changed. Run it with `--tag wizard --allow-tools Write
+"Bash(*/tree-check)" "Bash(*/wizard-check *)" "Bash(cat *)" "Bash(ls *)"`.
+
 The **`survey`** cases work on orders, a small Python library whose
 pricing is split into one-line modules that three callers sequence
 themselves, one in the wrong order, beside a deep storage module a
@@ -159,6 +169,7 @@ suggestions, cites the calls behind each one, and leaves the tree clean.
 | `prototype_cases.py` | The prototypes' projects and cases, which `generate.py` writes too |
 | `questionnaire_cases.py` | The questionnaire's project and case, which `generate.py` writes too |
 | `survey_cases.py` | The survey's project, history and cases, which `generate.py` writes too |
+| `wizard_cases.py` | The wizard writer's project, plan, notes and case, which `generate.py` writes too |
 | `retro_cases.py` | The retrospective's project, session and case, which `generate.py` writes too |
 | `fixtures/` | Each variant's project and review directory, generated |
 | `<case>/` | Each case's prompt, graders and setup script, generated |

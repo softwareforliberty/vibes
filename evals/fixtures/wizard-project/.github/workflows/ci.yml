@@ -1,0 +1,10 @@
+name: CI
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      ACMEPAY_SECRET_KEY: ${{ secrets.ACMEPAY_SECRET_KEY }}
+      ACMEPAY_ACCOUNT_ID: ${{ vars.ACMEPAY_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v5
