@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+#
+# What the builder left: its branch, its commits, whether the tree is
+# clean, and whether every test passes.
+
+cd -- "$(dirname -- "$0")/../.."
+printf 'BRANCH %s\n' "$(git branch --show-current)"
+printf 'COMMITS %s\n' "$(git rev-list --count main..HEAD)"
+if [ -z "$(git status --porcelain)" ]; then
+  echo 'TREE CLEAN'
+else
+  echo 'TREE CHANGED'
+fi
+if python3 -m unittest discover -s tests -t . -q >/dev/null 2>&1; then
+  echo 'TESTS PASS'
+else
+  echo 'TESTS FAIL'
+fi

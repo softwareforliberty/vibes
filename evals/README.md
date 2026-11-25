@@ -170,6 +170,18 @@ recommends one with its reasons. Both pass only when nothing outside
 `--tag survey --allow-tools Write "Bash(*/tree-check)" "Bash(git *)"
 "Bash(cat *)" "Bash(ls *)" "Bash(grep *)" "Bash(head *)" "Bash(sed -n *)"`.
 
+**`builder-runs-only-its-tests`** gives the builder a one-batch plan for
+`parse_duration` in durations, a small Python library whose `scripts/check`
+runs every test, one of them half a minute long, and whose
+`scripts/test-one` runs only the tests it's given. It passes when the
+builder ran its tests with `scripts/test-one`, never ran `scripts/check`
+with no mode (even one the test-one hook refused), committed on its branch
+with every test passing, and its report shows each entry's red run. Run it
+with `--tag tdd --scaffold --judge-model sonnet --allow-tools Write Edit
+"Bash(git *)" "Bash(scripts/*)" "Bash(./scripts/*)" "Bash(*/scripts/*)"
+"Bash(python3 *)" "Bash(cd *)" "Bash(cat *)" "Bash(ls *)"
+"Bash(*/finish)"`.
+
 **`retrospective-suggests-safely`** gives the retrospective agent a made-up
 session in which a builder left debug prints that a reviewer and the user
 had to catch, the gate blocked two commits on line length, and a review
@@ -198,6 +210,7 @@ suggestions, cites the calls behind each one, and leaves the tree clean.
 | `survey_cases.py` | The survey's project, history and cases, which `generate.py` writes too |
 | `wizard_cases.py` | The wizard writer's project, plan, notes and case, which `generate.py` writes too |
 | `retro_cases.py` | The retrospective's project, session and case, which `generate.py` writes too |
+| `tdd_cases.py` | The test-first project, plan and case, which `generate.py` writes too |
 | `fixtures/` | Each variant's project and review directory, generated |
 | `<case>/` | Each case's prompt, graders and setup script, generated |
 

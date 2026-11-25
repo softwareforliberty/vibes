@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+#
+# Run only the tests given, while you work: test files, such as
+# tests/test_parse.py, or single tests, such as
+# tests/test_parse.py::ParseSecondsTest::test_reads_whole_seconds. With no
+# test, it lists them. The gate runs every test on each commit.
+
+set -euo pipefail
+
+cd -- "$(dirname -- "$0")/.."
+if (($# == 0)); then
+  python3 -c '
+import unittest
+def walk(suite):
+    for item in suite:
+        if isinstance(item, unittest.TestSuite):
+            yield from walk(item)
+        else:
+            yield item.id()
+for name in walk(unittest.defaultTestLoader.discover("tests", top_level_dir=".")):
+    print(name)
+'
+  exit 0
+fi
+names=()
+for test; do
+  test="${test/.py::/::}"
+  test="${test%.py}"
+  test="${test//\//.}"
+  names+=("${test//::/.}")
+done
+python3 -m unittest -q "${names[@]}"

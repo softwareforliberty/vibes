@@ -38,6 +38,7 @@ import questionnaire_cases
 import research_cases
 import retro_cases
 import survey_cases
+import tdd_cases
 import wizard_cases
 
 EVALS = Path(__file__).resolve().parent
@@ -859,6 +860,7 @@ def main() -> None:
     wizard_cases.build()
     wizard_cases.build_runbook()
     grill_cases.build()
+    tdd_cases.build()
 
 
 if __name__ == "__main__":
