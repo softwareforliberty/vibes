@@ -592,7 +592,9 @@ apply to it.
    answers to a fresh fixer. For a small task's spec, which you wrote,
    decide on and fix the findings yourself. In the rebuild phase, check
    the fixer's commits are on the right branch and the working tree is
-   clean.
+   clean, then run the slow tests before the next round:
+   `"${CLAUDE_PLUGIN_ROOT}/bin/check-all"` in the shell's background mode, as Phase 6
+   step 5 says, with a `FAILED` going to a fresh fixer.
 5. **Start the next round** with only the reviewers whose verdict was
    `CHANGES REQUESTED`, to check the fixes to their BLOCKER and MAJOR
    findings and any rejections. A fix to a MINOR finding isn't reviewed
@@ -840,21 +842,30 @@ below that mention one don't apply.
    `.vibes/<name>/build-<batch>.md`. The spec and design are the source of
    truth: for a large task, as the spike phase left them.
 3. **Check each batch** before the next: its commits are on the rebuild
-   branch, the working tree is clean, the plan's entries are ticked off,
-   and the builder's reply says `scripts/check --all` passed. After the
+   branch, the working tree is clean, and the plan's entries are ticked
+   off. After the
    first batch, and any batch that creates a component, check its report
    proves each of the component's boundary rules with the line its breach
    failed on, and names its breach in `scripts/breaches/`. Don't run
-   `scripts/check` yourself: the gate ran it on every commit, and the
-   builder ran the slow tests. Check the guides on the branch's changes, as
+   `scripts/check` yourself: the gate ran it on every commit. Check the
+   guides on the branch's changes, as
    [Keep the guides current](#keep-the-guides-current) describes, and
    update `state.md`.
 4. **Decide what the builder couldn't,** such as a spec change that alters
    what the user asked for, which you ask the user about. Then carry on
    with the next batch.
 
-By the end of the build, every entry is ticked off, and the spec and design
-hold every change from the spike phase.
+5. **Run the slow tests once,** when every batch is built and joined:
+   `"${CLAUDE_PLUGIN_ROOT}/bin/check-all"`, in the shell's background mode, on the
+   rebuild branch with a clean working tree. It runs
+   `scripts/check --all`, unless it already passed on the same files, and
+   ends with `PASSED` or `FAILED`. On `FAILED`, give the output to a fresh
+   `vibes:builder` in `fix` mode, then run it again. Builders don't run it
+   per batch: on a project whose slow tests take most of an hour, one run
+   here replaces one for every batch.
+
+By the end of the build, every entry is ticked off, the slow tests pass,
+and the spec and design hold every change from the spike phase.
 
 ## Phase 7: Review the rebuild
 
@@ -892,7 +903,8 @@ with `git worktree remove --force .vibes/<name>/audit`.
    same way, only when a commit since the audited one changed the
    project's dependencies, such as a manifest or lock file. The review's
    fixes went through the gate and the reviewers.
-2. Check `git status` is clean and `scripts/check --all` passes, and that
+2. Check `git status` is clean and `"${CLAUDE_PLUGIN_ROOT}/bin/check-all"` prints `PASSED`
+   (at once, when nothing changed since its last run), and that
    every boundary rule still bites:
    `"${CLAUDE_PLUGIN_ROOT}/bin/rules-bite"` prints `BITES` for each
    breach, or `NO BREACHES` for a task with no design. Have anything else

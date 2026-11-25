@@ -48,6 +48,10 @@ while holding it to the standards of careful, experienced developers.
   kept in `scripts/breaches/`, to a throwaway copy, and checks
   `scripts/check` still catches it. It's in `lib/rules_bite/`, and its
   tests in `tests/rules_bite/`.
+- **`bin/check-all`:** runs `scripts/check --all`, unless the same files
+  already passed, as the workflows do once a task's batches are built,
+  before each review round and at the finish. It's in `lib/check_all/`,
+  and its tests in `tests/check_all/`.
 - **`bin/tracker`:** reaches the project's issue tracker through the
   commands it names in `.vibes-tracker`, only as you approved them, as
   [Your issue tracker](#your-issue-tracker) says. It's in `lib/tracker/`,
@@ -924,8 +928,10 @@ Once it exists, the gate:
 `scripts/check` runs its static checks first, and stops before the tests
 if any fail, since the tests are the slow part. It runs only the fast
 tests; the slow ones, such as boot or smoke tests, run with
-`scripts/check --all`, once at the end of each batch of work and before a
-task finishes.
+`scripts/check --all`, once a task's batches are built, before each review
+round and before the task finishes. They run through vibes' `bin/check-all`,
+which remembers each set of files that passed, so a tree that already
+passed isn't run again.
 
 Alongside it, `scripts/check-file` runs the per-file checks, formatting in
 rewrite mode and linting, on the files it's given. The plugin runs it on

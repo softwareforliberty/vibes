@@ -320,7 +320,8 @@ round limit is 5.
    change in one more `rebuild` round with the spec and bug reviewers.
 2. **No debug tag is left:** `git diff <base commit>...HEAD` has no
    `vibes-debug-<slug>`. The gate refuses one, so this should hold.
-3. **Check `git status` is clean** and `scripts/check --all` passes.
+3. **Check `git status` is clean** and `"${CLAUDE_PLUGIN_ROOT}/bin/check-all"` prints
+   `PASSED`.
 4. **Write a wizard for what only the user can set up:** if
    `"${CLAUDE_PLUGIN_ROOT}/bin/setup-needs" <base commit>` lists anything,
    such as an API key the fix now reads, write

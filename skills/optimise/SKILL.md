@@ -364,9 +364,10 @@ benchmark is built like any other entry, with the language's own benchmark
 tool, never `bin/bench`, and the gate runs it only at its small size.
 
 After each batch, check its commits are on the rebuild branch, the tree is
-clean, the plan's entries are ticked off, and the builder's reply says
-`scripts/check --all` passed, and check the guides. Don't run
-`scripts/check` yourself: the gate ran it on every commit.
+clean and the plan's entries are ticked off, and check the guides. Don't
+run `scripts/check` yourself: the gate ran it on every commit. When every
+batch is built, run the slow tests once, as the vibe skill's Phase 6
+step 5 says, with `"${CLAUDE_PLUGIN_ROOT}/bin/check-all"`.
 
 ## Phase 7: Verify the rebuild
 
@@ -398,7 +399,7 @@ clean, the plan's entries are ticked off, and the builder's reply says
 1. **Finish the audit** from Phase 7, as the vibe skill's Phase 8 says:
    wait for it, have its failures fixed, and run it again only when a
    commit since the audited one changed the project's dependencies.
-2. Check `git status` is clean and `scripts/check --all` passes.
+2. Check `git status` is clean and `"${CLAUDE_PLUGIN_ROOT}/bin/check-all"` prints `PASSED`.
 3. **Write a wizard for what only the user can set up:** if
    `"${CLAUDE_PLUGIN_ROOT}/bin/setup-needs" <base>` lists anything, such
    as an API key the code now reads, write

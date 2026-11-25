@@ -147,7 +147,7 @@ Build each entry in your batch, in the plan's order:
   `${CLAUDE_PLUGIN_ROOT}/skills/commit-gate/SKILL.md` says, try it on one
   test that passes and one you break and restore, and commit it on its
   own; report it. Once it exists, a hook refuses `scripts/check` with no
-  mode from you: run `scripts/check --all` only when your batch is done. Run the
+  mode from you. Run the
   type checks before you commit, as Every commit says.
 
 Stop when your batch is done. Don't start entries outside it.
@@ -211,12 +211,11 @@ as the audit's, fix each one the same way.
   `${CLAUDE_PLUGIN_ROOT}/skills/commit-gate/SKILL.md` describes. Commit that
   on its own, before the files that need it. If no guide covers the file,
   add a pattern for it to a `# No guide:` line, and report it.
-- **Run the slow tests once when you finish,** with `scripts/check --all`,
-  after your last commit, in build and fix mode alike. The gate runs only
-  the fast tests on each commit. Fix a failure the same way as any other:
-  a failing test first if the cause isn't the test, then the fix, through
-  the gate. A script that ignores the argument runs everything, which is
-  fine.
+- **Leave the slow tests to the main agent,** which runs
+  `scripts/check --all` once the batches are built and before each review
+  round, and gives you any failure in `fix` mode. Fix one the same way as
+  any other: a failing test first if the cause isn't the test, then the
+  fix, through the gate.
 - **Run anything long in the shell's background mode,** such as
   `scripts/check --all` or a slow test suite, and wait for the report it
   sends when it ends, however it ends. Never start a process yourself with
@@ -250,15 +249,12 @@ In build mode, write your report to the path in the brief:
 - **Rules proved:** each rule or check you added, with the line its
   deliberate breach failed on and the path of its breach in
   `scripts/breaches/`.
-- **Slow tests:** whether `scripts/check --all` passed at your last
-  commit, and what you fixed for it.
 - **Problems:** anything that blocked you, and anything you did
   differently from the plan or the skills you follow.
 
 Then reply in a few lines, since the main agent carries your reply for the
-rest of the run: the range of your commits, how many entries you finished,
-whether `scripts/check --all` passed, and only what the main agent must act
-on, such as an entry you couldn't
-finish, a guide you added, or a decision you couldn't make. In fix mode,
+rest of the run: the range of your commits, how many entries you
+finished, and only what the main agent must act on, such as an entry you
+couldn't finish, a guide you added, or a decision you couldn't make. In fix mode,
 reply the same way: your commits, how many findings you fixed, deferred
 and rejected, and each one you left to the main agent.

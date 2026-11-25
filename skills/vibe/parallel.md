@@ -70,10 +70,12 @@ every commit in a line, as a run that built one batch at a time would.
       work.
    2. **Check the result** if the rebase moved anything, because the
       rebuild branch had changed since the batch started: run
-      `cd .vibes/workers/<k> && scripts/check --all`. If it fails, give
-      the failure to a builder in `fix` mode in that worktree, and check
-      again. The rebased commits each passed the gate where they were
-      made; this check covers them where they now sit.
+      `cd .vibes/workers/<k> && scripts/check`, the fast checks and
+      tests. If it fails, give the failure to a builder in `fix` mode in
+      that worktree, and check again. The rebased commits each passed the
+      gate where they were made; this check covers them where they now
+      sit. The slow tests run once, when every batch is joined, as
+      Phase 6 step 5 says.
    3. **Move the rebuild branch on,** in the main checkout:
 
       ```sh

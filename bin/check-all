@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#
+# Runs the project's scripts/check --all, unless it already passed on the
+# same files:
+#
+#   check-all [--tree <dir>]
+#
+# lib/check_all/cli.py describes what it records and prints. Exits 0 when
+# it passed, now or before, 1 when it failed, and 2 on an error. Needs
+# Python 3.9 or later.
+
+set -euo pipefail
+
+ROOT="$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/.."
+readonly ROOT
+
+# -I ignores PYTHON* variables and the user's site directory, and -S skips
+# site, so nothing outside the plugin is imported. -I also leaves the
+# script's own directory off the path, so lib/ is added here.
+exec python3 -I -S -c 'import sys; sys.path.insert(0, sys.argv.pop(1)); from check_all.cli import main; sys.exit(main(sys.argv[1:]))' \
+  "${ROOT}/lib" "$@"

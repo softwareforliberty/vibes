@@ -122,9 +122,10 @@ the tests:
 - **The fast tests,** with the coverage minimum from `tools.md`: every
   test but the slow ones.
 
-**The slow tests** run only with `scripts/check --all`, which the builders
-run once at the end of each batch, the vibe workflow runs before it
-finishes, and `scripts/audit` runs. A test is slow when it takes more than
+**The slow tests** run only with `scripts/check --all`, which the vibe
+workflow runs once its batches are built, before each review round and
+before it finishes, through vibes' `bin/check-all`, which skips a tree that
+already passed; `scripts/audit` runs it too. A test is slow when it takes more than
 about ten seconds, or needs a virtual machine, an emulator, a container or
 a browser, such as a boot or smoke test. Mark them with the test runner's
 own mechanism, such as a pytest marker, an ignored Rust test run with
@@ -138,7 +139,7 @@ waits for them.
 | --- | --- | --- |
 | `scripts/check` | The static checks, then the fast tests | The gate, on every commit |
 | `scripts/check --static` | The static checks | The gate, on a commit of documents only |
-| `scripts/check --all` | The static checks, then every test | The end of each batch, the finish, and `scripts/audit` |
+| `scripts/check --all` | The static checks, then every test | `bin/check-all`, once the batches are built, before each review round and at the finish; `scripts/audit` |
 
 Architecture rules and requirement markers count as static checks when
 they don't run the tests. Put an architecture rule that is itself a test

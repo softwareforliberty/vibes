@@ -10,6 +10,15 @@ guides behave, and says so under **Changed**.
 
 ### Added
 
+- **`bin/check-all`, and the slow tests once per build, not per batch.**
+  `bin/check-all` runs `scripts/check --all` unless the same files already
+  passed, remembered in the repository's shared git folder, so a worker's
+  worktree and the main checkout share them. Builders no longer run the
+  slow tests at the end of each batch: the main agent runs them once the
+  batches are built and joined, before each rebuild review round, and at
+  the finish, where an unchanged tree costs nothing. Joining a parallel
+  batch runs the fast checks only.
+
 - **The gate doesn't check the same commit twice.** After a pass it
   remembers the commit's parent, staged tree and mode, in the git folder,
   and a retry of exactly that commit, as after git refused its message,
