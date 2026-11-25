@@ -8,6 +8,8 @@ guides behave, and says so under **Changed**.
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-25
+
 ### Added
 
 - **Contributing guidelines and a security policy.** `CONTRIBUTING.md`
@@ -577,7 +579,8 @@ The first versioned release.
 - **A worked example** of a large, unattended run, in
   [`docs/example/`](docs/example/README.md).
 
-[Unreleased]: https://github.com/softwareforliberty/vibes/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/softwareforliberty/vibes/compare/v0.8.0...HEAD
+[0.8.0]: https://github.com/softwareforliberty/vibes/compare/v0.7.0...v0.8.0
 [0.7.0]: https://github.com/softwareforliberty/vibes/compare/v0.6.1...v0.7.0
 [0.6.1]: https://github.com/softwareforliberty/vibes/compare/v0.6.0...v0.6.1
 [0.6.0]: https://github.com/softwareforliberty/vibes/compare/v0.5.1...v0.6.0
