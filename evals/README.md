@@ -196,6 +196,7 @@ suggestions, cites the calls behind each one, and leaves the tree clean.
 | `source/change/` | The files the clean change adds or replaces |
 | `source/pr-base/`, `source/pr-change/` | strbuf, and the clean pull request's files |
 | `generate.py` | The defect variants, and the code that writes the fixtures and cases |
+| `run` | Runs the evals with `lib/eval-path/git` first on the path, after checking a Mac has a git the sandbox can run |
 | `pr_cases.py` | The pull request variants and cases, which `generate.py` writes too |
 | `source/optimise/`, `source/optimise-run/` | contacts, and the run directory its baseline leaves |
 | `optimise_cases.py` | The optimise candidates and cases, which `generate.py` writes too |
@@ -219,20 +220,21 @@ suggestions, cites the calls behind each one, and leaves the tree clean.
 You need Claude Code 2.1.269 or later. From the repository root:
 
 ```sh
-PATH="$PWD/lib/eval-path:$PATH" \
-  claude plugin eval . --scaffold --ablation none --allow-tools Write "Bash(cat:*)"
+evals/run --scaffold --ablation none --allow-tools Write "Bash(cat:*)"
 ```
 
-- `PATH="$PWD/lib/eval-path:$PATH"` puts a `git` wrapper first on the
+- `evals/run` runs `claude plugin eval` on the plugin, passing its
+  arguments on, with a `git` wrapper, `lib/eval-path/git`, first on the
   path, which every case whose agent runs git needs on macOS. There the
   eval's sandbox won't stat a real git binary, though it will run one, so
   the shell's search for `git` skips Homebrew's, and Apple's
-  `/usr/bin/git` fails, unable to find the Command Line Tools' git. The
-  wrapper runs the next git on the path by its full path, and changes
-  nothing elsewhere. It can't live in `evals/`, which the sandbox hides
-  from the agent, or `bin/`, which Claude Code puts on every session's
-  path. Use it for every command below.
-
+  `/usr/bin/git`, a stand-in, can't find the developer tools' git. The
+  wrapper runs the next git on the path by its full path, or the developer
+  tools' own git in place of Apple's stand-in, and changes nothing
+  elsewhere. It can't live in `evals/`, which the sandbox hides from the
+  agent, or `bin/`, which Claude Code puts on every session's path. On a
+  Mac with neither Homebrew's git nor the Command Line Tools, `evals/run`
+  stops and says how to install one.
 - `--scaffold` lets each case's setup script copy its fixture into the run's
   working directory. The scripts copy files from `fixtures/`, and some
   commit them to a new git repository there. The optimise ones also make
@@ -251,8 +253,7 @@ The optimise cases run commands, so give them the tools their prompts
 list rather than unrestricted Bash:
 
 ```sh
-PATH="$PWD/lib/eval-path:$PATH" \
-  claude plugin eval . --scaffold --ablation none --tag optimise \
+evals/run --scaffold --ablation none --tag optimise \
   --allow-tools Write Edit "Bash(git *)" "Bash(python3 *)" \
   "Bash(*/bin/bench *)" "Bash(*/bench/run *)" "Bash(*/bench/prepare *)" \
   "Bash(command -v *)" "Bash(ls *)" "Bash(cat *)" "Bash(head *)" \
@@ -261,11 +262,10 @@ PATH="$PWD/lib/eval-path:$PATH" \
 
 The retrospective case runs the digest command and a check that nothing
 outside `.vibes/` changed, which stands in for `git status`, so the case
-works without the git wrapper too:
+works without the git wrapper too, under plain `claude plugin eval`:
 
 ```sh
-PATH="$PWD/lib/eval-path:$PATH" \
-  claude plugin eval . --scaffold --ablation none --tag retrospective \
+evals/run --scaffold --ablation none --tag retrospective \
   --allow-tools Write "Bash(*/session-digest *)" "Bash(*/tree-check)" \
   "Bash(git *)" "Bash(cat *)" "Bash(ls *)" "Bash(grep *)" "Bash(head *)" \
   "Bash(sed -n *)"

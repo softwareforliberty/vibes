@@ -4,14 +4,22 @@
 #
 # On macOS, the eval sandbox won't stat a real git binary, though it will
 # run one. So bash's PATH search skips Homebrew's git, and Apple's
-# /usr/bin/git can't find the Command Line Tools' git it runs. This script
-# can be stat'ed, and it runs the real git by its path. The plugin's evals/
-# folder is hidden from the agent and its bin/ goes on every agent's PATH,
-# so the wrapper lives here, and only an eval run puts it on PATH:
+# /usr/bin/git, a stand-in that looks for the developer tools' git, can't
+# find it. This script can be stat'ed, and it runs the real git by its
+# path: the next one on PATH, or, in place of Apple's stand-in, the
+# developer tools' own. The plugin's evals/ folder is hidden from the agent
+# and its bin/ goes on every agent's PATH, so the wrapper lives here, and
+# evals/run puts it first on PATH.
 #
-#   PATH="$PWD/lib/eval-path:$PATH" claude plugin eval . ...
+# With VIBES_EVAL_GIT_SHOW=1, it prints the git it would run and runs
+# nothing, which is how evals/run checks there is one.
 
 set -eu
+
+readonly STAND_IN='/usr/bin/git'
+readonly XCRUN='/usr/bin/xcrun'
+readonly XCODE_SELECT='/usr/bin/xcode-select'
+readonly COMMAND_LINE_TOOLS='/Library/Developer/CommandLineTools'
 
 case $0 in
   */*) self_dir="${0%/*}" ;;
@@ -41,8 +49,24 @@ real_git="$(
     fi
   done
 )"
+
+# Only macOS has xcrun beside its stand-in. The developer tools are where
+# DEVELOPER_DIR or xcode-select says, as xcrun would find them, or else
+# the Command Line Tools.
+if [ "${real_git}" = "${STAND_IN}" ] && [ -x "${XCRUN}" ]; then
+  developer_dir="${DEVELOPER_DIR:-$("${XCODE_SELECT}" -p 2>/dev/null || true)}"
+  developer_git="${developer_dir:-${COMMAND_LINE_TOOLS}}/usr/bin/git"
+  if [ -x "${developer_git}" ]; then
+    real_git="${developer_git}"
+  fi
+fi
+
 if [ -z "${real_git}" ]; then
   echo 'git: no other git on PATH' >&2
   exit 127
+fi
+if [ "${VIBES_EVAL_GIT_SHOW:-}" = 1 ]; then
+  printf '%s\n' "${real_git}"
+  exit 0
 fi
 exec "${real_git}" "$@"

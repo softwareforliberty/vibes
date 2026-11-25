@@ -276,10 +276,13 @@ guides behave, and says so under **Changed**.
 
 - **Evals whose agent runs git now work on macOS.** The eval's sandbox
   won't stat a real git binary, though it will run one, so the shell's
-  search for `git` skipped Homebrew's, and Apple's `/usr/bin/git` couldn't
-  find the Command Line Tools' git. `lib/eval-path/git` runs the next git
-  on the path by its full path, and the evals README puts it first on the
-  path for every run.
+  search for `git` skipped Homebrew's, and Apple's `/usr/bin/git` stand-in
+  couldn't find the developer tools' git. `lib/eval-path/git` runs the next
+  git on the path by its full path, or the developer tools' own git in
+  place of Apple's stand-in, so neither Homebrew nor any setup is needed.
+  `evals/run` runs the evals with it first on the path, and on a Mac with
+  no git the sandbox can run, stops and says to run
+  `xcode-select --install` or `brew install git`.
 - **`bin/capacity` no longer undercounts memory under pressure.** macOS
   compresses an idle process's pages when memory runs short, so sampling
   resident memory could see 9 MB of a command holding 80 MB, and allow too

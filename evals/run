@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# Runs the plugin's evals with lib/eval-path's git wrapper first on PATH,
+# passing every argument on to claude plugin eval:
+#
+#   evals/run --scaffold --ablation none --tag tdd ...
+#
+# On macOS it first checks that the wrapper has a git the eval's sandbox
+# can run, Homebrew's or the developer tools' own, since Apple's
+# /usr/bin/git stand-in can't run there. Other systems need no check.
+# Exits 2 when there's none, and with claude's status otherwise.
+
+set -euo pipefail
+
+ROOT="$(cd -P -- "${BASH_SOURCE[0]%/*}/.." && pwd)"
+readonly ROOT
+readonly EVAL_PATH="${ROOT}/lib/eval-path"
+readonly STAND_IN='/usr/bin/git'
+
+# Says whether the wrapper has a git the sandbox can run.
+has_sandbox_git() {
+  local git_path
+  git_path="$(VIBES_EVAL_GIT_SHOW=1 "${EVAL_PATH}/git" 2>/dev/null)" \
+    || return 1
+  [[ -n "${git_path}" && "${git_path}" != "${STAND_IN}" ]]
+}
+
+main() {
+  export PATH="${EVAL_PATH}:${PATH}"
+  if [[ "${OSTYPE}" == darwin* ]] && ! has_sandbox_git; then
+    cat >&2 <<EOF
+evals/run: no git the eval's sandbox can run, where Apple's ${STAND_IN}
+can't find the developer tools' git. Install the Command Line Tools with
+'xcode-select --install', or Homebrew's git with 'brew install git'.
+EOF
+    exit 2
+  fi
+  exec claude plugin eval "${ROOT}" "$@"
+}
+
+main "$@"

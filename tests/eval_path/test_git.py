@@ -8,6 +8,7 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
@@ -38,9 +39,10 @@ class EvalPathGitTest(unittest.TestCase):
         os.chmod(path, 0o755)
         return directory
 
-    def git(self, path: str, *args: str) -> subprocess.CompletedProcess[str]:
+    def git(self, path: str, *args: str,
+            **env: str) -> subprocess.CompletedProcess[str]:
         return subprocess.run(["git", *args], text=True, capture_output=True,
-                              check=False, env={"PATH": path})
+                              check=False, env={"PATH": path, **env})
 
     def test_runs_the_next_git_on_path_with_its_arguments(self) -> None:
         other = self.fake_git("other")
@@ -73,6 +75,29 @@ class EvalPathGitTest(unittest.TestCase):
         found = self.git(f"{WRAPPER_DIR}:{self.tmp}:/bin")
         self.assertEqual(found.returncode, 127)
         self.assertEqual(found.stderr, "git: no other git on PATH\n")
+
+    def test_show_prints_the_git_it_would_run_and_runs_nothing(self) -> None:
+        other = self.fake_git("other")
+        found = self.git(f"{WRAPPER_DIR}:{other}:{SYSTEM_PATH}", "commit",
+                         VIBES_EVAL_GIT_SHOW="1")
+        self.assertEqual(found.returncode, 0, found.stderr)
+        self.assertEqual(found.stdout, f"{other}/git\n")
+
+    @unittest.skipUnless(sys.platform == "darwin", "Apple's stand-in")
+    def test_runs_the_developer_tools_git_for_apples_stand_in(self) -> None:
+        tools = self.fake_git("developer/usr/bin")
+        found = self.git(f"{WRAPPER_DIR}:{SYSTEM_PATH}", "status",
+                         DEVELOPER_DIR=os.path.join(self.tmp, "developer"))
+        self.assertEqual(found.returncode, 0, found.stderr)
+        self.assertEqual(found.stdout.splitlines(),
+                         [f"fake git from {tools}", "arg <status>"])
+
+    @unittest.skipUnless(sys.platform == "darwin", "Apple's stand-in")
+    def test_keeps_apples_stand_in_without_developer_tools(self) -> None:
+        found = self.git(f"{WRAPPER_DIR}:{SYSTEM_PATH}",
+                         DEVELOPER_DIR=os.path.join(self.tmp, "none"),
+                         VIBES_EVAL_GIT_SHOW="1")
+        self.assertEqual(found.stdout, "/usr/bin/git\n")
 
 
 if __name__ == "__main__":
