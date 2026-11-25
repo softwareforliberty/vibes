@@ -16,7 +16,12 @@ guides behave, and says so under **Changed**.
   builds only what they need, as the gate does, and lists what it can run
   when given nothing. The TDD skill and the builder run each red and
   green step with it, and a builder that finds a gated project without
-  one writes it first.
+  one writes it first. The vibe, debug and optimise workflows set it up
+  with the rest of the gate.
+- **The test-one hook.** In a project with `scripts/test-one`, it refuses
+  `scripts/check` with no mode from `vibes:builder`, which runs its tests
+  with `scripts/test-one` instead. `--all` and `--static` stay open, the
+  gate still runs on every commit, and no other agent is held.
 
 - **The designer keeps the project's glossary and decision records.**
   - **The glossary:** the spec uses its terms and none of the words it

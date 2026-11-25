@@ -191,7 +191,8 @@ the baseline again before trusting old gains.
    [Phase 0](../vibe/SKILL.md#phase-0-set-up) says, with
    `bin/install-git-hooks`.
 6. **Set up the commit gate,** if the project has no executable
-   `scripts/check` or `scripts/check-file`, or the `# Guides:` line misses
+   `scripts/check`, `scripts/check-file` or `scripts/test-one`, or the
+   `# Guides:` line misses
    a guide: spawn a
    `general-purpose` subagent with `medium` effort to follow
    `${CLAUDE_PLUGIN_ROOT}/skills/commit-gate/SKILL.md` on the base branch,

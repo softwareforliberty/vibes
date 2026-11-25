@@ -224,6 +224,7 @@ def gemini_hooks() -> str:
              "hooks": [hook("claude_commit_gate"),
                        hook("claude_read_only_agents"),
                        hook("claude_tracker_guard"),
+                       hook("claude_test_one_guard"),
                        hook("claude_check_file")]},
             {"matcher": writes,
              "hooks": [hook("claude_guide_check"),

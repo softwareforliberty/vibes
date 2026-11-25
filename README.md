@@ -772,6 +772,11 @@ The plugin provides:
   writes, as soon as it's written, in projects with `scripts/check-file`.
   It also checks the files a shell command changes, except a command that
   runs git.
+- **The test-one hook,** which keeps the builder's test-first steps fast: in
+  a project with `scripts/test-one`, it refuses `scripts/check` with no mode
+  from `vibes:builder`, and points it to `scripts/test-one <test>`. The
+  builder still runs `scripts/check --all` when its batch is done, and the
+  gate still runs on every commit; other agents and you are never held.
 - **The guide check hook.** The first time an agent, or each subagent, writes a
   kind of file in a conversation without having read its guide, it names the
   guide for it, and warns when the project's gate doesn't check that guide yet.
@@ -931,7 +936,9 @@ file or a single test function, built and run as the gate runs them. The
 builder runs each red and green step with it, so test-first work takes
 seconds a step, not a full test run; the gate still runs every fast test
 before each commit. A builder that finds a gated project without one
-writes it first, in a commit of its own.
+writes it first, in a commit of its own, and the vibe, debug and optimise
+workflows set it up with the rest of the gate. While it exists, a hook stops
+the builder running `scripts/check` with no mode to see its tests.
 
 For a project with specs, `scripts/check` also checks the tests'
 requirement markers. Each test names the requirements it covers, such as

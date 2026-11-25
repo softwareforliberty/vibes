@@ -1,0 +1,111 @@
+#!/usr/bin/env bash
+#
+# PreToolUse hook that keeps the builder's test-first steps fast: in a
+# project with scripts/test-one, vibes' builder may not run scripts/check
+# with no mode to see its tests. It runs the test it's changing with
+# scripts/test-one, the gate runs scripts/check on each commit, and
+# `scripts/check --all` (or --static) stays open for the end of a batch.
+# Every other agent, and the main agent, may run the gate as they like.
+
+set -euo pipefail
+
+# shellcheck source=hooks/lib/hook_input.sh
+source "$(dirname -- "$(realpath -- "${BASH_SOURCE[0]}")")/lib/hook_input.sh"
+
+# The builder's names: Claude Code's, and other hosts'.
+readonly BUILDER_NAMES=' vibes:builder builder vibes-builder '
+# Words that may come before the program they run.
+readonly WRAPPERS=' time env nice nohup command exec bash sh timeout '
+# Characters that group commands, which don't change the words in them.
+readonly GROUPING='[(){}]'
+
+# Blocks the call with a reason the builder sees.
+refuse() {
+  printf 'vibes test-one: %s\n' "$*" >&2
+  exit 2
+}
+
+# Prints a path resolved against a directory, or nothing when either is
+# unknown.
+resolve() {
+  local dir="$1" path="$2"
+  [[ -n "${dir}" && -n "${path}" ]] || return 0
+  case "${path}" in
+    /*) printf '%s\n' "${path}" ;;
+    *) printf '%s\n' "${dir}/${path}" ;;
+  esac
+}
+
+# Prints, for each run of a project's scripts/check with no mode in the
+# command, the folder of the repository it belongs to, or an empty line
+# when that can't be told.
+bare_checks() {
+  local dir="$2" segment word i n has_mode
+  local -a words
+  while IFS= read -r segment; do
+    segment="${segment//${GROUPING}/ }"
+    read -r -a words <<<"${segment}"
+    n="${#words[@]}"
+    ((n > 0)) || continue
+    i=0
+    while ((i < n)) && [[ "${words[i]}" =~ ^[A-Za-z_][A-Za-z0-9_]*= ]]; do
+      ((i += 1))
+    done
+    ((i < n)) || continue
+    if [[ "${words[i]}" == cd ]]; then
+      dir="$(resolve "${dir}" "${words[i + 1]:-}")"
+      continue
+    fi
+    # A wrapper, its options and a timeout's duration come before the
+    # program.
+    while ((i < n)) && [[ "${WRAPPERS}" == *" ${words[i]##*/} "* ||
+      "${words[i]}" == -* || "${words[i]}" =~ ^[0-9.]+[smhd]?$ ]]; do
+      ((i += 1))
+    done
+    ((i < n)) || continue
+    word="${words[i]}"
+    [[ "${word}" == scripts/check || "${word}" == ./scripts/check ||
+      "${word}" == */scripts/check ]] || continue
+    has_mode=""
+    for word in "${words[@]:i+1}"; do
+      case "${word}" in
+        --all | --static) has_mode=1 ;;
+        *) ;;
+      esac
+    done
+    [[ -z "${has_mode}" ]] || continue
+    word="${words[i]}"
+    case "${word}" in
+      /*) printf '%s\n' "${word%/scripts/check}" ;;
+      */scripts/check) printf '%s\n' "$(resolve "${dir}" "${word%/scripts/check}")" ;;
+      *) printf '%s\n' "${dir}" ;;
+    esac
+  done <<<"${1//[;&|]/$'\n'}"
+}
+
+main() {
+  local input agent raw command cwd root
+  hook::read_input "$0"
+  input="${HOOK_INPUT}"
+  [[ "$(hook::json_field "${input}" '.tool_name')" == Bash ]] || exit 0
+  agent="$(hook::json_field "${input}" '.agent_type')"
+  [[ -n "${agent}" && "${BUILDER_NAMES}" == *" ${agent} "* ]] || exit 0
+  raw="$(hook::json_field "${input}" '.tool_input.command')"
+  [[ -n "${raw}" ]] || exit 0
+  command="$(hook::strip_text <<<"${raw}")"
+  cwd="$(hook::json_field "${input}" '.cwd')"
+  cwd="${cwd:-${PWD}}"
+  while IFS= read -r root; do
+    root="${root:-${cwd}}"
+    root="$(cd -- "${root}" 2>/dev/null && git rev-parse --show-toplevel \
+      2>/dev/null)" || continue
+    [[ -x "${root}/scripts/test-one" ]] || continue
+    refuse "don't run scripts/check to see your tests: run only the ones" \
+      "you're changing, with scripts/test-one <test>... (with no test, it" \
+      "lists what it can run). The gate runs scripts/check on every" \
+      "commit, and you run scripts/check --all once, when your batch is" \
+      "done."
+  done < <(bare_checks "${command}" "${cwd}")
+}
+
+main "$@"

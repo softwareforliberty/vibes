@@ -146,7 +146,8 @@ Build each entry in your batch, in the plan's order:
   your first entry, as Step 4 of
   `${CLAUDE_PLUGIN_ROOT}/skills/commit-gate/SKILL.md` says, try it on one
   test that passes and one you break and restore, and commit it on its
-  own; report it. Run the
+  own; report it. Once it exists, a hook refuses `scripts/check` with no
+  mode from you: run `scripts/check --all` only when your batch is done. Run the
   type checks before you commit, as Every commit says.
 
 Stop when your batch is done. Don't start entries outside it.

@@ -503,7 +503,8 @@ its steps.
    `core.hooksPath` is set, tell the user that their hook manager needs to
    run the vibes hooks.
 9. **Start the commit gate setup.** If the project has no executable
-   `scripts/check` or `scripts/check-file`, or the `# Guides:` line
+   `scripts/check`, `scripts/check-file` or `scripts/test-one`, or the
+   `# Guides:` line
    doesn't name every guide the project already needs, spawn a
    `general-purpose` subagent in the background, with `medium` effort, to follow the
    `${CLAUDE_PLUGIN_ROOT}/skills/commit-gate/SKILL.md` skill on the base

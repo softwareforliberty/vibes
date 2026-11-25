@@ -394,16 +394,17 @@ should run it too.
 
 ## When the gate is older than this skill
 
-A project whose gate has `scripts/check` but no `scripts/check-file` was
-set up before the steps above. Bring it up to date in one commit: write
-`scripts/check-file` as Step 3 says, and `scripts/test-one` as Step 4
-says; make `scripts/check` fail fast, with
-its static checks before its tests; add its `--static` and `--all` modes;
-and move its slow tests under `--all`, telling the user which tests moved.
-Keep every check it already has. Then install the hooks again as Step 6
-says, which turns links to a plugin version's folder into stubs and adds a
-missing `commit-msg` hook. A script that ignores its arguments still
-works with the gate meanwhile: it runs everything every time.
+A project whose gate has `scripts/check` but no `scripts/check-file` or
+no `scripts/test-one` was set up before the steps above. Bring it up to
+date in one commit: write whichever is missing, `scripts/check-file` as
+Step 3 says and `scripts/test-one` as Step 4 says; make `scripts/check`
+fail fast, with its static checks before its tests; add its `--static`
+and `--all` modes; and move its slow tests under `--all`, telling the
+user which tests moved. Keep every check it already has. Then install
+the hooks again as Step 6 says, which turns links to a plugin version's
+folder into stubs and adds a missing `commit-msg` hook. A script that
+ignores its arguments still works with the gate meanwhile: it runs
+everything every time.
 
 ## When the project needs a new guide
 
