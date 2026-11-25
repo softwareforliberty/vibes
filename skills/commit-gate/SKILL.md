@@ -53,7 +53,10 @@ whose code is thrown away, and files git ignores.
    of its output. For a commit of documents only, such as a spec, it runs
    `scripts/check --static`, without the tests, since a document can't
    break a test. Test data, such as a Markdown fixture under `tests/`,
-   isn't a document.
+   isn't a document. It doesn't run it again for the very commit it just
+   passed, on the same parent, with the same staged files, in the same
+   mode, as when a retry follows a refused commit message: git runs the
+   gate before it reads the message.
 6. It blocks a commit whose subject is longer than 50 characters, before
    running anything else.
 7. It blocks a commit that adds a line carrying a `/vibes:debug` run's

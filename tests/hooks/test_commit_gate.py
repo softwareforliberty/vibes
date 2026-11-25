@@ -347,5 +347,80 @@ class ChangedWhileCheckingTest(unittest.TestCase):
         result = self.gate("mkdir -p build && echo x > build/out.o")
         self.assertEqual(result.returncode, 0, result.stderr)
 
+class PassedBeforeTest(unittest.TestCase):
+    """A retry of the very commit the gate just passed, as after a refused
+    message, isn't checked again; anything else is."""
+
+    def setUp(self) -> None:
+        self.repo = os.path.realpath(tempfile.mkdtemp())
+        self.runs = os.path.join(self.repo, ".git", "check-runs")
+        self.git("init", "-q", "-b", "main")
+        self.write("scripts/build.sh", "true\n")
+        self.write("scripts/check", "#!/bin/sh\n# Guides: languages/SH\n"
+                   f"echo run >> {self.runs}\n")
+        os.chmod(os.path.join(self.repo, "scripts", "check"), 0o755)
+        self.git("add", ".")
+        self.git("-c", "user.name=t", "-c", "user.email=t@example.com",
+                 "commit", "-q", "--no-verify", "-m", "Add the checks")
+        self.write("scripts/build.sh", "true\ntrue\n")
+        self.git("add", "scripts/build.sh")
+
+    def tearDown(self) -> None:
+        shutil.rmtree(self.repo)
+
+    git = DocsOnlyTest.git
+    write = DocsOnlyTest.write
+
+    def gate(self) -> subprocess.CompletedProcess:
+        return subprocess.run([HOOK], cwd=self.repo, capture_output=True,
+                              text=True, check=False)
+
+    def runs_of_check(self) -> int:
+        if not os.path.exists(self.runs):
+            return 0
+        with open(self.runs, encoding="utf-8") as stream:
+            return len(stream.readlines())
+
+    def test_the_same_commit_again_skips_the_checks(self) -> None:
+        self.assertEqual(self.gate().returncode, 0)
+        result = self.gate()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("passed the gate already", result.stderr)
+        self.assertEqual(self.runs_of_check(), 1)
+
+    def test_a_change_to_what_is_staged_is_checked(self) -> None:
+        self.assertEqual(self.gate().returncode, 0)
+        self.write("scripts/build.sh", "true\nfalse\n")
+        self.git("add", "scripts/build.sh")
+        self.assertEqual(self.gate().returncode, 0)
+        self.assertEqual(self.runs_of_check(), 2)
+
+    def test_a_commit_on_another_parent_is_checked(self) -> None:
+        self.assertEqual(self.gate().returncode, 0)
+        self.git("-c", "user.name=t", "-c", "user.email=t@example.com",
+                 "commit", "-q", "--no-verify", "-m", "Build twice")
+        self.write("scripts/other.sh", "true\n")
+        self.git("add", "scripts/other.sh")
+        self.assertEqual(self.gate().returncode, 0)
+        self.assertEqual(self.runs_of_check(), 2)
+
+    def test_a_failure_is_never_remembered(self) -> None:
+        self.write("scripts/check", "#!/bin/sh\n# Guides: languages/SH\n"
+                   f"echo run >> {self.runs}\nexit 1\n")
+        self.git("add", "scripts/check")
+        self.assertEqual(self.gate().returncode, 1)
+        self.assertEqual(self.gate().returncode, 1)
+        self.assertEqual(self.runs_of_check(), 2)
+
+    def test_a_static_pass_is_not_a_full_pass(self) -> None:
+        self.git("reset", "-q", "--hard")
+        self.write("docs.md", "notes\n")
+        self.git("add", "docs.md")
+        self.assertEqual(self.gate().returncode, 0)
+        with open(os.path.join(self.repo, ".git", "vibes-gate-passed"),
+                  encoding="utf-8") as stream:
+            self.assertTrue(stream.read().strip().endswith(" static"))
+
+
 if __name__ == "__main__":
     unittest.main()

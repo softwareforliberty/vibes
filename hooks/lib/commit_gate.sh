@@ -26,6 +26,9 @@ readonly GATE_RULES_BITE
 # vibes-debug-month-end, so none reaches a commit.
 readonly GATE_DEBUG_TAG_RE='vibes-debug-[a-z0-9]'
 readonly GATE_DEBUG_LINES=20
+# The file, in the repository's git folder, that names the last commit the
+# gate passed: the commit it sits on, its tree and the mode it was checked in.
+readonly GATE_PASSED_FILE="vibes-gate-passed"
 
 gate::err() {
   printf 'vibes commit gate: %s\n' "$*" >&2
@@ -184,6 +187,20 @@ gate::check_breaches() {
   return 0
 }
 
+# Prints the key of the commit being made: the commit it sits on (none for
+# the first), the staged tree and the mode, on one line.
+gate::commit_key() {
+  local head tree
+  head="$(git rev-parse --quiet --verify HEAD 2>/dev/null || echo none)"
+  tree="$(git write-tree)" || return 1
+  printf '%s %s %s\n' "${head}" "${tree}" "$1"
+}
+
+# Prints the path of the file that remembers the last commit the gate passed.
+gate::passed_file() {
+  git rev-parse --git-path "${GATE_PASSED_FILE}"
+}
+
 gate::run() {
   local root
   if ! root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
@@ -221,12 +238,22 @@ gate::run() {
     return 1
   fi
 
-  local output before
+  local output before key passed mode_name=full
   local -a mode=()
-  before="$(gate::snapshot)"
   if gate::docs_only; then
     mode=(--static)
+    mode_name=static
   fi
+  # The same commit, checked the same way, passed a moment ago, as when a
+  # retry follows a refused commit message: there's nothing new to check.
+  passed="$(gate::passed_file)"
+  key="$(gate::commit_key "${mode_name}")" || key=""
+  if [[ -n "${key}" && -f "${passed}" && "$(cat -- "${passed}")" == "${key}" ]]; then
+    gate::err "this exact commit passed the gate already; not checking it again."
+    return 0
+  fi
+  rm -f -- "${passed}"
+  before="$(gate::snapshot)"
   if ! output="$("./${GATE_CHECK_SCRIPT}" ${mode[@]+"${mode[@]}"} 2>&1)"; then
     gate::err "${GATE_CHECK_SCRIPT} failed, so the commit is blocked."
     gate::err "Fix the problems below, then commit again."
@@ -242,5 +269,6 @@ gate::run() {
     return 1
   fi
 
+  [[ -z "${key}" ]] || printf '%s\n' "${key}" >"${passed}"
   return 0
 }

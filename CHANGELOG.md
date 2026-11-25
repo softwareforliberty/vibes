@@ -10,6 +10,13 @@ guides behave, and says so under **Changed**.
 
 ### Added
 
+- **The gate doesn't check the same commit twice.** After a pass it
+  remembers the commit's parent, staged tree and mode, in the git folder,
+  and a retry of exactly that commit, as after git refused its message,
+  goes through without running `scripts/check` again. Git runs the gate
+  before it reads the message, so a long subject used to cost a whole
+  second gate run.
+
 - **`scripts/test-one`, to run only the tests you name.** The commit-gate
   skill writes it beside `scripts/check-file` (its new Step 4): it takes
   test files, test functions or a source file of the code under test,

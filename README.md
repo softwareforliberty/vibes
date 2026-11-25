@@ -908,6 +908,9 @@ Once it exists, the gate:
   rule and the text its failure prints, and `bin/rules-bite` applies each
   to a throwaway copy and runs `scripts/check` there
 - runs no checks on `spike/*` branches, apart from the subject's length
+- doesn't check again the very commit it just passed, with the same parent,
+  staged files and mode, as when you retry after git refused the commit's
+  message: git runs the gate before it reads the message
 - in an agent's session, also blocks `git commit -a` and `--no-verify`
 - in an agent's session, asks you to confirm a commit that loosens the gate
   itself: one that deletes `scripts/check` or `scripts/check-file`, makes
