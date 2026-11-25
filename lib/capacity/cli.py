@@ -9,7 +9,9 @@ once for this project, measured and cached.
 Run each from the repository's root. A builder's cost is roughly one run of
 the project's gate, scripts/check, so `measure` runs a command in one
 worktree, or in two at once, sampling every second the memory of its
-processes and of any Docker containers it starts, and records the wall
+processes and of any Docker containers it starts (never less than the
+kernel's own peak for the command, which samples miss when macOS
+compresses idle pages under memory pressure), and records the wall
 time, the CPU time and the peaks in the cache. `decide` works out how many
 builders fit: what memory and CPU allow, never more than 4, and 1 when two
 at once ran little faster than one after the other. `check` prints
@@ -187,8 +189,13 @@ def measure(trees: List[str], command: List[str]) -> Dict[str, Any]:
     for thread in threads:
         thread.start()
     runs = []
+    # The kernel's peak resident memory of each command, or of its largest
+    # process it waited for. Under memory pressure macOS compresses idle
+    # pages, so the samples can miss most of a process; this can't.
+    peak = 0
     for tree, proc in zip(trees, procs):
         _, status, usage = os.wait4(proc.pid, 0)
+        peak += usage.ru_maxrss * (1 if sys.platform == "darwin" else 1024)
         proc.returncode = os.waitstatus_to_exitcode(status) \
             if hasattr(os, "waitstatus_to_exitcode") else status >> 8
         runs.append({"tree": tree, "exit": proc.returncode,
@@ -197,7 +204,7 @@ def measure(trees: List[str], command: List[str]) -> Dict[str, Any]:
     done.set()
     for thread in threads:
         thread.join(timeout=10)
-    return {"runs": runs, "memory": peaks["memory"],
+    return {"runs": runs, "memory": max(peaks["memory"], peak),
             "docker_memory": peaks["docker_memory"],
             "docker_cpu": round(docker_cpu[0], 2)}
 

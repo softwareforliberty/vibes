@@ -130,6 +130,22 @@ class StaleTest(unittest.TestCase):
                                     {**self.PROJECT, "files": 120}))
 
 
+class MeasureTest(unittest.TestCase):
+    def test_counts_a_peak_the_samples_missed(self) -> None:
+        # Under memory pressure macOS compresses an idle process's pages, so
+        # sampling its resident memory can see almost none of it; the
+        # kernel's record of its peak still counts them.
+        original = cli.tree_memory
+        cli.tree_memory = lambda roots: 0
+        try:
+            with tempfile.TemporaryDirectory() as tree:
+                result = cli.measure([tree], [
+                    sys.executable, "-c", "b = bytearray(80_000_000)"])
+        finally:
+            cli.tree_memory = original
+        self.assertGreater(result["memory"], 60_000_000)
+
+
 class CommandTest(unittest.TestCase):
     """The commands, measuring real commands with Docker hidden."""
 

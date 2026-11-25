@@ -274,6 +274,12 @@ guides behave, and says so under **Changed**.
 
 ### Fixed
 
+- **`bin/capacity` no longer undercounts memory under pressure.** macOS
+  compresses an idle process's pages when memory runs short, so sampling
+  resident memory could see 9 MB of a command holding 80 MB, and allow too
+  many builders. A measurement now counts at least the kernel's own peak
+  for the command.
+
 - **Three layer checks that couldn't fail now do.** On Julia 1.13,
   `Pkg.precompile()` printed a forbidden dependency but exited 0, so the
   Julia guide passes `strict=true`. On sbt 2, a cached `sbt test` skipped
