@@ -76,8 +76,8 @@ doing harm:
    right.
 5. **Commit it** on the default branch, alone, as the vibe skill's
    [agents section](../vibe/SKILL.md#the-agents) says for your own
-   commits. The commit gate asks the user to confirm a commit that changes
-   `.vibes-tracker`; that's expected.
+   commits. The commit gate notes a commit that changes `.vibes-tracker`;
+   that's expected.
 6. **Tell the user to approve it,** in their own terminal, not in this
    session, from the repository:
 

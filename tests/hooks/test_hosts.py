@@ -254,8 +254,8 @@ class GuideCheckTest(unittest.TestCase):
 
 
 class LooseningTest(unittest.TestCase):
-    """Where a hook can't ask the user, a commit loosening the gate is
-    refused rather than let through."""
+    """No host asks about, or refuses, a commit loosening the gate, so an
+    unattended run keeps going; the agent is told what it loosened."""
 
     def setUp(self) -> None:
         self.repo = os.path.realpath(tempfile.mkdtemp())
@@ -280,25 +280,24 @@ class LooseningTest(unittest.TestCase):
         subprocess.run(["git", "-C", self.repo, *args], check=True,
                        capture_output=True)
 
-    def test_codex_and_gemini_refuse_it(self) -> None:
-        for event in (codex("Bash", cwd=self.repo, command="git commit -m x"),
-                      {"hook_event_name": "BeforeTool", "cwd": self.repo,
-                       "tool_name": "run_shell_command",
-                       "tool_input": {"command": "git commit -m x"}}):
-            with self.subTest(host=event.get("turn_id", "gemini")):
-                result = run("claude_commit_gate", event)
-                self.assertEqual(result.returncode, 2)
-                self.assertIn("can't ask for it", result.stderr)
-                self.assertIn("scripts/check-file", result.stderr)
-
-    def test_copilot_asks(self) -> None:
-        result = run("claude_commit_gate",
-                     {"tool_name": "Bash", "cwd": self.repo,
-                      "tool_input": {"command": "git commit -m x"}},
-                     env={"COPILOT_PLUGIN_ROOT": "/plugin"})
-        self.assertEqual(result.returncode, 0, result.stderr)
-        output = json.loads(result.stdout)["hookSpecificOutput"]
-        self.assertEqual(output["permissionDecision"], "ask")
+    def test_every_host_lets_it_through_with_a_note(self) -> None:
+        for name, event, env in (
+                ("codex", codex("Bash", cwd=self.repo,
+                                command="git commit -m x"), None),
+                ("gemini", {"hook_event_name": "BeforeTool", "cwd": self.repo,
+                            "tool_name": "run_shell_command",
+                            "tool_input": {"command": "git commit -m x"}},
+                 None),
+                ("copilot", {"tool_name": "Bash", "cwd": self.repo,
+                             "tool_input": {"command": "git commit -m x"}},
+                 {"COPILOT_PLUGIN_ROOT": "/plugin"})):
+            with self.subTest(host=name):
+                result = run("claude_commit_gate", event, env=env)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                output = json.loads(result.stdout)["hookSpecificOutput"]
+                self.assertNotIn("permissionDecision", output)
+                self.assertIn("scripts/check-file: deleted",
+                              output["additionalContext"])
 
 
 if __name__ == "__main__":

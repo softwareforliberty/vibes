@@ -175,8 +175,10 @@ LOOSENING_CHECK_FILE = """#!/usr/bin/env bash
 
 
 class LooseningTest(unittest.TestCase):
-    """The Claude Code hook has the user confirm a commit that loosens the
-    gate, and lets one that extends it through."""
+    """The Claude Code hook lets a commit that loosens the gate through
+    without asking anyone, and tells the agent what it loosened, so the
+    agent can say so in its report. One that extends the gate passes
+    without a word."""
 
     def setUp(self) -> None:
         self.repo = os.path.realpath(tempfile.mkdtemp())
@@ -205,15 +207,15 @@ class LooseningTest(unittest.TestCase):
         self.git("add", "scripts/check")
 
     def decision(self, command: str = "git commit -m x") -> str:
-        """The reason the hook asks for confirmation, or "" when it lets the
-        commit through without asking."""
+        """The note the hook gives the agent, or "" when it gives none. The
+        hook never asks, and never refuses the commit."""
         result = self.hook(command)
         self.assertEqual(result.returncode, 0, result.stderr)
         if not result.stdout.strip():
             return ""
         output = json.loads(result.stdout)["hookSpecificOutput"]
-        self.assertEqual(output["permissionDecision"], "ask")
-        return output["permissionDecisionReason"]
+        self.assertNotIn("permissionDecision", output)
+        return output["additionalContext"]
 
     def test_extending_the_gate_needs_no_confirmation(self) -> None:
         self.edit("# Guides: languages/BASH languages/Python",
@@ -222,14 +224,14 @@ class LooseningTest(unittest.TestCase):
         self.edit(": test unit\n", ": test unit\n: test integration\n")
         self.assertEqual(self.decision(), "")
 
-    def test_dropping_a_check_asks(self) -> None:
+    def test_dropping_a_check_is_noted(self) -> None:
         self.edit(": test unit\n", "")
         reason = self.decision()
-        self.assertIn("loosens the vibes commit gate", reason)
+        self.assertIn("loosens the commit gate", reason)
         self.assertIn("scripts/check: removes or changes `: test unit`",
                       reason)
 
-    def test_dropping_an_option_or_a_guide_asks(self) -> None:
+    def test_dropping_an_option_or_a_guide_is_noted(self) -> None:
         for old, new in ((": lint --strict scripts", ": lint scripts"),
                          ("set -euo pipefail", "set -uo pipefail"),
                          ("# Guides: languages/BASH languages/Python",
@@ -239,7 +241,7 @@ class LooseningTest(unittest.TestCase):
                 self.assertIn(f"`{old}`", self.decision())
                 self.git("checkout", "HEAD", "--", "scripts/check")
 
-    def test_ignoring_a_failure_asks(self) -> None:
+    def test_ignoring_a_failure_is_noted(self) -> None:
         for old, new in ((": test unit", ": test unit || true"),
                          (": test unit", ": test unit||:"),
                          (": lint --strict scripts",
@@ -250,24 +252,39 @@ class LooseningTest(unittest.TestCase):
                           "set -euo pipefail\nexit 0\n")):
             with self.subTest(new=new):
                 self.edit(old, new)
-                self.assertIn("loosens the vibes commit gate",
+                self.assertIn("loosens the commit gate",
                               self.decision())
                 self.git("checkout", "HEAD", "--", "scripts/check")
+
+    def test_the_note_asks_for_a_report(self) -> None:
+        self.edit(": test unit\n", "")
+        self.assertIn("Say in your report", self.decision())
+
+    def test_rewrapping_a_command_keeps_its_words(self) -> None:
+        self.edit(": lint --strict scripts", ": lint \\\n  --strict scripts")
+        self.assertEqual(self.decision(), "")
+        self.edit(": lint \\\n  --strict scripts",
+                  ": lint --strict \\\n  scripts src")
+        self.assertEqual(self.decision(), "")
+
+    def test_a_rewrapped_command_that_loses_a_word_is_noted(self) -> None:
+        self.edit(": lint --strict scripts", ": lint \\\n  scripts")
+        self.assertIn("`: lint --strict scripts`", self.decision())
 
     def test_comments_and_blank_lines_do_not_count(self) -> None:
         self.edit("#\n# Guides", "# The project's checks.\n# Guides")
         self.assertEqual(self.decision(), "")
 
-    def test_deleting_the_gate_asks(self) -> None:
+    def test_deleting_the_gate_is_noted(self) -> None:
         self.git("rm", "-q", "scripts/check-file")
         self.assertIn("scripts/check-file: deleted", self.decision())
 
-    def test_deleting_the_check_asks_though_it_turns_the_gate_off(
+    def test_deleting_the_check_is_noted_though_it_turns_the_gate_off(
             self) -> None:
         self.git("rm", "-q", "scripts/check")
         self.assertIn("scripts/check: deleted", self.decision())
 
-    def test_dropping_the_executable_bit_asks(self) -> None:
+    def test_dropping_the_executable_bit_is_noted(self) -> None:
         os.chmod(os.path.join(self.repo, "scripts", "check"), 0o644)
         self.git("add", "scripts/check")
         self.assertIn("no longer executable", self.decision())

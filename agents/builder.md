@@ -183,10 +183,10 @@ as the audit's, fix each one the same way.
 - **The gate runs on every commit.** It runs `scripts/check`, and refuses
   unstaged and untracked changes. When it blocks a commit, fix the cause and
   commit again. Never bypass it, and never weaken a check or a test to get
-  past it. A commit that removes or loosens a check in `scripts/check` or
-  `scripts/check-file` needs the user's confirmation, and is refused where
-  nobody can give it: don't try. Report any check that you think has to
-  change, and leave it to the main agent.
+  past it. When a check in `scripts/check` or `scripts/check-file` truly
+  has to change, change it, and say in your report what you changed and
+  why. The commit gate tells you when a commit loosens the gate; every
+  such change goes in your report.
 - **Write and edit files with the Write and Edit tools,** not with shell
   commands such as heredocs or `sed`, even where other instructions prefer
   the shell. A hook runs `scripts/check-file` on every file you write: it

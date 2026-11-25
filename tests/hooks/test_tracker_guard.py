@@ -116,7 +116,8 @@ class FileTest(unittest.TestCase):
 
 
 class GateTest(unittest.TestCase):
-    """The commit gate has the user confirm a change to .vibes-tracker."""
+    """The commit gate lets a change to .vibes-tracker through, and tells
+    the agent about it."""
 
     def setUp(self) -> None:
         self.repo = os.path.realpath(tempfile.mkdtemp())
@@ -151,14 +152,15 @@ class GateTest(unittest.TestCase):
             input=json.dumps(event), text=True, capture_output=True,
             check=False)
 
-    def test_a_change_asks(self) -> None:
+    def test_a_change_is_noted(self) -> None:
         self.write(".vibes-tracker", "issue-id\t.*\n")
         self.git("add", ".vibes-tracker")
         result = self.gate()
         self.assertEqual(result.returncode, 0, result.stderr)
-        reason = json.loads(result.stdout)["hookSpecificOutput"][
-            "permissionDecisionReason"]
-        self.assertIn(".vibes-tracker: changes the commands", reason)
+        output = json.loads(result.stdout)["hookSpecificOutput"]
+        self.assertNotIn("permissionDecision", output)
+        self.assertIn(".vibes-tracker: changes the commands",
+                      output["additionalContext"])
 
     def test_other_changes_dont(self) -> None:
         self.write("notes.txt", "x\n")

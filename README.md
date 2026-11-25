@@ -106,8 +106,8 @@ while holding it to the standards of careful, experienced developers.
   but their own findings files and reports,
   and the
   profiler from changing the code. The commit gate also refuses a subject
-  longer than 50 characters, and asks you before a commit that loosens
-  the gate itself.
+  longer than 50 characters, and tells the agent when a commit loosens
+  the gate itself, so its report says so.
 - **`evals/`:** evals that check each reviewer agent finds the defects in
   its area and approves clean code, that the workflow picks the right
   reviewers for a change, that a pull request review catches malicious
@@ -458,8 +458,9 @@ It changes nothing, and it only ever tightens:
 - **Tool economy looks only for waste,** such as the same file read again
   unchanged or a failing command retried as it was. The review rounds, the
   gate and the tests cost a lot on purpose, and are never counted.
-- **The commit gate asks you** before any commit that loosens it, whoever
-  made the change.
+- **The commit gate never asks you,** so an unattended run keeps going.
+  When a commit loosens it, whoever made the change, the agent is told,
+  and says so in its report.
 
 Name the suggestions you want, and each is applied as a commit of its own.
 
@@ -571,9 +572,9 @@ one in layers:
 - **Your other secrets stay out.** The commands get only the tokens the
   file names, besides what any program needs, such as `PATH` and `HOME`.
 - **It's guarded like the gate.** No agent may approve it or touch the
-  approval, no subagent may write the file, the commit gate asks you
-  before a commit that changes it, and `/vibes:review-pr` marks a change
-  to it HIGH.
+  approval, no subagent may write the file, the commit gate tells the
+  agent when a commit changes it, so its report says so, and
+  `/vibes:review-pr` marks a change to it HIGH.
 
 **Run agents in a sandbox** for the approval to hold against an agent
 that's turned on you, such as by instructions planted in an issue. Agents
@@ -771,7 +772,7 @@ The plugin provides:
   `vibes:retrospective` and the reviewers, such as `vibes:security-reviewer` and
   `vibes:project-docs-reviewer`.
 - **The commit gate hook,** which runs before every `git commit` the agent
-  makes, and asks you before one that loosens the gate.
+  makes, and tells the agent when one loosens the gate.
 - **The check-file hook,** which formats and lints each file an agent
   writes, as soon as it's written, in projects with `scripts/check-file`.
   It also checks the files a shell command changes, except a command that
@@ -857,7 +858,7 @@ and run `host-files` again after updating it.
 | | Claude Code | Copilot CLI | Codex | Gemini CLI |
 |---|---|---|---|---|
 | The commit gate on the agent's commits | Yes | Yes | Once you trust the hooks | Yes |
-| A commit that loosens the gate | Asks you | Asks you | Refused | Refused |
+| A commit that loosens the gate | Let through; the agent is told | Let through; the agent is told | Let through | Let through |
 | Posting to the issue tracker | Asks you | Asks you | You run the batch | You run the batch |
 | Formatting and linting each file written | Yes | Yes | Yes | Yes |
 | The guide check | Yes | Yes | Yes | Yes |
@@ -916,14 +917,14 @@ Once it exists, the gate:
   staged files and mode, as when you retry after git refused the commit's
   message: git runs the gate before it reads the message
 - in an agent's session, also blocks `git commit -a` and `--no-verify`
-- in an agent's session, asks you to confirm a commit that loosens the gate
-  itself: one that deletes `scripts/check` or `scripts/check-file`, makes
-  either not executable, removes or changes a line so that a word of it is
-  lost, such as a check, an option or a guide, or lets a failure pass, such
-  as with `|| true` or an early `exit`. Extending the gate keeps every word,
-  so it goes through without asking. Where nobody can answer,
-  as in `claude -p`, or the host can't ask from a hook, as in Codex and
-  Gemini CLI, the commit is refused
+- in an agent's session, tells the agent when a commit loosens the gate
+  itself, so its report says so: one that deletes `scripts/check` or
+  `scripts/check-file`, makes either not executable, removes or changes a
+  line so that a word of it is lost, such as a check, an option or a
+  guide, or lets a failure pass, such as with `|| true` or an early
+  `exit`. It never asks you or refuses the commit, so an unattended run
+  keeps going. Extending the gate keeps every word, and rewrapping a
+  command across lines keeps them too, so neither is mentioned
 
 `scripts/check` runs its static checks first, and stops before the tests
 if any fail, since the tests are the slow part. It runs only the fast

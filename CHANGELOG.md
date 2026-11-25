@@ -15,6 +15,22 @@ guides behave, and says so under **Changed**.
   `SECURITY.md` how to report a vulnerability privately, through GitHub's
   private vulnerability reporting, which is now on.
 
+### Changed
+
+- **The commit gate no longer asks before a commit that loosens it.** It
+  stopped unattended runs to ask about small, safe changes, such as a
+  lint command given another include folder. Now no host asks or refuses:
+  the commit goes through, and the agent is told what it loosened, so its
+  report says so. A builder may now change a check that truly has to
+  change, and reports it.
+
+### Fixed
+
+- **Rewrapping a command in `scripts/check` no longer counts as
+  loosening it.** A line ending in a backslash is joined to the next
+  before the words are compared, so a command split across lines
+  differently keeps its words.
+
 ## [0.7.0] - 2026-11-25
 
 ### Added

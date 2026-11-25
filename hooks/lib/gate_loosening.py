@@ -5,7 +5,9 @@
 Compares scripts/check and scripts/check-file at HEAD with the index and
 the working tree, and prints one line for each loosening: the file deleted,
 its executable bit dropped, a line removed whose words no added line in the
-same file keeps, or a line added that can end the checks early. Extending
+same file keeps, or a line added that can end the checks early. A line
+ending in a backslash is joined to the next, so rewrapping a command
+doesn't count. Extending
 the gate keeps every word, such as adding a guide to the "# Guides:" line
 or a file to a lint command, so it passes; dropping a check, an option or a
 guide doesn't. A changed line that gains a way to ignore a failure, such as
@@ -71,10 +73,16 @@ def escapes(line):
                             or (words[0] == "set" and "+e" in words[1:]))
 
 
+def commands(text):
+    """The text's lines, each continued line joined to the one before it,
+    so a command wrapped differently keeps the same words."""
+    return text.replace("\\\n", " ").splitlines()
+
+
 def loosened(old, new):
     """Each way the new text loosens the old: a line removed or changed,
     or one added that ends the checks early."""
-    old_lines, new_lines = old.splitlines(), new.splitlines()
+    old_lines, new_lines = commands(old), commands(new)
     gone, added, found = [], [], []
     matcher = difflib.SequenceMatcher(None, old_lines, new_lines,
                                       autojunk=False)
