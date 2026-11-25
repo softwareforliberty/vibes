@@ -274,6 +274,13 @@ guides behave, and says so under **Changed**.
 
 ### Fixed
 
+- **A long subject in a `git commit -F -` heredoc is caught before git
+  runs.** The Claude hook split the whole command into shell words,
+  heredoc included, so a lone apostrophe in the message, as in "isn't",
+  read as an unclosed quote, and the hook let the commit through
+  unchecked. Git then ran the whole gate before its own subject check
+  refused the commit. A command that can't be split as a whole is now
+  split with each heredoc's body cut out.
 - **Evals whose agent runs git now work on macOS.** The eval's sandbox
   won't stat a real git binary, though it will run one, so the shell's
   search for `git` skipped Homebrew's, and Apple's `/usr/bin/git` stand-in

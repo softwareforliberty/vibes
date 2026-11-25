@@ -138,7 +138,25 @@ def message_of(commit, command, directory):
 
 
 def words_of(command):
-    """A command's words, with each separator a word of its own."""
+    """A command's words, with each separator a word of its own.
+
+    A heredoc's body is text, not shell, so a lone quote in it, such as an
+    apostrophe in a message for -F -, leaves the shell's words unchanged.
+    When one makes the command unreadable as a whole, the words are those
+    of the command with each heredoc's body cut out.
+    """
+    try:
+        return split(command)
+    except ValueError:
+        return split(HEREDOC.sub(heredoc_head, command))
+
+
+def heredoc_head(match):
+    """A heredoc's first line, the redirection, without its body."""
+    return match.group(0).split("\n", 1)[0] + "\n"
+
+
+def split(command):
     lexer = shlex.shlex(command, posix=True, punctuation_chars=";&|")
     lexer.whitespace_split = True
     lexer.commenters = ""

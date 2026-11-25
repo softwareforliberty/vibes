@@ -61,6 +61,21 @@ class HelperTest(unittest.TestCase):
         self.assertEqual(long_subjects(
             f"git commit -F - <<'EOF'\n{LONG}\n\nWhy.\nEOF\n"), [LONG])
 
+    def test_reads_a_stdin_heredoc_holding_a_lone_quote(self) -> None:
+        # An apostrophe in the message is no quote to the shell here, as
+        # the heredoc's body is never split into words. One alone would
+        # leave a quote open, where two would close each other.
+        long = "Refuse an order's quantity below one with a clear message"
+        message = f"{long}\n\nThe old check gave no reason."
+        for option in ("-F -", "-F-", "--file=-", "-qF -"):
+            with self.subTest(option=option):
+                self.assertEqual(long_subjects(
+                    f"git commit {option} <<'EOF'\n{message}\nEOF\n"),
+                    [long])
+        self.assertEqual(long_subjects(
+            f"git commit -F - <<'EOF'\nFix the order's total\n\n"
+            f"It left out the tax.\nEOF\n"), [])
+
     def test_reads_a_message_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             with open(os.path.join(directory, "msg"), "w",
@@ -115,6 +130,9 @@ class HookTest(unittest.TestCase):
     def test_claude_hook_blocks_a_long_subject(self) -> None:
         self.assertEqual(self.claude(f'git commit -m "{LONG}"'), 2)
         self.assertEqual(self.claude(heredoc(f"{LONG}\n\nWhy.")), 2)
+        self.assertEqual(self.claude(
+            f"git commit -F - <<'EOF'\n{LONG}\n\nIt didn't say why.\nEOF\n"),
+            2)
 
     def test_claude_hook_lets_a_short_subject_through(self) -> None:
         self.assertEqual(self.claude(f'git commit -m "{SHORT}"'), 0)
