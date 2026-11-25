@@ -476,7 +476,9 @@ A round reviews one phase, `spec`, `design`, `spike` or `rebuild`, in
 5. **Have them decided on and fixed:** a fresh `vibes:designer` in `revise`
    mode for the spec, design and spike phases, or `vibes:builder` in `fix`
    mode for the rebuild. Ask the user about anything it leaves to you, and
-   give the answers to a fresh fixer.
+   give the answers to a fresh fixer. In the rebuild, run the slow tests
+   before the next round, as the vibe skill's Phase 6 step 5 says, with
+   `"${CLAUDE_PLUGIN_ROOT}/bin/check-all"`.
 6. **The next round** runs only the reviewers that requested changes, until
    all approve. In the rebuild, a last round then runs the spec reviewer
    and each reviewer that approved before a fix to a BLOCKER or MAJOR
