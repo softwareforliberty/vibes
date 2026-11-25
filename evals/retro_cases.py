@@ -10,7 +10,7 @@ count as waste, and the builder read one file five times unchanged. The
 case checks the report suggests a check for the prints, puts anything that
 loosens a check only under "Would loosen a check", cites the calls behind
 each suggestion, and changes nothing, which a checksum of every file
-outside .vibes/ shows, since git can't run in the eval's sandbox.
+outside .vibes/ shows, so the case runs without lib/eval-path's git.
 
 generate.py calls build() after clearing the generated files.
 """
@@ -268,7 +268,8 @@ chmod +x {retro}/tree-check
 mv {retro}/tree-now {retro}/tree-before
 """
 
-# git can't run in the eval's sandbox, so the scaffold records every file
+# So that a case needn't run git, which in the eval's sandbox on macOS
+# needs lib/eval-path's wrapper, the scaffold records every file
 # outside .vibes/ and .git/ with its checksum, and this says whether any was
 # added, removed or changed since. It lives two levels below the project,
 # in .vibes/<run>/, beside the record it compares with; the survey evals

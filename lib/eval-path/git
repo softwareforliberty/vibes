@@ -1,0 +1,48 @@
+#!/bin/sh
+#
+# Runs the next git on PATH after this one, for evals whose agent runs git.
+#
+# On macOS, the eval sandbox won't stat a real git binary, though it will
+# run one. So bash's PATH search skips Homebrew's git, and Apple's
+# /usr/bin/git can't find the Command Line Tools' git it runs. This script
+# can be stat'ed, and it runs the real git by its path. The plugin's evals/
+# folder is hidden from the agent and its bin/ goes on every agent's PATH,
+# so the wrapper lives here, and only an eval run puts it on PATH:
+#
+#   PATH="$PWD/lib/eval-path:$PATH" claude plugin eval . ...
+
+set -eu
+
+case $0 in
+  */*) self_dir="${0%/*}" ;;
+  *) self_dir='.' ;;
+esac
+
+# The first git on PATH outside this script's directory, however PATH
+# spells that directory, so the wrapper never runs itself. The subshell
+# keeps its cd's to itself, and is one fork rather than one per entry.
+real_git="$(
+  start="${PWD}"
+  CDPATH=''
+  cd -P -- "${self_dir}"
+  self="${PWD}"
+  set -f
+  IFS=:
+  for dir in ${PATH}; do
+    cd -- "${start}"
+    [ -n "${dir}" ] || continue
+    if cd -P -- "${dir}" 2>/dev/null; then
+      [ "${PWD}" != "${self}" ] || continue
+      dir="${PWD}"
+    fi
+    if [ -x "${dir}/git" ] && [ ! -d "${dir}/git" ]; then
+      printf '%s\n' "${dir}/git"
+      break
+    fi
+  done
+)"
+if [ -z "${real_git}" ]; then
+  echo 'git: no other git on PATH' >&2
+  exit 127
+fi
+exec "${real_git}" "$@"

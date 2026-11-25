@@ -219,8 +219,19 @@ suggestions, cites the calls behind each one, and leaves the tree clean.
 You need Claude Code 2.1.269 or later. From the repository root:
 
 ```sh
-claude plugin eval . --scaffold --ablation none --allow-tools Write "Bash(cat:*)"
+PATH="$PWD/lib/eval-path:$PATH" \
+  claude plugin eval . --scaffold --ablation none --allow-tools Write "Bash(cat:*)"
 ```
+
+- `PATH="$PWD/lib/eval-path:$PATH"` puts a `git` wrapper first on the
+  path, which every case whose agent runs git needs on macOS. There the
+  eval's sandbox won't stat a real git binary, though it will run one, so
+  the shell's search for `git` skips Homebrew's, and Apple's
+  `/usr/bin/git` fails, unable to find the Command Line Tools' git. The
+  wrapper runs the next git on the path by its full path, and changes
+  nothing elsewhere. It can't live in `evals/`, which the sandbox hides
+  from the agent, or `bin/`, which Claude Code puts on every session's
+  path. Use it for every command below.
 
 - `--scaffold` lets each case's setup script copy its fixture into the run's
   working directory. The scripts copy files from `fixtures/`, and some
@@ -240,7 +251,8 @@ The optimise cases run commands, so give them the tools their prompts
 list rather than unrestricted Bash:
 
 ```sh
-claude plugin eval . --scaffold --ablation none --tag optimise \
+PATH="$PWD/lib/eval-path:$PATH" \
+  claude plugin eval . --scaffold --ablation none --tag optimise \
   --allow-tools Write Edit "Bash(git *)" "Bash(python3 *)" \
   "Bash(*/bin/bench *)" "Bash(*/bench/run *)" "Bash(*/bench/prepare *)" \
   "Bash(command -v *)" "Bash(ls *)" "Bash(cat *)" "Bash(head *)" \
@@ -248,11 +260,12 @@ claude plugin eval . --scaffold --ablation none --tag optimise \
 ```
 
 The retrospective case runs the digest command and a check that nothing
-outside `.vibes/` changed, which stands in for `git status`, since git
-can't run in the eval's sandbox:
+outside `.vibes/` changed, which stands in for `git status`, so the case
+works without the git wrapper too:
 
 ```sh
-claude plugin eval . --scaffold --ablation none --tag retrospective \
+PATH="$PWD/lib/eval-path:$PATH" \
+  claude plugin eval . --scaffold --ablation none --tag retrospective \
   --allow-tools Write "Bash(*/session-digest *)" "Bash(*/tree-check)" \
   "Bash(git *)" "Bash(cat *)" "Bash(ls *)" "Bash(grep *)" "Bash(head *)" \
   "Bash(sed -n *)"

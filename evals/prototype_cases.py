@@ -12,8 +12,8 @@ under a different constraint, and a fourth compares them. It checks the
 variants differ in structure and leave the page itself alone.
 
 Both check nothing changed outside .vibes/ and the prototype's own files.
-Git can't run in the eval sandbox, so the briefs tell the agents their
-branch.
+So the agents needn't run git, which in the eval sandbox on macOS needs
+lib/eval-path's wrapper, the briefs tell them their branch.
 
 generate.py calls build() after clearing the generated files.
 """
