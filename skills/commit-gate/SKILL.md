@@ -3,7 +3,8 @@ name: commit-gate
 description: >-
   Sets up the vibes commit gate in a project: writes scripts/check (format,
   lint and the fast tests, with the slow ones under --all), scripts/check-file (each file's format and lint, as
-  it's written) and scripts/audit from the guides' tools.md, and installs
+  it's written), scripts/test-one (only the tests named, while you work) and
+  scripts/audit from the guides' tools.md, and installs
   the git hook so no commit lands unless every check passes. Use when
   starting the vibe workflow in a project, or when asked to add a commit gate.
 ---
@@ -298,7 +299,51 @@ main() {
 main "$@"
 ```
 
-## Step 4: write scripts/audit
+## Step 4: write scripts/test-one
+
+`scripts/test-one` runs **only the tests it's given**, so an agent working
+test-first runs the test it's writing in seconds, not the whole suite.
+The TDD skill and the builder use it for every red and green run; the
+gate still runs every fast test before each commit.
+
+- **Each argument names a test** the way the project's runner does: a test
+  file, a test function where the runner can pick one (`pytest`'s
+  `path::name`, `cargo test <name>`, `go test -run <name> ./pkg`), a
+  module or package, or a test program. Where the runner can, a source
+  file of the code under test stands for the tests of that file.
+- **It builds only what those tests need,** incrementally, in the same
+  environment the gate's tests run in, such as its container and caches.
+  It writes nothing the gate reads, such as pass markers or coverage data,
+  so a run never changes what the next commit's gate does.
+- **It runs them quietly,** a line for a pass and each failure in full,
+  and exits non-zero when any fails. A name it can't place fails with
+  exit 2 and says why. With no argument, it lists what it can run.
+- It follows the same rules as `scripts/check`: Bash, run from the
+  repository root, no network.
+
+A skeleton to start from, for a Python project:
+
+```bash
+#!/usr/bin/env bash
+#
+# Run only the tests given, while you work: test files, test functions
+# (path::name) or folders. The gate runs every test before each commit.
+
+set -euo pipefail
+
+main() {
+  cd -- "$(git rev-parse --show-toplevel)"
+  if (($# == 0)); then
+    pytest --collect-only -q
+    return
+  fi
+  pytest -q -p no:cacheprovider -- "$@"
+}
+
+main "$@"
+```
+
+## Step 5: write scripts/audit
 
 `scripts/audit` holds the checks that are **slow or need the network**, such
 as dependency vulnerability scans (OSV-Scanner and the guide's own audit
@@ -312,7 +357,7 @@ tests. It follows the same rules as
 `scripts/check`. The vibe workflow runs it before finishing a task, and CI
 should run it too.
 
-## Step 5: install the hooks
+## Step 6: install the hooks
 
 1. Make the scripts executable, then run `scripts/check --all` on the current
    state of the project. Fix or report any failures before going on: a gate
@@ -342,7 +387,8 @@ should run it too.
    other hook alone: if it reports one, ask the user before running it
    again with `--replace`. If it reports that `core.hooksPath` is set,
    tell the user that their hook manager needs to run the vibes hooks.
-3. Commit `scripts/check`, `scripts/check-file`, `scripts/audit`,
+3. Commit `scripts/check`, `scripts/check-file`, `scripts/test-one`,
+   `scripts/audit`,
    `scripts/check-requirements` if the project has specs, and the tool
    config files in one commit. The gate runs on that commit too.
 
@@ -350,10 +396,11 @@ should run it too.
 
 A project whose gate has `scripts/check` but no `scripts/check-file` was
 set up before the steps above. Bring it up to date in one commit: write
-`scripts/check-file` as Step 3 says; make `scripts/check` fail fast, with
+`scripts/check-file` as Step 3 says, and `scripts/test-one` as Step 4
+says; make `scripts/check` fail fast, with
 its static checks before its tests; add its `--static` and `--all` modes;
 and move its slow tests under `--all`, telling the user which tests moved.
-Keep every check it already has. Then install the hooks again as Step 5
+Keep every check it already has. Then install the hooks again as Step 6
 says, which turns links to a plugin version's folder into stubs and adds a
 missing `commit-msg` hook. A script that ignores its arguments still
 works with the gate meanwhile: it runs everything every time.

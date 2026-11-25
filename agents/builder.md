@@ -139,8 +139,14 @@ Build each entry in your batch, in the plan's order:
 - **Tick off each entry** in the rebuild plan's test list once it's
   committed. The plan isn't in git, so this needs no commit.
 - **Run the tests quietly,** and only the ones you're changing until you
-  commit, as the test-driven development skill says. The gate runs the
-  fast tests on every commit, so don't run them yourself first. Run the
+  commit, as the test-driven development skill says: with
+  `scripts/test-one <test>...` when the project has it. The gate runs the
+  fast tests on every commit, so don't run them yourself first. When the
+  project has `scripts/check` but no `scripts/test-one`, write it before
+  your first entry, as Step 4 of
+  `${CLAUDE_PLUGIN_ROOT}/skills/commit-gate/SKILL.md` says, try it on one
+  test that passes and one you break and restore, and commit it on its
+  own; report it. Run the
   type checks before you commit, as Every commit says.
 
 Stop when your batch is done. Don't start entries outside it.

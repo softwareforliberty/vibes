@@ -10,6 +10,14 @@ guides behave, and says so under **Changed**.
 
 ### Added
 
+- **`scripts/test-one`, to run only the tests you name.** The commit-gate
+  skill writes it beside `scripts/check-file` (its new Step 4): it takes
+  test files, test functions or a source file of the code under test,
+  builds only what they need, as the gate does, and lists what it can run
+  when given nothing. The TDD skill and the builder run each red and
+  green step with it, and a builder that finds a gated project without
+  one writes it first.
+
 - **The designer keeps the project's glossary and decision records.**
   - **The glossary:** the spec uses its terms and none of the words it
     says to avoid, and a clash between the task's words and the glossary

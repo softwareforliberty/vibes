@@ -53,7 +53,11 @@ should take minutes, not hours.
 Run tests with the runner's quiet option, such as `pytest -q` or
 `cargo test -q`, so a passing run prints a line, not a page, and a failing
 one still shows each failure in full. While you work, run the one test or
-module you're changing; the gate runs the rest before each commit.
+module you're changing; the gate runs the rest before each commit. When the
+project has `scripts/test-one`, run it with that, such as
+`scripts/test-one tests/test_parse.py::test_bad_status`, since it builds
+and runs the test as the gate does; with no argument it lists what it can
+run. Never run `scripts/check` to see one test.
 
 ### 1. Red: write one failing test
 

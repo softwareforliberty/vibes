@@ -926,6 +926,13 @@ command, except on `spike/*` branches and for the spiker, so a format or
 lint error is fixed straight away rather than at the commit. Type checks
 and tests need the whole project, so they stay in `scripts/check`.
 
+`scripts/test-one <test>...` runs only the tests it's given, such as a test
+file or a single test function, built and run as the gate runs them. The
+builder runs each red and green step with it, so test-first work takes
+seconds a step, not a full test run; the gate still runs every fast test
+before each commit. A builder that finds a gated project without one
+writes it first, in a commit of its own.
+
 For a project with specs, `scripts/check` also checks the tests'
 requirement markers. Each test names the requirements it covers, such as
 `# Covers: order-export R1, R4`. Every commit fails on a marker naming a
