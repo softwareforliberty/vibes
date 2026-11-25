@@ -977,6 +977,12 @@ The hooks need Bash, git and `realpath`. The agents' hooks also use `jq`
 or Python 3 to read their input, and Python 3 for Codex's and Gemini
 CLI's.
 
+## Contributing
+
+Bug reports, ideas and changes are welcome: [CONTRIBUTING.md](CONTRIBUTING.md)
+says how. Report a security problem privately, as [SECURITY.md](SECURITY.md)
+says, never in a public issue.
+
 ## License
 
 [0BSD](LICENSE): use, copy, modify and share any of it, for any purpose, with

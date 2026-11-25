@@ -8,6 +8,13 @@ guides behave, and says so under **Changed**.
 
 ## [Unreleased]
 
+### Added
+
+- **Contributing guidelines and a security policy.** `CONTRIBUTING.md`
+  says how to report a bug, suggest an idea and send a change, and
+  `SECURITY.md` how to report a vulnerability privately, through GitHub's
+  private vulnerability reporting, which is now on.
+
 ## [0.7.0] - 2026-11-25
 
 ### Added
